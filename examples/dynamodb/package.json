@@ -1,0 +1,16 @@
+{
+  "name": "dynamodb",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "ava -v"
+  },
+  "license": "MIT",
+  "ava": {
+    "files": "*.test.js",
+    "require": "./setup.js"
+  },
+  "dependencies": {
+    "ava": "^0.25.0",
+    "@lifeomic/lambda-tools": "file:../../"
+  },
+}

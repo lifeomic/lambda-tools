@@ -1,0 +1,4 @@
+/.editorconfig
+/.travis*
+/examples/
+/test/

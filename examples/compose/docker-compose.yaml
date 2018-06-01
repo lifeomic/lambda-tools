@@ -1,0 +1,25 @@
+version: "3"
+services:
+  dynamodb:
+    image: cnadiminti/dynamodb-local:latest
+  test:
+    command: yarn run ava -v
+    depends_on:
+      - dynamodb
+    environment:
+      - AWS_ACCESS_KEY_ID=bogus
+      - AWS_REGION=us-east-1
+      - AWS_SECRET_ACCESS_KEY=bogus
+      - COMPOSE_PROJECT_NAME
+      - DYNAMODB_ENDPOINT=http://dynamodb:8000
+      - ENABLE_LAMBDA_LOGGING
+      - MOUNTPOINT=${PWD}/build/
+    image: node:8.9.4-alpine
+    volumes:
+      - ./:/opt/work
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /opt/work
+
+networks:
+  default:
+    internal: true
