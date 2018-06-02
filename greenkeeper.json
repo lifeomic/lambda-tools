@@ -1,0 +1,11 @@
+{
+  "groups": {
+    "default": {
+      "packages": [
+        "examples/compose/package.json",
+        "examples/dynamodb/package.json",
+        "package.json"
+      ]
+    }
+  }
+}
