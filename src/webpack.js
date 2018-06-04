@@ -132,7 +132,8 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
       // relative to the caller or us. This cause our node modules to be
       // searched if a dependency can't be found in the caller's.
       modules: [ CALLER_NODE_MODULES, LAMBDA_TOOLS_NODE_MODULES ],
-      extensions: ['.js', '.ts']
+      // .mjs is needed for graphql. See https://bit.ly/2HmemEM
+      extensions: ['.mjs', '.js', '.ts']
     },
     resolveLoader: {
       // Since build is being called by other packages dependencies may be
