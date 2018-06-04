@@ -238,6 +238,24 @@ for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
     test.false(result.hasErrors());
   });
 
+  test.serial(`Can webpack files that use arrow functions inside async functions when targetting ${nodeVersion}`, async (test) => {
+    const source = path.join(__dirname, 'fixtures', 'async_with_arrow.js');
+
+    const result = await build({
+      nodeVersion,
+      entrypoint: source,
+      outputPath: test.context.buildDirectory,
+      serviceName: 'test-service'
+    });
+    test.false(result.hasErrors());
+
+    // Try loading the newly loaded file to make sure it can
+    // execute without an error
+
+    // eslint-disable-next-line security/detect-non-literal-require
+    require(path.join(test.context.buildDirectory, 'async_with_arrow'));
+  });
+
   // Test that EJS modules can be packed because they are used by graphql
   test.serial(`Can webpack modules that use .mjs modules when targetting ${nodeVersion}`, async (test) => {
     const source = path.join(__dirname, 'fixtures', 'es_modules/index.js');
