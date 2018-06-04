@@ -6,6 +6,8 @@ const sinon = require('sinon');
 const test = require('ava');
 const uuid = require('uuid/v4');
 
+const SUPPORTED_NODE_VERSIONS = ['6.10', '8.10'];
+
 test.beforeEach((test) => {
   test.context.buildDirectory = path.join(__dirname, 'fixtures', 'build', uuid());
 });
@@ -221,3 +223,18 @@ test.serial('Bundles are produced in the current working directory by default', 
     process.chdir(cwd);
   }
 });
+
+for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
+  // Test that a common pattern can be packed without a regression
+  test.serial(`Can webpack files that use await inside for...of statements targetting ${nodeVersion}`, async (test) => {
+    const source = path.join(__dirname, 'fixtures', 'async_test.js');
+
+    const result = await build({
+      nodeVersion,
+      entrypoint: source,
+      outputPath: test.context.buildDirectory,
+      serviceName: 'test-service'
+    });
+    test.false(result.hasErrors());
+  });
+}
