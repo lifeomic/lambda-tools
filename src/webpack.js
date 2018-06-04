@@ -7,6 +7,8 @@ const webpack = require('webpack');
 const WrapperPlugin = require('wrapper-webpack-plugin');
 const ZipPlugin = require('zip-webpack-plugin');
 
+const WEBPACK_DEFAULTS = new webpack.WebpackOptionsDefaulter().process({});
+
 const { promisify } = require('util');
 const run = promisify(webpack);
 
@@ -132,8 +134,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
       // relative to the caller or us. This cause our node modules to be
       // searched if a dependency can't be found in the caller's.
       modules: [ CALLER_NODE_MODULES, LAMBDA_TOOLS_NODE_MODULES ],
-      // .mjs is needed for graphql. See https://bit.ly/2HmemEM
-      extensions: ['.mjs', '.js', '.ts']
+      extensions: WEBPACK_DEFAULTS.resolve.extensions.concat(['.ts'])
     },
     resolveLoader: {
       // Since build is being called by other packages dependencies may be

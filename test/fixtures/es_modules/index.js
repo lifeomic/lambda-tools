@@ -1,0 +1,1 @@
+require('./es_module');
