@@ -237,4 +237,18 @@ for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
     });
     test.false(result.hasErrors());
   });
+
+  // Test that EJS modules can be packed because they are used by graphql
+  test.serial(`Can webpack modules that use .mjs modules when targetting ${nodeVersion}`, async (test) => {
+    const source = path.join(__dirname, 'fixtures', 'es_modules/index.js');
+
+    const result = await build({
+      nodeVersion,
+      entrypoint: source,
+      outputPath: test.context.buildDirectory,
+      serviceName: 'test-service'
+    });
+
+    test.false(result.hasErrors());
+  });
 }
