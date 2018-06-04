@@ -86,7 +86,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     module: {
       rules: [
         {
-          ...babelLoaderConfig,
+          loader: 'babel-loader',
           test: /\.js$/,
           options: {
             presets: [ babelEnvConfig ],
@@ -94,9 +94,9 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
               // X-Ray tracing cannot currently track execution across
               // async/await calls. The issue is tracked upstream at
               // https://github.com/aws/aws-xray-sdk-node/issues/12 Using
-              // fast-async will convert async/await into traditional Promises
-              // which can be traced with X-Ray
-              require('fast-async')
+              // transform-async-to-generator will convert async/await into
+              // generators which can be traced with X-Ray
+              'transform-async-to-generator'
             ]
           }
         },
