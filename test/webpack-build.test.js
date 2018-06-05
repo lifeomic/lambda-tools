@@ -5,6 +5,7 @@ const path = require('path');
 const sinon = require('sinon');
 const test = require('ava');
 const uuid = require('uuid/v4');
+const {createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment, LambdaRunner} = require('../src/lambda');
 
 const SUPPORTED_NODE_VERSIONS = ['6.10', '8.10'];
 
@@ -251,9 +252,17 @@ for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
 
     // Try loading the newly loaded file to make sure it can
     // execute without an error
-
-    // eslint-disable-next-line security/detect-non-literal-require
-    require(path.join(test.context.buildDirectory, 'async_with_arrow'));
+    const executionEnvironment = await createLambdaExecutionEnvironment({
+      image: `lambci/lambda:nodejs${nodeVersion}`,
+      mountpoint: test.context.buildDirectory
+    });
+    try {
+      const runner = new LambdaRunner(executionEnvironment.container.id, 'async_with_arrow.handle');
+      const result = await runner.invoke({});
+      test.deepEqual(result, {});
+    } finally {
+      await destroyLambdaExecutionEnvironment(executionEnvironment);
+    }
   });
 
   // Test that EJS modules can be packed because they are used by graphql
