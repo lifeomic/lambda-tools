@@ -62,7 +62,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
   }
 
   const babelEnvConfig = [
-    require('@babel/preset-env'),
+    '@babel/preset-env',
     {
       targets: {
         node: nodeVersion
