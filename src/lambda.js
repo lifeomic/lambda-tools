@@ -96,33 +96,26 @@ exports.useComposeContainer = ({ service, handler }) => {
   Object.assign(globalOptions, { container, handler });
 };
 
-exports.useLambda = (test, localOptions = {}) => {
-  const impliedOptions = {};
+async function createLambdaExecutionEnvironment (options) {
+  const { environment = {}, image = LAMBDA_IMAGE, mountpoint, network: networkId } = options;
 
-  let container = null;
-  let network = null;
+  assert(!(options.mountpoint && options.service), 'A mountpoint cannot be used with a compose service');
 
-  const getOptions = () => {
-    const options = Object.assign({}, globalOptions, impliedOptions, localOptions);
-    assert(!(options.mountpoint && options.service), 'A mountpoint cannot be used with a compose service');
-    return options;
-  };
+  const executionEnvironment = {};
 
-  test.before(async (test) => {
-    const { environment = {}, image = LAMBDA_IMAGE, mountpoint, network: networkId } = getOptions();
-
-    if (mountpoint) {
+  if (mountpoint) {
+    try {
       const docker = new Docker();
       await ensureImage(docker, image);
 
       if (!networkId) {
-        network = await docker.createNetwork({
+        executionEnvironment.network = await docker.createNetwork({
           Internal: true,
           Name: uuid()
         });
       }
 
-      container = await docker.createContainer({
+      executionEnvironment.container = await docker.createContainer({
         Entrypoint: 'sh',
         Env: createEnvironmentVariables(environment),
         HostConfig: {
@@ -130,7 +123,7 @@ exports.useLambda = (test, localOptions = {}) => {
           Binds: [
             `${mountpoint}:/var/task`
           ],
-          NetworkMode: networkId || network.id
+          NetworkMode: networkId || executionEnvironment.network.id
         },
         Image: image,
         OpenStdin: true,
@@ -139,19 +132,50 @@ exports.useLambda = (test, localOptions = {}) => {
         }
       });
 
-      await container.start();
-      impliedOptions.container = container.id;
+      await executionEnvironment.container.start();
+    } catch (error) {
+      await destroyLambdaExecutionEnvironment(executionEnvironment);
+      throw error;
+    }
+  }
+
+  return executionEnvironment;
+}
+
+async function destroyLambdaExecutionEnvironment (environment) {
+  const {container, network} = environment;
+
+  if (container) {
+    await container.stop();
+  }
+
+  if (network) {
+    await network.remove();
+  }
+}
+
+exports.createLambdaExecutionEnvironment = createLambdaExecutionEnvironment;
+exports.destroyLambdaExecutionEnvironment = destroyLambdaExecutionEnvironment;
+
+exports.useLambda = (test, localOptions = {}) => {
+  const impliedOptions = {};
+
+  let executionEnvironment = null;
+
+  const getOptions = () => {
+    const options = Object.assign({}, globalOptions, impliedOptions, localOptions);
+    return options;
+  };
+
+  test.before(async (test) => {
+    executionEnvironment = await createLambdaExecutionEnvironment(getOptions());
+    if (executionEnvironment.container) {
+      impliedOptions.container = executionEnvironment.container.id;
     }
   });
 
   test.always.after(async (test) => {
-    if (container) {
-      await container.stop();
-    }
-
-    if (network) {
-      await network.remove();
-    }
+    await destroyLambdaExecutionEnvironment(executionEnvironment);
   });
 
   test.beforeEach((test) => {

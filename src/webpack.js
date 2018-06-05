@@ -98,7 +98,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
               // https://github.com/aws/aws-xray-sdk-node/issues/12 Using
               // transform-async-to-generator will convert async/await into
               // generators which can be traced with X-Ray
-              'transform-async-to-generator'
+              '@babel/plugin-transform-async-to-generator'
             ]
           }
         },

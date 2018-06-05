@@ -5,6 +5,7 @@ const path = require('path');
 const sinon = require('sinon');
 const test = require('ava');
 const uuid = require('uuid/v4');
+const {createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment, LambdaRunner} = require('../src/lambda');
 
 const SUPPORTED_NODE_VERSIONS = ['6.10', '8.10'];
 
@@ -236,6 +237,32 @@ for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
       serviceName: 'test-service'
     });
     test.false(result.hasErrors());
+  });
+
+  test.serial(`Can webpack files that use arrow functions inside async functions when targetting ${nodeVersion}`, async (test) => {
+    const source = path.join(__dirname, 'fixtures', 'async_with_arrow.js');
+
+    const result = await build({
+      nodeVersion,
+      entrypoint: source,
+      outputPath: test.context.buildDirectory,
+      serviceName: 'test-service'
+    });
+    test.false(result.hasErrors());
+
+    // Try loading the newly loaded file to make sure it can
+    // execute without an error
+    const executionEnvironment = await createLambdaExecutionEnvironment({
+      image: `lambci/lambda:nodejs${nodeVersion}`,
+      mountpoint: test.context.buildDirectory
+    });
+    try {
+      const runner = new LambdaRunner(executionEnvironment.container.id, 'async_with_arrow.handle');
+      const result = await runner.invoke({});
+      test.deepEqual(result, {});
+    } finally {
+      await destroyLambdaExecutionEnvironment(executionEnvironment);
+    }
   });
 
   // Test that EJS modules can be packed because they are used by graphql
