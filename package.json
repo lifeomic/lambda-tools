@@ -1,6 +1,6 @@
 {
   "name": "@lifeomic/lambda-tools",
-  "version": "3.0.4",
+  "version": "3.1.0",
   "description": "Common utilities for Lambda testing and development",
   "main": "src/index.js",
   "bin": {
@@ -68,11 +68,15 @@
     "@babel/preset-env": "^7.0.0-beta.46",
     "@babel/preset-typescript": "^7.0.0-beta.46",
     "@lifeomic/alpha": "^0.11.0",
+    "archiver": "^2.1.1",
     "aws-sdk": "^2.192.0",
     "babel-loader": "^8.0.0-beta.2",
+    "chalk": "^2.4.1",
     "dockerode": "^2.5.3",
+    "glob": "^7.1.2",
     "jszip": "^3.1.5",
     "lodash": "^4.17.5",
+    "mkdirp": "^0.5.1",
     "nested-error-stacks": "^2.0.0",
     "promise-retry": "^1.1.1",
     "source-map-support": "^0.5.3",

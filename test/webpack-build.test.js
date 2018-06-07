@@ -193,18 +193,19 @@ test('Bundles can use custom names', async (test) => {
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'lambda', 'service.js')));
 });
 
-test('Multi-entry bundling cannot be used with bundle zipping', async (test) => {
-  const options = {
+test('Bundles for multiple entries can be zipped', async (test) => {
+  await build({
     entrypoint: [
-      path.join(__dirname, 'fixtures', 'lambda_service.js'),
-      path.join(__dirname, 'fixtures', 'lambda_graphql.js')
+      path.join(__dirname, 'fixtures', 'lambda_graphql.js:graphql.js'),
+      path.join(__dirname, 'fixtures', 'lambda_service.js:lambda/service.js')
     ],
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service',
     zip: true
-  };
+  });
 
-  await test.throws(build(options), /multiple entrypoints/i);
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'graphql.js.zip')));
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'lambda/service.js.zip')));
 });
 
 test.serial('Bundles are produced in the current working directory by default', async (test) => {

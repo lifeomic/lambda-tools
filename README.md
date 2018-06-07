@@ -155,7 +155,7 @@ additional `alpha` parameters (like request headers). The `raw(event, context)`
 method allows a raw Lambda event to be passed to the function and will return
 the raw response object.
 
-## Webpack
+## Lambda Webpack Bundle CLI
 
 Building code bundles that are optimized for the Lambda runtime can be a
 tedious exercise. In order to share code and learning in this area across
@@ -178,3 +178,47 @@ documentation may be accessed using the `lambda-tool-build --help` command.
 [dynamodb-local]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html "DynamoDB Local"
 [koa]: http://koajs.com/ "koa"
 [supertest]: https://github.com/visionmedia/supertest "supertest"
+
+**Build all lambda functions within a directory:**
+
+```bash
+lambda-tools-build -z -s my-service -n 8.10 -o ./dist/lambdas ./src/lambdas
+```
+
+Your `./src/lambdas` directory should look similar to:
+
+- `./src/lambdas/func1/index.js`
+- `./src/lambdas/func2/index.ts`
+- `./src/lambdas/func3.js`
+- `./src/lambdas/func4.ts`
+
+This will produce the following zip files:
+
+- `./dist/lambdas/func1.js.zip`
+- `./dist/lambdas/func2.js.zip`
+- `./dist/lambdas/func3.js.zip`
+- `./dist/lambdas/func4.js.zip`
+
+**Build a single lambda function and provide a name for the file:**
+
+```bash
+ lambda-tools-build -z -s my-service -n 8.10 -o ./dist/lambdas ./src/lambdas/my-function/index.ts:my-function.js
+ ```
+
+ This will produce the following zip files:
+
+- `./dist/lambdas/my-function.js.zip`
+
+You will also find the following intermediate files:
+
+- `./dist/lambdas/my-function.js`
+- `./dist/lambdas/my-function.js.map`
+
+**Development mode:**
+
+```bash
+ WEBPACK_MODE=development lambda-tools-build -z -s my-service -n 8.10 -o ./dist/lambdas ./src/lambdas/my-function/index.ts:my-function.js
+ ```
+
+ The `WEBPACK_MODE=development` environment variable will prevent
+ minification in the final output bundle.

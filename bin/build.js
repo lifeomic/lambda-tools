@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-const supportsColor = require('supports-color');
 const path = require('path');
 
 const { build } = require('../src/lambda');
@@ -64,26 +63,9 @@ if (argv.w) {
   buildOptions.configTransformer = transformFunction;
 }
 
-const BREAKOUT = 'compilation_error';
-
 build(buildOptions)
-  .then((stats) => {
-    console.log('Webpacking compilation result:\n', stats.toString({
-      colors: !!supportsColor.stdout,
-      // hide excessive chunking output
-      chunks: false,
-      // hide other built modules
-      maxModules: 0,
-      // hide warning traces
-      moduleTrace: false
-    }));
-
-    if (stats.hasErrors()) {
-      throw new Error(BREAKOUT);
-    }
-  })
   .catch((error) => {
-    if (error.message === BREAKOUT) {
+    if (error.message === 'compilation_error') {
       console.error('An error occurred during compilation. See output above for more details.');
     } else {
       console.error('Failed to build lambda package:', error);
