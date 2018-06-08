@@ -1,5 +1,3 @@
-/* eslint-disable security/detect-object-injection */
-/* eslint-disable security/detect-non-literal-fs-filename */
 const babelEnvDeps = require('webpack-babel-env-deps');
 const fs = require('fs-extra');
 const path = require('path');
@@ -78,6 +76,7 @@ async function findIndexFile (dir) {
   for (const indexFile of INDEX_FILES) {
     const candidateFile = path.join(dir, indexFile);
     try {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       const stats = await fs.stat(candidateFile);
       if (!stats.isDirectory()) {
         return candidateFile;
@@ -100,17 +99,20 @@ async function expandEntrypoints (entrypoints) {
   const finalEntrypoints = [];
 
   for (const entrypoint of entrypoints) {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const stats = await fs.stat(entrypoint.file);
 
     // Is the entrypoint a directory?
     if (stats.isDirectory()) {
       // The entrypoint is a directory so let's get the contents
       // of this directory
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       const directoryFiles = await fs.readdir(entrypoint.file);
 
       // Iterate through the files within this directory
       for (const directoryFile of directoryFiles) {
         const directoryFileAbs = path.join(entrypoint.file, directoryFile);
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
         const directoryFileStats = await fs.stat(directoryFileAbs);
 
         if (directoryFileStats.isDirectory()) {

@@ -209,21 +209,27 @@ test('Bundles for multiple entries can be zipped', async (test) => {
 });
 
 test('Expand input entrypoint directory into multiple entrypoints', async (test) => {
+  const multiLambdasDir = path.join(__dirname, 'fixtures/multi-lambdas');
+  const emptyDir = path.join(multiLambdasDir, `empty-${uuid()}`);
+  await fs.mkdirp(emptyDir);
   await build({
     entrypoint: [
-      path.join(__dirname, 'fixtures/multi-lambdas')
+      multiLambdasDir
     ],
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service',
     zip: true
   });
 
-  await fs.mkdirp(path.join(__dirname, 'fixtures/multi-lambdas/empty'));
-
-  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func1.js.zip')));
-  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func2.js.zip')));
-  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func3.js.zip')));
-  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func4.js.zip')));
+  try {
+    test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func1.js.zip')));
+    test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func2.js.zip')));
+    test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func3.js.zip')));
+    test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func4.js.zip')));
+  } finally {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    await fs.rmdir(emptyDir);
+  }
 });
 
 test.serial('Bundles are produced in the current working directory by default', async (test) => {
