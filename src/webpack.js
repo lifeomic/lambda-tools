@@ -81,8 +81,12 @@ async function findIndexFile (dir) {
       if (!stats.isDirectory()) {
         return candidateFile;
       }
-    } catch (ignoreErr) {
-      // ignore error
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        console.warn(chalk.yellow(`Unable to read possible index file ` +
+          `${chalk.bold(candidateFile)}. ` +
+          `Skipping! ${chalk.red(err.toString())}`));
+      }
     }
   }
 

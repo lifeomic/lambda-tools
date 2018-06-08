@@ -13,6 +13,10 @@ test.beforeEach((test) => {
   test.context.buildDirectory = path.join(__dirname, 'fixtures', 'build', uuid());
 });
 
+test.afterEach(() => {
+  sinon.restore();
+});
+
 test.always.afterEach((test) => fs.remove(test.context.buildDirectory));
 
 test('Setting WEBPACK_MODE to development disables minification', async (test) => {
@@ -208,20 +212,34 @@ test('Bundles for multiple entries can be zipped', async (test) => {
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'lambda/service.js.zip')));
 });
 
-test('Expand input entrypoint directory into multiple entrypoints', async (test) => {
+test.serial('Expand input entrypoint directory into multiple entrypoints', async (test) => {
   const multiLambdasDir = path.join(__dirname, 'fixtures/multi-lambdas');
   const emptyDir = path.join(multiLambdasDir, `empty-${uuid()}`);
   await fs.mkdirp(emptyDir);
-  await build({
-    entrypoint: [
-      multiLambdasDir
-    ],
-    outputPath: test.context.buildDirectory,
-    serviceName: 'test-service',
-    zip: true
+
+  const originalFsStat = fs.stat;
+  const unreadableFile = path.join(multiLambdasDir, 'unreadable/index.js');
+
+  const stubStat = sinon.stub(fs, 'stat').callsFake(function (file) {
+    if (file === unreadableFile) {
+      throw new Error('Simulated unreadable');
+    }
+
+    return originalFsStat(file);
   });
 
   try {
+    await build({
+      entrypoint: [
+        multiLambdasDir
+      ],
+      outputPath: test.context.buildDirectory,
+      serviceName: 'test-service',
+      zip: true
+    });
+
+    sinon.assert.calledWith(stubStat, unreadableFile);
+
     test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func1.js.zip')));
     test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func2.js.zip')));
     test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func3.js.zip')));
