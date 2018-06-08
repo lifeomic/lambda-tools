@@ -1,12 +1,10 @@
 /* eslint-disable security/detect-non-literal-fs-filename */
 const archiver = require('archiver');
-const fs = require('fs');
-const { promisify } = require('util');
-const mkdirp = promisify(require('mkdirp'));
+const fs = require('fs-extra');
 const path = require('path');
 
 module.exports = async function (zipFile, entries) {
-  await mkdirp(path.dirname(zipFile));
+  await fs.mkdirp(path.dirname(zipFile));
 
   return new Promise((resolve, reject) => {
     const outStream = fs.createWriteStream(zipFile);

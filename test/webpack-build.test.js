@@ -208,6 +208,24 @@ test('Bundles for multiple entries can be zipped', async (test) => {
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'lambda/service.js.zip')));
 });
 
+test('Expand input entrypoint directory into multiple entrypoints', async (test) => {
+  await build({
+    entrypoint: [
+      path.join(__dirname, 'fixtures/multi-lambdas')
+    ],
+    outputPath: test.context.buildDirectory,
+    serviceName: 'test-service',
+    zip: true
+  });
+
+  await fs.mkdirp(path.join(__dirname, 'fixtures/multi-lambdas/empty'));
+
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func1.js.zip')));
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func2.js.zip')));
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func3.js.zip')));
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func4.js.zip')));
+});
+
 test.serial('Bundles are produced in the current working directory by default', async (test) => {
   const cwd = process.cwd();
   await fs.ensureDir(test.context.buildDirectory);
@@ -221,6 +239,23 @@ test.serial('Bundles are produced in the current working directory by default', 
     test.false(buildResults.hasErrors());
 
     test.true(await fs.pathExists('lambda_service.js'));
+  } finally {
+    process.chdir(cwd);
+  }
+});
+
+test.serial('Should handle building entrypoint outside of current working directory', async (test) => {
+  const cwd = process.cwd();
+
+  try {
+    process.chdir(path.join(__dirname, '../src'));
+    const buildResults = await build({
+      outputPath: test.context.buildDirectory,
+      entrypoint: path.join(__dirname, 'fixtures', 'lambda_service.js'),
+      serviceName: 'test-service',
+      zip: true
+    });
+    test.false(buildResults.hasErrors());
   } finally {
     process.chdir(cwd);
   }

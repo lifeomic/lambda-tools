@@ -10,7 +10,7 @@ const zip = require('./zip');
 const chalk = require('chalk');
 const { promisify } = require('util');
 const glob = promisify(require('glob'));
-const supportsColor = require('supports-color');
+const handleWebpackResult = require('./handleWebpackResult');
 
 const WEBPACK_DEFAULTS = new webpack.WebpackOptionsDefaulter().process({});
 const run = promisify(webpack);
@@ -32,13 +32,12 @@ const parseEntrypoint = (entrypoint) => {
   };
 };
 
-const cwd = process.cwd();
-
 /**
  * Helper function to trim absolute file path by removing the `process.cwd()`
  * prefix if file is nested under `process.cwd()`.
  */
 function makeFilePathRelativeToCwd (file) {
+  const cwd = process.cwd();
   return (file.startsWith(cwd)) ? '.' + file.substring(cwd.length) : file;
 }
 
@@ -60,12 +59,6 @@ async function zipOutputFiles (outputDir, entryNames) {
         file: path.join(outputDir, file)
       };
     });
-
-    // Did we find any matches?
-    if (!entriesForZipFile.length) {
-      console.warn(chalk.yellow(`No output files for ${chalk.bold(entryName)}!`));
-      continue;
-    }
 
     // Now, write a zip file for each entry
     console.log(`Creating zip for entrypoint ${chalk.bold(entryName)}...`);
@@ -287,19 +280,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
 
   const webpackResult = await run(transformedConfig);
 
-  console.log('Webpacking compilation result:\n', webpackResult.toString({
-    colors: !!supportsColor.stdout,
-    // hide excessive chunking output
-    chunks: false,
-    // hide other built modules
-    maxModules: 0,
-    // hide warning traces
-    moduleTrace: false
-  }));
-
-  if (webpackResult.hasErrors()) {
-    throw new Error('compilation_error');
-  }
+  handleWebpackResult(webpackResult);
 
   if (options.zip) {
     await zipOutputFiles(outputDir, Object.keys(entry));
