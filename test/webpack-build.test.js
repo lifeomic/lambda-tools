@@ -13,6 +13,10 @@ test.beforeEach((test) => {
   test.context.buildDirectory = path.join(__dirname, 'fixtures', 'build', uuid());
 });
 
+test.afterEach(() => {
+  sinon.restore();
+});
+
 test.always.afterEach((test) => fs.remove(test.context.buildDirectory));
 
 test('Setting WEBPACK_MODE to development disables minification', async (test) => {
@@ -193,18 +197,57 @@ test('Bundles can use custom names', async (test) => {
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'lambda', 'service.js')));
 });
 
-test('Multi-entry bundling cannot be used with bundle zipping', async (test) => {
-  const options = {
+test('Bundles for multiple entries can be zipped', async (test) => {
+  await build({
     entrypoint: [
-      path.join(__dirname, 'fixtures', 'lambda_service.js'),
-      path.join(__dirname, 'fixtures', 'lambda_graphql.js')
+      path.join(__dirname, 'fixtures', 'lambda_graphql.js:graphql.js'),
+      path.join(__dirname, 'fixtures', 'lambda_service.js:lambda/service.js')
     ],
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service',
     zip: true
-  };
+  });
 
-  await test.throws(build(options), /multiple entrypoints/i);
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'graphql.js.zip')));
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'lambda/service.js.zip')));
+});
+
+test.serial('Expand input entrypoint directory into multiple entrypoints', async (test) => {
+  const multiLambdasDir = path.join(__dirname, 'fixtures/multi-lambdas');
+  const emptyDir = path.join(multiLambdasDir, `empty-${uuid()}`);
+  await fs.mkdirp(emptyDir);
+
+  const originalFsStat = fs.stat;
+  const unreadableFile = path.join(multiLambdasDir, 'unreadable/index.js');
+
+  const stubStat = sinon.stub(fs, 'stat').callsFake(function (file) {
+    if (file === unreadableFile) {
+      throw new Error('Simulated unreadable');
+    }
+
+    return originalFsStat(file);
+  });
+
+  try {
+    await build({
+      entrypoint: [
+        multiLambdasDir
+      ],
+      outputPath: test.context.buildDirectory,
+      serviceName: 'test-service',
+      zip: true
+    });
+
+    sinon.assert.calledWith(stubStat, unreadableFile);
+
+    test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func1.js.zip')));
+    test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func2.js.zip')));
+    test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func3.js.zip')));
+    test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'func4.js.zip')));
+  } finally {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    await fs.rmdir(emptyDir);
+  }
 });
 
 test.serial('Bundles are produced in the current working directory by default', async (test) => {
@@ -220,6 +263,23 @@ test.serial('Bundles are produced in the current working directory by default', 
     test.false(buildResults.hasErrors());
 
     test.true(await fs.pathExists('lambda_service.js'));
+  } finally {
+    process.chdir(cwd);
+  }
+});
+
+test.serial('Should handle building entrypoint outside of current working directory', async (test) => {
+  const cwd = process.cwd();
+
+  try {
+    process.chdir(path.join(__dirname, '../src'));
+    const buildResults = await build({
+      outputPath: test.context.buildDirectory,
+      entrypoint: path.join(__dirname, 'fixtures', 'lambda_service.js'),
+      serviceName: 'test-service',
+      zip: true
+    });
+    test.false(buildResults.hasErrors());
   } finally {
     process.chdir(cwd);
   }

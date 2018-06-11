@@ -1,15 +1,16 @@
-const assert = require('assert');
 const babelEnvDeps = require('webpack-babel-env-deps');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const webpack = require('webpack');
 const WrapperPlugin = require('wrapper-webpack-plugin');
-const ZipPlugin = require('zip-webpack-plugin');
+const zip = require('./zip');
+const chalk = require('chalk');
+const { promisify } = require('util');
+const glob = promisify(require('glob'));
+const handleWebpackResult = require('./handleWebpackResult');
 
 const WEBPACK_DEFAULTS = new webpack.WebpackOptionsDefaulter().process({});
-
-const { promisify } = require('util');
 const run = promisify(webpack);
 
 const CALLER_NODE_MODULES = 'node_modules';
@@ -29,13 +30,139 @@ const parseEntrypoint = (entrypoint) => {
   };
 };
 
+/**
+ * Helper function to trim absolute file path by removing the `process.cwd()`
+ * prefix if file is nested under `process.cwd()`.
+ */
+function makeFilePathRelativeToCwd (file) {
+  const cwd = process.cwd();
+  return (file.startsWith(cwd)) ? '.' + file.substring(cwd.length) : file;
+}
+
+/**
+ * @param {String} outputDir the directory that contains output files
+ * @param {String[]} entryNames the entrypoint names from which output was produced
+ */
+async function zipOutputFiles (outputDir, entryNames) {
+  console.log('\nCreating zip file for each entrypoint...\n');
+
+  for (const entryName of entryNames) {
+    const dirname = path.dirname(entryName);
+    // Find all of the output files that belong to this entry
+    const entriesForZipFile = (await glob(`${entryName}*`, {
+      cwd: outputDir
+    })).map((file) => {
+      return {
+        name: (dirname === '.') ? file : file.substring(dirname.length + 1),
+        file: path.join(outputDir, file)
+      };
+    });
+
+    // Now, write a zip file for each entry
+    console.log(`Creating zip for entrypoint ${chalk.bold(entryName)}...`);
+    console.log(entriesForZipFile.map((entry) => {
+      return `- ${chalk.bold(entry.name)}\n`;
+    }).join(''));
+    const outputZipFile = path.join(outputDir, `${entryName}.zip`);
+    await zip(outputZipFile, entriesForZipFile);
+    console.log(chalk.green(`Zip file for ${chalk.bold(entryName)} written to ` +
+      `${chalk.bold(makeFilePathRelativeToCwd(outputZipFile))}\n`));
+  }
+}
+
+const INDEX_FILES = ['index.js', 'index.ts'];
+
+async function findIndexFile (dir) {
+  for (const indexFile of INDEX_FILES) {
+    const candidateFile = path.join(dir, indexFile);
+    try {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      const stats = await fs.stat(candidateFile);
+      if (!stats.isDirectory()) {
+        return candidateFile;
+      }
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        console.warn(chalk.yellow(`Unable to read possible index file ` +
+          `${chalk.bold(candidateFile)}. ` +
+          `Skipping! ${chalk.red(err.toString())}`));
+      }
+    }
+  }
+
+  console.warn(chalk.yellow(`No index file for entrypoint in ` +
+    `${chalk.bold(makeFilePathRelativeToCwd(dir))} directory. ` +
+    `Searched for: ${INDEX_FILES.join(', ')}`));
+
+  // We didn't find an index file so return null and the caller will
+  // ignore this directory
+  return null;
+}
+
+async function expandEntrypoints (entrypoints) {
+  const finalEntrypoints = [];
+
+  for (const entrypoint of entrypoints) {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    const stats = await fs.stat(entrypoint.file);
+
+    // Is the entrypoint a directory?
+    if (stats.isDirectory()) {
+      // The entrypoint is a directory so let's get the contents
+      // of this directory
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      const directoryFiles = await fs.readdir(entrypoint.file);
+
+      // Iterate through the files within this directory
+      for (const directoryFile of directoryFiles) {
+        const directoryFileAbs = path.join(entrypoint.file, directoryFile);
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
+        const directoryFileStats = await fs.stat(directoryFileAbs);
+
+        if (directoryFileStats.isDirectory()) {
+          // We found a directory nested within the entrypoint directory.
+          // Look for an index file within this subdirectory which we will
+          // use as an entrypoint.
+          const indexFile = await findIndexFile(directoryFileAbs);
+
+          if (indexFile) {
+            // We found an index file in thie directory so use this
+            // as an entrypoint.
+            finalEntrypoints.push({
+              file: indexFile,
+              name: `${directoryFile}.js`
+            });
+          }
+        } else {
+          // We found a file under the subdirectory. Is it a
+          // JavaScript or TypeScript file?
+          if (/\.(js|ts)$/.test(directoryFile)) {
+            finalEntrypoints.push(parseEntrypoint(directoryFileAbs));
+          }
+        }
+      }
+    } else {
+      finalEntrypoints.push(entrypoint);
+    }
+  }
+
+  return finalEntrypoints;
+}
+
 module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }) => {
-  const entrypoints = [].concat(entrypoint);
-  assert(entrypoints.length <= 1 || !options.zip, 'Multiple entrypoints cannot be used with bundle zipping');
+  // If an entrypoint is a directory then we discover all of the entrypoints
+  // within that directory.
+  // For example, entrypoint might be "./src/lambdas" and we might discover
+  // "./src/lambdas/abc/index.js" (a subdirectory with index file)
+  // and "./src/lambdas/def.js" (a simple file)
+  const entrypoints = await expandEntrypoints(
+    [].concat(entrypoint).map((entrypoint) => {
+      return parseEntrypoint(entrypoint);
+    }));
 
   const entry = entrypoints.reduce(
     (accumulator, entry) => {
-      const { file, name } = parseEntrypoint(entry);
+      const { file, name } = entry;
       // eslint-disable-next-line security/detect-object-injection
       accumulator[name] = ['@babel/polyfill', 'source-map-support/register', file];
       return accumulator;
@@ -57,10 +184,6 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     })
   ];
 
-  if (options.zip) {
-    plugins.push(new ZipPlugin());
-  }
-
   const babelEnvConfig = [
     '@babel/preset-env',
     {
@@ -75,13 +198,15 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     loader: 'babel-loader'
   };
 
+  const outputDir = path.resolve(options.outputPath || process.cwd());
+
   const config = {
     entry,
     output: {
-      path: path.resolve(options.outputPath || process.cwd()),
+      path: outputDir,
       libraryTarget: 'commonjs',
       // Zipped bundles use explicit output names to determine the archive name
-      filename: options.zip ? Object.keys(entry)[0] : '[name]'
+      filename: '[name]'
     },
     devtool: 'source-map',
     plugins,
@@ -159,5 +284,13 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
   const transformer = options.configTransformer || function (config) { return config; };
   const transformedConfig = await transformer(config);
 
-  return run(transformedConfig);
+  const webpackResult = await run(transformedConfig);
+
+  handleWebpackResult(webpackResult);
+
+  if (options.zip) {
+    await zipOutputFiles(outputDir, Object.keys(entry));
+  }
+
+  return webpackResult;
 };
