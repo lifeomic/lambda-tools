@@ -213,7 +213,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     module: {
       rules: [
         {
-          loader: 'babel-loader',
+          ...babelLoaderConfig,
           test: /\.js$/,
           options: {
             presets: [ babelEnvConfig ],
