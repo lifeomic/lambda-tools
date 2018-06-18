@@ -73,7 +73,7 @@ test('assertError throws if no error matches the path', async (test) => {
   test.throws(() => assertError(response, 'some.other.path', 'boom!'), `No error found with path 'some.other.path'. The paths with errors were: error`);
 });
 
-test.skip('assertError throws if the error does not match the message', async (test) => {
+test('assertError throws if the error does not match the message', async (test) => {
   const query = '{ error }';
   const response = await test.context.graphql(query);
   test.throws(() => assertError(response, 'error', 'some other message'), `'boom!' == 'some other message'`);
