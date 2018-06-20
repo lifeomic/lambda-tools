@@ -48,7 +48,6 @@
     "aws-sdk-mock": "^3.0.0",
     "coveralls": "^3.0.1",
     "eslint": "^4.17.0",
-    "fs-extra": "^6.0.1",
     "graphql": "^0.13.2",
     "graphql-tools": "^3.0.2",
     "koa": "^2.5.0",
@@ -58,8 +57,7 @@
     "nyc": "^12.0.1",
     "proxyquire": "^2.0.1",
     "serverless-http": "^1.5.5",
-    "sinon": "^6.0.0",
-    "uuid": "^3.2.1"
+    "sinon": "^6.0.0"
   },
   "dependencies": {
     "@babel/core": "^7.0.0-beta.46",
@@ -73,6 +71,7 @@
     "babel-loader": "^8.0.0-beta.2",
     "chalk": "^2.4.1",
     "dockerode": "^2.5.3",
+    "fs-extra": "^6.0.1",
     "glob": "^7.1.2",
     "jszip": "^3.1.5",
     "lodash": "^4.17.5",
@@ -83,6 +82,7 @@
     "supertest": "^3.0.0",
     "supports-color": "^5.3.0",
     "uglifyjs-webpack-plugin": "^1.1.8",
+    "uuid": "^3.2.1",
     "webpack": "^4.10.0",
     "webpack-babel-env-deps": "^1.4.1",
     "wrapper-webpack-plugin": "^2.0.0",
