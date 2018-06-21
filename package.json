@@ -45,7 +45,7 @@
     "@types/koa-router": "^7.0.28",
     "apollo-server-koa": "^1.3.2",
     "ava": "^0.25.0",
-    "aws-sdk-mock": "^3.0.0",
+    "aws-sdk-mock": "^4.0.0",
     "coveralls": "^3.0.1",
     "eslint": "^4.17.0",
     "graphql": "^0.13.2",
