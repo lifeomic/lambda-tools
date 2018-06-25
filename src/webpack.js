@@ -48,9 +48,14 @@ async function zipOutputFiles (outputDir, entryNames) {
 
   for (const entryName of entryNames) {
     const dirname = path.dirname(entryName);
+    const outputZipBasename = `${entryName}.zip`;
+    const outputZipFile = path.join(outputDir, outputZipBasename);
+
     // Find all of the output files that belong to this entry
     const entriesForZipFile = (await glob(`${entryName}*`, {
-      cwd: outputDir
+      cwd: outputDir,
+      // ignore previously output zip file for repeatability
+      ignore: outputZipBasename
     })).map((file) => {
       return {
         name: (dirname === '.') ? file : file.substring(dirname.length + 1),
@@ -63,7 +68,6 @@ async function zipOutputFiles (outputDir, entryNames) {
     console.log(entriesForZipFile.map((entry) => {
       return `- ${chalk.bold(entry.name)}\n`;
     }).join(''));
-    const outputZipFile = path.join(outputDir, `${entryName}.zip`);
     await zip(outputZipFile, entriesForZipFile);
     console.log(chalk.green(`Zip file for ${chalk.bold(entryName)} written to ` +
       `${chalk.bold(makeFilePathRelativeToCwd(outputZipFile))}\n`));
