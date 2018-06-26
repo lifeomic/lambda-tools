@@ -64,7 +64,7 @@ include the following clients on the `dynamodb` attribute:
 | config           | The aws dynamodb config object, useful for passing to dynamoose or other dynamo wrappers.|
 
 If `useUniqueTables` is true, dynamically generated table names will be used, in
-the form of <tableNameProvidedInSchema>-<uuid>. The unique table name can be
+the form of `<tableNameProvidedInSchema>-<uuid>`. The unique table name can be
 fetched from the `tableNames` map. Otherwise, the table name will be the default
 provided in the schema. This allows tests to be run in parallel.
 
