@@ -152,6 +152,29 @@ test('Lambda archives can be produced', async (test) => {
   test.truthy(zip.file('lambda_service.js'));
 });
 
+test('Lambda archives can be produced repeatably', async (test) => {
+  const source = path.join(__dirname, 'fixtures', 'lambda_service.js');
+  const bundle = path.join(test.context.buildDirectory, 'lambda_service.js.zip');
+
+  const buildConfig = {
+    entrypoint: source,
+    outputPath: test.context.buildDirectory,
+    serviceName: 'test-service',
+    zip: true
+  };
+
+  let buildResults = await build(buildConfig);
+  test.false(buildResults.hasErrors());
+  buildResults = await build(buildConfig);
+  test.false(buildResults.hasErrors());
+
+  const zip = new JSZip();
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  await zip.loadAsync(await fs.readFile(bundle));
+  test.truthy(zip.file('lambda_service.js'));
+  test.falsy(zip.file('lambda_service.js.zip'));
+});
+
 test('Multiple bundles can be produced at one time', async (test) => {
   const buildResults = await build({
     entrypoint: [
