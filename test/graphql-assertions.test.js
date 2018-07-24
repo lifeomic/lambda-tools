@@ -76,8 +76,8 @@ test('assertError throws if no error matches the path', async (test) => {
 test('assertError throws if the error does not match the message', async (test) => {
   const query = '{ error }';
   const response = await test.context.graphql(query);
-  if (parseInt(process.version.split(/^v(\d+\.\d+)/)[1]) < 9.9) {
-    console.log('running test');
+  const version = process.version.split(/^v(\d+\.\d+)/)[1];
+  if (version.split('.')[0] < 10 && version.split('.')[1] < 9) {
     test.throws(() => assertError(response, 'error', 'some other message'), `'boom!' == 'some other message'`);
   }
 });
