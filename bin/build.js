@@ -14,6 +14,11 @@ named lambda.js in the output directory.
 
 const argv = require('yargs')
   .usage('$0 [<options>] <entrypoint[:name]>...')
+  .option('d', {
+    alias: 'dns-retry',
+    describe: 'enable automatic retries for DNS lookups',
+    type: 'boolean'
+  })
   .option('n', {
     alias: 'node-version',
     describe: 'the version of node that the bundle should be optimized for (default 6.10)',
@@ -44,6 +49,7 @@ const argv = require('yargs')
   .argv;
 
 const buildOptions = {
+  enableDnsRetry: argv.d,
   entrypoint: argv._,
   nodeVersion: argv.n,
   outputPath: argv.o,
