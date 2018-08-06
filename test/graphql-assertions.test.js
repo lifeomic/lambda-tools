@@ -43,6 +43,18 @@ test.before(() => {
   });
 });
 
+// This is a work-around for a bug in ava. This should be remove when the fix
+// is released in ava 1.0.0.
+// See https://github.com/avajs/ava/pull/1885
+test.beforeEach((test) => {
+  test.context.isTTY = process.stdout.isTTY;
+  process.stdout.isTTY = false;
+});
+
+test.afterEach((test) => {
+  process.stdout.isTTY = test.context.isTTY;
+});
+
 test('assertSuccess does not throw on a successful response', async (test) => {
   const query = '{ success }';
   const response = await test.context.graphql(query);
