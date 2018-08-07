@@ -1,21 +1,17 @@
 const Koa = require('koa');
-const convert = require('koa-convert');
-const koaBodyParser = convert(require('koa-better-body')({ fields: 'body' }));
-const Router = require('koa-router');
 const test = require('ava');
 
 const { assertError, assertSuccess, setupGraphQL, useGraphQL } = require('../src/graphql');
-const { graphqlKoa } = require('apollo-server-koa');
-const { makeExecutableSchema } = require('graphql-tools');
+const { ApolloServer, gql } = require('apollo-server-koa');
 
-const schema = makeExecutableSchema({
+const graphql = new ApolloServer({
   resolvers: {
     Query: {
       error: (obj, args, context, info) => { throw new Error('boom!'); },
       success: (obj, args, context, info) => 'success!'
     }
   },
-  typeDefs: `
+  typeDefs: gql`
     type Query {
       error: String!
       success: String!
@@ -23,22 +19,12 @@ const schema = makeExecutableSchema({
   `
 });
 
-const graphql = graphqlKoa((context) => ({
-  context: {},
-  schema
-}));
-
 useGraphQL(test);
 
 test.before(() => {
   setupGraphQL(() => {
     const app = new Koa();
-    const router = new Router();
-
-    router.use(koaBodyParser);
-    router.post('/graphql', graphql);
-    app.use(router.routes());
-
+    graphql.applyMiddleware({ app });
     return app;
   });
 });
