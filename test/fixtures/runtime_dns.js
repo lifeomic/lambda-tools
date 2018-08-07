@@ -6,7 +6,10 @@ exports.handler = (event, context, callback) => {
   const failure = new Error('simulated failure');
   failure.code = dns.NOTFOUND;
 
-  const lookup = sinon.stub(dns.lookup, '_raw')
+  // Simulate an extra pollyfill/shim
+  dns.lookup = dns.lookup.bind(dns);
+
+  const lookup = sinon.stub(dns._raw, 'lookup')
     .callsArgWith(2, failure)
     .withArgs('example.com', sinon.match.object, sinon.match.func)
     .onFirstCall().callsArgWith(2, failure)
