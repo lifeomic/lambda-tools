@@ -1,35 +1,25 @@
-const convert = require('koa-convert');
 const Koa = require('koa');
-const koaBodyParser = convert(require('koa-better-body')({ fields: 'body' }));
-const Router = require('koa-router');
 const serverless = require('serverless-http');
 
-const { graphqlKoa } = require('apollo-server-koa');
-const { makeExecutableSchema } = require('graphql-tools');
+const { ApolloServer, gql } = require('apollo-server-koa');
 
 const app = new Koa();
-const router = new Router();
 
-const schema = makeExecutableSchema({
+const graphql = new ApolloServer({
+  context: ({ctx}) => ({
+    header: ctx.request.get('test-header')
+  }),
   resolvers: {
     Query: {
       value: (obj, args, context, info) => args.prompt + ': ' + context.header
     }
   },
-  typeDefs: `
+  typeDefs: gql`
     type Query {
       value (prompt: String!): String!
     }
   `
 });
 
-const graphql = graphqlKoa((context) => ({
-  context: {
-    header: context.request.get('test-header')
-  },
-  schema
-}));
-
-router.post('/', koaBodyParser, graphql);
-app.use(router.routes());
+graphql.applyMiddleware({ app, path: '/' });
 module.exports.handler = serverless(app);

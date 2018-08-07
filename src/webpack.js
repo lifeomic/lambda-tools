@@ -216,6 +216,12 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     plugins,
     module: {
       rules: [
+        // See https://github.com/bitinn/node-fetch/issues/493
+        {
+          type: 'javascript/auto',
+          test: /\.mjs$/,
+          use: []
+        },
         {
           loader: 'babel-loader',
           test: /\.js$/,
