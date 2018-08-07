@@ -1,0 +1,39 @@
+// Lambdas running inside a VPC rely on ENIs. On a cold start attaching the ENI
+// can be quite slow and can mean that some services, like DNS, are not yet
+// functional when the Lambda function begins to execute for the first time.
+// Inserting DNS retry logic gives the function a chance to recover before
+// failing completely.
+//
+// See https://docs.aws.amazon.com/lambda/latest/dg/vpc.html#vpc-configuring
+(function () {
+  const dns = require('dns');
+  const lookup = dns.lookup;
+
+  const DELAY = 1000;
+  const TRIES = 5;
+
+  dns.lookup = function dnsLookupWrapper (hostname, options, callback) {
+    let remaining = TRIES;
+
+    function dnsLookupWrapperResponse (error, address, family) {
+      if (error && error.code === dns.NOTFOUND && --remaining > 0) {
+        setTimeout(
+          () => dns.lookup._raw(hostname, options, dnsLookupWrapperResponse),
+          DELAY
+        );
+        return;
+      }
+
+      callback(error, address, family);
+    }
+
+    if (typeof options === 'function') {
+      callback = options;
+      options = {};
+    }
+
+    return dns.lookup._raw(hostname, options, dnsLookupWrapperResponse);
+  };
+
+  dns.lookup._raw = lookup;
+})();
