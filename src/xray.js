@@ -1,9 +1,11 @@
 const xray = require('aws-xray-sdk-core');
 
-exports.captureWithXRay = () => {
-  if (process.env.LAMBDA_TASK_ROOT) {
-    xray.captureHTTPsGlobal(require('http'));
-    xray.captureAWS(require('aws-sdk'));
-    xray.capturePromise();
-  }
+exports.captureAWS = function(awsSdk) {
+    return xray.captureAWS(awsSdk);
+};
+
+exports.captureWithXRay = (awsSdk) => {
+  xray.captureHTTPsGlobal(require('http'));
+  captureAWS(awsSdk);
+  xray.capturePromise();
 };
