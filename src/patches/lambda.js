@@ -1,4 +1,4 @@
-// Wrap the patch implementation in a closure in order to avoid poluting the
+// Wrap the patch implementation in a closure in order to avoid polluting the
 // Lambda module's namespace.
 (function () {
   const tag = '[lambda-tools]';

@@ -1,52 +1,36 @@
 const Koa = require('koa');
-const convert = require('koa-convert');
-const koaBodyParser = convert(require('koa-better-body')({ fields: 'body' }));
-const Router = require('koa-router');
 const sinon = require('sinon');
 const test = require('ava');
 
 const { setupGraphQL, useGraphQL } = require('../src/graphql');
-const { graphqlKoa } = require('apollo-server-koa');
-const { makeExecutableSchema } = require('graphql-tools');
-
-const schema = makeExecutableSchema({
-  resolvers: {
-    Query: {
-      value: (obj, args, context, info) => args.prompt + ': ' + (context.header || context.defaultValue())
-    }
-  },
-  typeDefs: `
-    type Query {
-      value(prompt: String!): String!
-    }
-  `
-});
-
-const graphql = graphqlKoa((context) => ({
-  context: {
-    defaultValue: context.defaultValue,
-    header: context.request.get('test-header')
-  },
-  schema
-}));
+const { ApolloServer, gql } = require('apollo-server-koa');
 
 useGraphQL(test);
 
 test.before(() => {
   setupGraphQL((test) => {
     const app = new Koa();
-    const router = new Router();
 
     test.context.defaultValue = sinon.stub().returns('default');
 
-    router.use(async (context, next) => {
-      context.defaultValue = test.context.defaultValue;
-      await next();
+    const graphql = new ApolloServer({
+      context: ({ ctx }) => ({
+        defaultValue: test.context.defaultValue,
+        header: ctx.get('test-header')
+      }),
+      resolvers: {
+        Query: {
+          value: (obj, args, context, info) => args.prompt + ': ' + (context.header || context.defaultValue())
+        }
+      },
+      typeDefs: gql`
+        type Query {
+          value(prompt: String!): String!
+        }
+      `
     });
 
-    router.post('/graphql', koaBodyParser, graphql);
-    app.use(router.routes());
-
+    graphql.applyMiddleware({ app });
     return app;
   });
 });

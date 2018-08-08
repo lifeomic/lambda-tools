@@ -3,20 +3,19 @@ const fs = require('fs-extra');
 const path = require('path');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const webpack = require('webpack');
-const WrapperPlugin = require('wrapper-webpack-plugin');
 const zip = require('./zip');
 const chalk = require('chalk');
 const { promisify } = require('util');
 const glob = promisify(require('glob'));
 const handleWebpackResult = require('./handleWebpackResult');
 
+const { loadPatch } = require('./patches');
+
 const WEBPACK_DEFAULTS = new webpack.WebpackOptionsDefaulter().process({});
 const run = promisify(webpack);
 
 const CALLER_NODE_MODULES = 'node_modules';
 const DEFAULT_NODE_VERSION = '6.10';
-// eslint-disable-next-line security/detect-non-literal-fs-filename
-const LAMBDA_PATCHES = fs.readFileSync(path.join(__dirname, 'lambda-patches.js'), { encoding: 'utf8' });
 const LAMBDA_TOOLS_NODE_MODULES = path.resolve(__dirname, '..', 'node_modules');
 
 const getNormalizedFileName = (file) => path.basename(file).replace(/.ts$/, '.js');
@@ -182,11 +181,12 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
       'global.GENTLY': false,
       'process.env.LIFEOMIC_SERVICE_NAME': `'${serviceName}'`
     }),
-    new WrapperPlugin({
-      test: /\.js$/,
-      footer: LAMBDA_PATCHES
-    })
+    await loadPatch('lambda')
   ];
+
+  if (options.enableDnsRetry) {
+    plugins.push(await loadPatch('dns'));
+  }
 
   const babelEnvConfig = [
     '@babel/preset-env',
@@ -216,6 +216,12 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     plugins,
     module: {
       rules: [
+        // See https://github.com/bitinn/node-fetch/issues/493
+        {
+          type: 'javascript/auto',
+          test: /\.mjs$/,
+          use: []
+        },
         {
           loader: 'babel-loader',
           test: /\.js$/,
