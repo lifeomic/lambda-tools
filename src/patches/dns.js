@@ -7,10 +7,11 @@
 // See https://docs.aws.amazon.com/lambda/latest/dg/vpc.html#vpc-configuring
 (function () {
   const dns = require('dns');
-  const lookup = dns.lookup;
 
   const DELAY = 1000;
   const TRIES = 5;
+
+  dns._raw = { lookup: dns.lookup };
 
   dns.lookup = function dnsLookupWrapper (hostname, options, callback) {
     let remaining = TRIES;
@@ -18,7 +19,7 @@
     function dnsLookupWrapperResponse (error, address, family) {
       if (error && error.code === dns.NOTFOUND && --remaining > 0) {
         setTimeout(
-          () => dns.lookup._raw(hostname, options, dnsLookupWrapperResponse),
+          () => dns._raw.lookup(hostname, options, dnsLookupWrapperResponse),
           DELAY
         );
         return;
@@ -32,8 +33,6 @@
       options = {};
     }
 
-    return dns.lookup._raw(hostname, options, dnsLookupWrapperResponse);
+    return dns._raw.lookup(hostname, options, dnsLookupWrapperResponse);
   };
-
-  dns.lookup._raw = lookup;
 })();
