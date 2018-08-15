@@ -286,6 +286,10 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     },
     externals: {
       'aws-sdk': 'aws-sdk',
+      // crypto-browserify is a port of Node's crypto package for browsers.
+      // However, it tends to be less reliable than the native crypto. This
+      // causes native crypto to be used instead.
+      'crypto-browserify': 'crypto',
       'dtrace-provider': 'dtrace-provider',
       'vertx': 'vertx'
     }
