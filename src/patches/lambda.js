@@ -39,7 +39,15 @@
       unhandledRejection: (reason, promise) => logWithContext('Unhandled rejection at:', promise, 'reason:', reason)
     };
 
+    const completions = [];
+
     const finish = (...args) => {
+      if (completions.length) {
+        logWithContext('The Lambda function called back multiple times. Note that promise resolutions are equivalent to callback invocations.');
+        logWithContext('The callback was invoked with the following sets of arguments:\n', completions);
+      }
+
+      completions.push(args);
       removeAllEventHandlers(eventHandlers);
       done(...args);
     };
