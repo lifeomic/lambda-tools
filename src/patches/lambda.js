@@ -44,11 +44,21 @@
       done(...args);
     };
 
+    let returned = null;
+
     try {
       addAllEventHandlers(eventHandlers);
-      return handler(event, context, finish);
+      returned = handler(event, context, finish);
     } catch (error) {
       finish(error);
+      return;
+    }
+
+    if (returned && typeof returned.then === 'function') {
+      returned.then(
+        function (result) { finish(null, result); },
+        function (error) { finish(error); }
+      );
     }
   };
 
