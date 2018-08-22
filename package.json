@@ -64,7 +64,7 @@
     "@babel/preset-env": "^7.0.0-beta.46",
     "@babel/preset-typescript": "^7.0.0-beta.46",
     "@lifeomic/alpha": "^0.12.0",
-    "archiver": "^2.1.1",
+    "archiver": "^3.0.0",
     "aws-sdk": "^2.296.0",
     "babel-loader": "^8.0.0-beta.2",
     "chalk": "^2.4.1",
