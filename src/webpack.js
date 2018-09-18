@@ -1,7 +1,7 @@
 const babelEnvDeps = require('webpack-babel-env-deps');
 const fs = require('fs-extra');
 const path = require('path');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const webpack = require('webpack');
 const zip = require('./zip');
 const chalk = require('chalk');
@@ -251,18 +251,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     },
     mode: process.env.WEBPACK_MODE || 'production',
     optimization: {
-      // The default UglifyJsPlugin configuration seems to occaisionally create
-      // bugs in minified code. This overrides that configuration. See:
-      // - https://github.com/webpack/webpack/issues/7108
-      // - https://github.com/graphql/graphiql/issues/665#issuecomment-381919771
-      minimizer: [ new UglifyJsPlugin({ sourceMap: true,
-        uglifyOptions: {
-          compress: {
-            // Work around https://github.com/mishoo/UglifyJS2/issues/2842
-            inline: 1
-          }
-        }
-      }) ]
+      minimizer: [ new TerserPlugin({ sourceMap: true }) ]
     },
     resolve: {
       // Since build is being called by other packages dependencies may be
