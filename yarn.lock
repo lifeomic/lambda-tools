@@ -877,10 +877,6 @@
   version "10.7.0"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.7.0.tgz#d384b2c8625414ab2aa18fdf989c288d6a7a8202"
 
-"@types/node@^9.4.6":
-  version "9.6.20"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-9.6.20.tgz#b59a1bd357ae2df7d44d5ac98e9b64eb96ea1fef"
-
 "@types/serve-static@*":
   version "1.13.2"
   resolved "https://registry.yarnpkg.com/@types/serve-static/-/serve-static-1.13.2.tgz#f5ac4d7a6420a99a6a45af4719f4dcd8cd907a48"
@@ -1201,14 +1197,6 @@ apollo-engine-reporting@0.0.2:
     graphql-extensions "0.1.2"
     lodash "^4.17.10"
 
-apollo-link@1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/apollo-link/-/apollo-link-1.2.1.tgz#c120b16059f9bd93401b9f72b94d2f80f3f305d2"
-  dependencies:
-    "@types/node" "^9.4.6"
-    apollo-utilities "^1.0.0"
-    zen-observable-ts "^0.8.6"
-
 apollo-link@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/apollo-link/-/apollo-link-1.2.2.tgz#54c84199b18ac1af8d63553a68ca389c05217a03"
@@ -1216,6 +1204,13 @@ apollo-link@^1.2.2:
     "@types/graphql" "0.12.6"
     apollo-utilities "^1.0.0"
     zen-observable-ts "^0.8.9"
+
+apollo-link@^1.2.3:
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/apollo-link/-/apollo-link-1.2.3.tgz#9bd8d5fe1d88d31dc91dae9ecc22474d451fb70d"
+  dependencies:
+    apollo-utilities "^1.0.0"
+    zen-observable-ts "^0.8.10"
 
 apollo-server-caching@0.1.2:
   version "0.1.2"
@@ -3939,16 +3934,6 @@ graphql-tag@^2.9.2:
   version "2.9.2"
   resolved "https://registry.yarnpkg.com/graphql-tag/-/graphql-tag-2.9.2.tgz#2f60a5a981375f430bf1e6e95992427dc18af686"
 
-graphql-tools@^3.0.2:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/graphql-tools/-/graphql-tools-3.0.2.tgz#fb79821c23b0f5d11d842c4d0c15000d856c6c8c"
-  dependencies:
-    apollo-link "1.2.1"
-    apollo-utilities "^1.0.1"
-    deprecated-decorator "^0.1.6"
-    iterall "^1.1.3"
-    uuid "^3.1.0"
-
 graphql-tools@^3.0.4:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/graphql-tools/-/graphql-tools-3.1.1.tgz#d593358f01e7c8b1671a17b70ddb034dea9dbc50"
@@ -3959,11 +3944,21 @@ graphql-tools@^3.0.4:
     iterall "^1.1.3"
     uuid "^3.1.0"
 
-graphql@^0.13.2:
-  version "0.13.2"
-  resolved "https://registry.yarnpkg.com/graphql/-/graphql-0.13.2.tgz#4c740ae3c222823e7004096f832e7b93b2108270"
+graphql-tools@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/graphql-tools/-/graphql-tools-4.0.0.tgz#6ea01937c6f947212f83567ba687e97c22fdd2a6"
   dependencies:
-    iterall "^1.2.1"
+    apollo-link "^1.2.3"
+    apollo-utilities "^1.0.1"
+    deprecated-decorator "^0.1.6"
+    iterall "^1.1.3"
+    uuid "^3.1.0"
+
+graphql@^14.0.2:
+  version "14.0.2"
+  resolved "https://registry.yarnpkg.com/graphql/-/graphql-14.0.2.tgz#7dded337a4c3fd2d075692323384034b357f5650"
+  dependencies:
+    iterall "^1.2.2"
 
 handlebars@^4.0.3:
   version "4.0.11"
@@ -4636,7 +4631,7 @@ istanbul-reports@^1.4.1:
   dependencies:
     handlebars "^4.0.3"
 
-iterall@^1.1.3, iterall@^1.2.1:
+iterall@^1.1.3, iterall@^1.2.1, iterall@^1.2.2:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/iterall/-/iterall-1.2.2.tgz#92d70deb8028e0c39ff3164fdbf4d8b088130cd7"
 
@@ -7841,7 +7836,13 @@ ylru@^1.2.0:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/ylru/-/ylru-1.2.1.tgz#f576b63341547989c1de7ba288760923b27fe84f"
 
-zen-observable-ts@^0.8.6, zen-observable-ts@^0.8.9:
+zen-observable-ts@^0.8.10:
+  version "0.8.10"
+  resolved "https://registry.yarnpkg.com/zen-observable-ts/-/zen-observable-ts-0.8.10.tgz#18e2ce1c89fe026e9621fd83cc05168228fce829"
+  dependencies:
+    zen-observable "^0.8.0"
+
+zen-observable-ts@^0.8.9:
   version "0.8.9"
   resolved "https://registry.yarnpkg.com/zen-observable-ts/-/zen-observable-ts-0.8.9.tgz#d3c97af08c0afdca37ebcadf7cc3ee96bda9bab1"
   dependencies:
