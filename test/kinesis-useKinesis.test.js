@@ -35,5 +35,4 @@ test('calls createStream to create the stream', (test) => {
     StreamName: TEST_STREAM_NAME,
     ShardCount: 1
   });
-  test.truthy(true);
 });
