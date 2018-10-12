@@ -1,6 +1,6 @@
 const test = require('ava');
 const sinon = require('sinon');
-const xray = require('../src/xray');
+const { captureWithXRay } = require('../xray');
 
 test('X-Ray integration is added', function (t) {
   const xrayCore = require('aws-xray-sdk-core');
@@ -9,7 +9,7 @@ test('X-Ray integration is added', function (t) {
   sinon.spy(xrayCore, 'captureAWS');
   sinon.spy(xrayCore, 'capturePromise');
 
-  const returnedAWS = xray.captureWithXRay(AWS);
+  const returnedAWS = captureWithXRay(AWS);
 
   t.is(returnedAWS, AWS);
 
