@@ -4,5 +4,6 @@ module.exports = {
   Environment: require('./Environment'),
   graphql: require('./graphql'),
   lambda: require('./lambda'),
+  kinesis: require('./kinesis'),
   WriteBuffer: require('./WriteBuffer')
 };

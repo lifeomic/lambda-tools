@@ -1,6 +1,6 @@
 {
   "name": "@lifeomic/lambda-tools",
-  "version": "5.0.0-beta",
+  "version": "5.0.0-beta.1",
   "description": "Common utilities for Lambda testing and development",
   "main": "src/index.js",
   "bin": {
@@ -46,6 +46,7 @@
     "apollo-server-koa": "^2.0.0",
     "ava": "^0.25.0",
     "aws-sdk-mock": "^4.0.0",
+    "aws-xray-sdk-core": "^2.0.0",
     "coveralls": "^3.0.1",
     "eslint": "^5.1.0",
     "graphql": "^14.0.2",
@@ -90,5 +91,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "peerDependencies": {
+    "aws-xray-sdk-core": "^2.0.0"
   }
 }
