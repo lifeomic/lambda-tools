@@ -47,8 +47,14 @@ exports.assertError = (response, path, messageTest) => {
 exports.assertSuccess = (response) => {
   assert(response.statusCode >= 200 && response.statusCode < 300, `Did not succeed. HTTP status code was ${response.statusCode}`);
 
-  const messages = map(response.body.errors, 'message').join(', ');
-  assert(!response.body.errors, `Did not succeed. Errors were ${messages}`);
+  const errors = map(response.body.errors, err => {
+    return {
+      message: err.message,
+      path: err.path.join('.')
+    };
+  });
+  assert(!response.body.errors, 'Did not succeed. Errors were ' +
+    `${JSON.stringify(errors, null, 2)}`);
 };
 
 exports.setupGraphQL = (func) => {

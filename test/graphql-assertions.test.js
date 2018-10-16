@@ -50,7 +50,14 @@ test('assertSuccess does not throw on a successful response', async (test) => {
 test('assertSuccess throws on a graphql error', async (test) => {
   const query = '{ error }';
   const response = await test.context.graphql(query);
-  test.throws(() => assertSuccess(response), 'Did not succeed. Errors were boom!');
+  const expectedErrorMessage = `Did not succeed. Errors were [
+  {
+    "message": "boom!",
+    "path": "error"
+  }
+]`;
+
+  test.throws(() => assertSuccess(response), expectedErrorMessage);
 });
 
 test('assertError throws on a successful response', async (test) => {
