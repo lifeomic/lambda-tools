@@ -50,7 +50,7 @@ exports.assertSuccess = (response) => {
   const errors = map(response.body.errors, err => {
     return {
       message: err.message,
-      path: err.path.join('.')
+      path: err.path && err.path.join('.')
     };
   });
   assert(!response.body.errors, 'Did not succeed. Errors were ' +
