@@ -20,5 +20,11 @@ test.before(() => {
 test('assertSuccess throws on an HTTP error', async (test) => {
   const query = '{ error }';
   const response = await test.context.graphql(query);
-  test.throws(() => assertSuccess(response), 'Did not succeed. HTTP status code was 404');
+  const expectedErrorMessage = `Did not succeed. HTTP status code was 404 and error was {
+  "status": 404,
+  "text": "Not Found",
+  "method": "POST",
+  "path": "/graphql"
+}`;
+  test.throws(() => assertSuccess(response), expectedErrorMessage);
 });

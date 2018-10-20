@@ -45,7 +45,9 @@ exports.assertError = (response, path, messageTest) => {
 };
 
 exports.assertSuccess = (response) => {
-  assert(response.statusCode >= 200 && response.statusCode < 300, `Did not succeed. HTTP status code was ${response.statusCode}`);
+  assert(response.statusCode >= 200 && response.statusCode < 300,
+    `Did not succeed. HTTP status code was ${response.statusCode}` +
+    ` and error was ${JSON.stringify(response.error, null, 2)}`);
 
   const messages = map(response.body.errors, 'message').join(', ');
   assert(!response.body.errors, `Did not succeed. Errors were ${messages}`);
