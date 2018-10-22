@@ -49,8 +49,14 @@ exports.assertSuccess = (response) => {
     `Did not succeed. HTTP status code was ${response.statusCode}` +
     ` and error was ${JSON.stringify(response.error, null, 2)}`);
 
-  const messages = map(response.body.errors, 'message').join(', ');
-  assert(!response.body.errors, `Did not succeed. Errors were ${messages}`);
+  const errors = map(response.body.errors, err => {
+    return {
+      message: err.message,
+      path: err.path && err.path.join('.')
+    };
+  });
+  assert(!response.body.errors, 'Did not succeed. Errors were ' +
+    `${JSON.stringify(errors, null, 2)}`);
 };
 
 exports.setupGraphQL = (func) => {
