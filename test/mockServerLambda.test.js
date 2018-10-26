@@ -108,6 +108,27 @@ test('Lambda function invocations can be mocked', async (test) => {
   });
 });
 
+test('Lambda function invocations can be mocked without specifying the request body', async (test) => {
+  const {lambda, mockServerClient} = test.context;
+
+  const functionName = `test-${uuid()}`;
+  const expectedResponse = {response: 'result'};
+  const expectedRequestBody = {test: 'value'};
+
+  await mockInvocation(mockServerClient, functionName, expectedResponse);
+
+  // Verify that invocations succeed after mocking
+  const response = await lambda.invoke({
+    FunctionName: functionName,
+    Payload: JSON.stringify(expectedRequestBody)
+  }).promise();
+
+  test.deepEqual(response, {
+    StatusCode: 200,
+    Payload: JSON.stringify(expectedResponse)
+  });
+});
+
 test('Lambda function invocations can be verified', async (test) => {
   const {lambda, mockServerClient} = test.context;
 
