@@ -222,10 +222,3 @@ You will also find the following intermediate files:
 
  The `WEBPACK_MODE=development` environment variable will prevent
  minification in the final output bundle.
-
-## XRay
-
-There is nothing intrinsically difficult about adding XRay tracing hooks to a
-Lambda runtime environment. However, many of our projects require this
-functionality so a separate utility/helper is a useful way of reducing code
-duplication while achieving that requirement.

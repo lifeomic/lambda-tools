@@ -5,6 +5,5 @@ module.exports = {
   graphql: require('./graphql'),
   lambda: require('./lambda'),
   kinesis: require('./kinesis'),
-  WriteBuffer: require('./WriteBuffer'),
-  xray: require('./xray')
+  WriteBuffer: require('./WriteBuffer')
 };
