@@ -73,6 +73,7 @@
     "glob": "^7.1.2",
     "jszip": "^3.1.5",
     "lodash": "^4.17.5",
+    "mockserver-client": "^5.3.0",
     "nested-error-stacks": "^2.0.0",
     "promise-retry": "^1.1.1",
     "source-map-support": "^0.5.3",

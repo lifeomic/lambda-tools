@@ -103,6 +103,11 @@ test context will be augmented with a `graphql(query, variables)` method that
 will use [supertest][supertest] to POST data to the `options.url` endpoint and
 return the response. The default endpoint is `/graphql`.
 
+# MockServer Lambda
+
+A collection of helper methods to mock and verify Lambda invocations based on [MockServer](https://mock-server.com/)
+
+
 # Lambda
 
 Replicating the Lambda runtime environment in a local test framework is a
