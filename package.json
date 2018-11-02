@@ -90,8 +90,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "peerDependencies": {
-    "aws-xray-sdk-core": "^2.0.0"
   }
 }
