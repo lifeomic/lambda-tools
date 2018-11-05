@@ -22,7 +22,7 @@ the DynamoDB interface (using something like [aws-sdk-mock][aws-sdk-mock]) or
 pointing the test code at a provisioned DynamoDB instance. AWS has published
 [DynamoDB Local][dynamodb-local] so that testing can be done without having to
 use real AWS resources. DynamoDB Local has also been published as a
-[community docker imaga][dynamodb-image] making testing even easier to do using
+[community docker image][dynamodb-image] making testing even easier to do using
 tools like [docker-compose][docker-compose] and [dockerode][dockerode].
 
 `lambda-tools` supports both methods of integrating with DynamoDB. For simple
