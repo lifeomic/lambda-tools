@@ -11,7 +11,7 @@ const { mockServerClient } = require('mockserver-client');
 
 const { getHostAddress, ensureImage } = require('../src/docker');
 
-const MOCKSERVER_IMAGE = 'jamesdbloom/mockserver';
+const MOCKSERVER_IMAGE = 'jamesdbloom/mockserver:mockserver-5.4.1';
 
 async function waitForMockServerToBeReady (mockServerClient) {
   await promiseRetry(async function (retry, retryNumber) {
