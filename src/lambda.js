@@ -174,7 +174,7 @@ exports.useLambda = (test, localOptions = {}) => {
     }
   });
 
-  test.always.after(async (test) => {
+  test.after.always(async (test) => {
     await destroyLambdaExecutionEnvironment(executionEnvironment);
   });
 

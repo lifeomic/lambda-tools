@@ -143,10 +143,10 @@ exports.useDynamoDB = (test, useUniqueTables = false) => {
     await createTables(service, uniqueIdentifier);
   });
 
-  test.always.afterEach(async test => {
+  test.afterEach.always(async test => {
     const {dynamoClient, uniqueIdentifier} = test.context.dynamodb;
     await destroyTables(dynamoClient, uniqueIdentifier);
   });
 
-  test.always.after(test => connection.cleanup());
+  test.after.always(test => connection.cleanup());
 };
