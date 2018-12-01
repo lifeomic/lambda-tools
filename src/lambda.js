@@ -9,8 +9,17 @@ const { promisify } = require('util');
 
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs6.10';
 
-const createEnvironmentVariables = (environment) => Object.entries(environment)
-  .map(([ key, value ]) => `${key}=${value}`);
+const createEnvironmentVariables = (environment) => {
+  const envVariables = Object.entries(environment)
+    .map(([ key, value ]) => `${key}=${value}`);
+  if (environment.DISABLE_XRAY_LOGGING) {
+    // We want to disable xray logging in integration tests, because it's too verbose, see
+    // xray set up in lambda-runtime-tools
+    // From Docker docs: a variable without = is removed from the environment, rather than to have an empty value.
+    envVariables.push('AWS_XRAY_CONTEXT_MISSING');
+  }
+  return envVariables;
+};
 
 class Client extends Alpha {
   constructor ({ handler, container }) {
@@ -114,7 +123,6 @@ async function createLambdaExecutionEnvironment (options) {
           Name: uuid()
         });
       }
-
       executionEnvironment.container = await docker.createContainer({
         Entrypoint: 'sh',
         Env: createEnvironmentVariables(environment),
