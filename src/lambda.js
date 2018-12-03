@@ -9,13 +9,12 @@ const { promisify } = require('util');
 
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs6.10';
 
-const createEnvironmentVariables = (environment) => {
+const createEnvironmentVariables = (environment, options) => {
   const envVariables = Object.entries(environment)
     .map(([ key, value ]) => `${key}=${value}`);
-  if (environment.DISABLE_XRAY_LOGGING) {
-    // We want to disable xray logging in integration tests, because it's too verbose, see
-    // xray set up in lambda-runtime-tools
-    // From Docker docs: a variable without = is removed from the environment, rather than to have an empty value.
+  if (options.unsetXrayContextMissing) {
+    // We need to unset AWS_XRAY_CONTEXT_MISSING because otherwise xray wouldn't let us override it with
+    // xray.setContextMissingStrategy
     envVariables.push('AWS_XRAY_CONTEXT_MISSING');
   }
   return envVariables;
@@ -95,9 +94,9 @@ const globalOptions = {};
 exports.build = webpack;
 exports.LambdaRunner = LambdaRunner;
 
-exports.useNewContainer = ({ environment, mountpoint, handler, image, useComposeNetwork }) => {
+exports.useNewContainer = ({ environment, mountpoint, handler, image, useComposeNetwork, unsetXrayContextMissing }) => {
   const network = useComposeNetwork ? `${process.env.COMPOSE_PROJECT_NAME}_default` : undefined;
-  Object.assign(globalOptions, { environment, handler, image, mountpoint, network });
+  Object.assign(globalOptions, { environment, handler, image, mountpoint, network, unsetXrayContextMissing });
 };
 
 exports.useComposeContainer = ({ service, handler }) => {
@@ -125,7 +124,7 @@ async function createLambdaExecutionEnvironment (options) {
       }
       executionEnvironment.container = await docker.createContainer({
         Entrypoint: 'sh',
-        Env: createEnvironmentVariables(environment),
+        Env: createEnvironmentVariables(environment, options),
         HostConfig: {
           AutoRemove: true,
           Binds: [

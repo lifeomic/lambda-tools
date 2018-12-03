@@ -33,16 +33,16 @@ test.serial('Cleanups up the network and container on failure after start', asyn
   sinon.assert.calledOnce(networkRemoveSpy);
 });
 
-test.serial('Sends AWS_XRAY_CONTEXT_MISSING var with no value when DISABLE_XRAY_LOGGING is set', async function (test) {
+test.serial('Sends AWS_XRAY_CONTEXT_MISSING var with no value when unsetXrayContextMissing is true', async function (test) {
   const createSpy = sandbox.spy(Docker.prototype, 'createContainer');
 
   await lambda.createLambdaExecutionEnvironment({
-    environment: {DISABLE_XRAY_LOGGING: true},
+    unsetXrayContextMissing: true,
     mountpoint: path.join(__dirname, 'fixtures', 'build')
   });
 
   sinon.assert.calledWithMatch(createSpy, sinon.match((arg) => {
-    assert.deepEqual(arg.Env, [ 'DISABLE_XRAY_LOGGING=true', 'AWS_XRAY_CONTEXT_MISSING' ]);
+    assert.deepEqual(arg.Env, [ 'AWS_XRAY_CONTEXT_MISSING' ]);
     return true;
   }));
 });
