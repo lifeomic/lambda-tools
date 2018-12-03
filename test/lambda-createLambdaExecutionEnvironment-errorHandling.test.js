@@ -5,10 +5,10 @@ const path = require('path');
 const lambda = require('../src/lambda');
 const assert = require('assert');
 
-test.beforeEach(() => {
+test.beforeEach((test) => {
   test.context.sandbox = sinon.createSandbox();
 });
-test.afterEach(() => {
+test.afterEach((test) => {
   test.context.sandbox.restore();
 });
 
@@ -32,11 +32,11 @@ test.serial('Cleanups up the network and container on failure after start', asyn
   sinon.assert.calledOnce(networkRemoveSpy);
 });
 
-test.serial('Sends AWS_XRAY_CONTEXT_MISSING var with no value when unsetXrayContextMissing is true', async function (test) {
+test.serial('Sends AWS_XRAY_CONTEXT_MISSING var to createContainer with no value when it is null (removing env vars)', async function (test) {
   const createSpy = test.context.sandbox.spy(Docker.prototype, 'createContainer');
 
   await lambda.createLambdaExecutionEnvironment({
-    unsetXrayContextMissing: true,
+    environment: { AWS_XRAY_CONTEXT_MISSING: null },
     mountpoint: path.join(__dirname, 'fixtures', 'build')
   });
 

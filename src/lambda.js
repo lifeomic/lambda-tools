@@ -9,16 +9,9 @@ const { promisify } = require('util');
 
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs6.10';
 
-const createEnvironmentVariables = (environment, options) => {
-  const envVariables = Object.entries(environment)
-    .map(([ key, value ]) => `${key}=${value}`);
-  if (options.unsetXrayContextMissing) {
-    // We need to unset AWS_XRAY_CONTEXT_MISSING because otherwise xray wouldn't let us override it with
-    // xray.setContextMissingStrategy
-    envVariables.push('AWS_XRAY_CONTEXT_MISSING');
-  }
-  return envVariables;
-};
+// null value means 'delete this variable'. Docker deletes variables that only have the key, without '=value'
+const createEnvironmentVariables = (environment) => Object.entries(environment)
+  .map(([ key, value ]) => value === null ? key : `${key}=${value}`);
 
 class Client extends Alpha {
   constructor ({ handler, container }) {
@@ -124,7 +117,7 @@ async function createLambdaExecutionEnvironment (options) {
       }
       executionEnvironment.container = await docker.createContainer({
         Entrypoint: 'sh',
-        Env: createEnvironmentVariables(environment, options),
+        Env: createEnvironmentVariables(environment),
         HostConfig: {
           AutoRemove: true,
           Binds: [
