@@ -9,8 +9,9 @@ const { promisify } = require('util');
 
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs6.10';
 
+// null value means 'delete this variable'. Docker deletes variables that only have the key, without '=value'
 const createEnvironmentVariables = (environment) => Object.entries(environment)
-  .map(([ key, value ]) => `${key}=${value}`);
+  .map(([ key, value ]) => value === null ? key : `${key}=${value}`);
 
 class Client extends Alpha {
   constructor ({ handler, container }) {
@@ -114,7 +115,6 @@ async function createLambdaExecutionEnvironment (options) {
           Name: uuid()
         });
       }
-
       executionEnvironment.container = await docker.createContainer({
         Entrypoint: 'sh',
         Env: createEnvironmentVariables(environment),
