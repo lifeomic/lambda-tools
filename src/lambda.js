@@ -87,9 +87,9 @@ const globalOptions = {};
 exports.build = webpack;
 exports.LambdaRunner = LambdaRunner;
 
-exports.useNewContainer = ({ environment, mountpoint, handler, image, useComposeNetwork, unsetXrayContextMissing }) => {
+exports.useNewContainer = ({ environment, mountpoint, handler, image, useComposeNetwork }) => {
   const network = useComposeNetwork ? `${process.env.COMPOSE_PROJECT_NAME}_default` : undefined;
-  Object.assign(globalOptions, { environment, handler, image, mountpoint, network, unsetXrayContextMissing });
+  Object.assign(globalOptions, { environment, handler, image, mountpoint, network });
 };
 
 exports.useComposeContainer = ({ service, handler }) => {
