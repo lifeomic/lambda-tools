@@ -160,7 +160,7 @@ function dynamoDBTestHooks (useUniqueTables = false) {
 }
 exports.dynamoDBTestHooks = dynamoDBTestHooks;
 
-exports.useDynamoDB = (test, useUniqueTables = false) => {
+exports.useDynamoDB = (test, useUniqueTables) => {
   const testHooks = dynamoDBTestHooks(useUniqueTables);
 
   test.before(testHooks.beforeAll);
