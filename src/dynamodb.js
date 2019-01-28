@@ -117,21 +117,21 @@ exports.tableSchema = (schema) => {
   tablesSchema = cloneDeep(schema);
 };
 
-exports.useDynamoDB = (test, useUniqueTables = false) => {
+function dynamoDBTestHooks (useUniqueTables = false) {
   let connection, config;
 
-  test.before(async (test) => {
+  async function beforeAll () {
     const result = await getConnection();
     connection = result.connection;
     config = result.config;
-  });
+  }
 
-  test.beforeEach(async (test) => {
+  async function beforeEach () {
     const uniqueIdentifier = useUniqueTables ? uuid() : '';
     const service = new AWS.DynamoDB(config);
     const streamsClient = new AWS.DynamoDBStreams(config);
 
-    test.context.dynamodb = {
+    const context = {
       documentClient: new AWS.DynamoDB.DocumentClient({ service }),
       dynamoClient: service,
       streamsClient,
@@ -141,12 +141,39 @@ exports.useDynamoDB = (test, useUniqueTables = false) => {
     };
 
     await createTables(service, uniqueIdentifier);
+
+    return context;
+  }
+
+  async function afterEach (context) {
+    const {dynamoClient, uniqueIdentifier} = context;
+    await destroyTables(dynamoClient, uniqueIdentifier);
+  }
+
+  async function afterAll () {
+    await connection.cleanup();
+  }
+
+  return {
+    beforeAll, beforeEach, afterEach, afterAll
+  };
+}
+exports.dynamoDBTestHooks = dynamoDBTestHooks;
+
+exports.useDynamoDB = (test, useUniqueTables) => {
+  const testHooks = dynamoDBTestHooks(useUniqueTables);
+
+  test.before(testHooks.beforeAll);
+
+  test.beforeEach(async (test) => {
+    const context = await testHooks.beforeEach();
+    test.context.dynamodb = context;
   });
 
   test.afterEach.always(async test => {
-    const {dynamoClient, uniqueIdentifier} = test.context.dynamodb;
-    await destroyTables(dynamoClient, uniqueIdentifier);
+    const context = test.context.dynamodb;
+    await testHooks.afterEach(context);
   });
 
-  test.after.always(test => connection.cleanup());
+  test.after.always(testHooks.afterAll);
 };
