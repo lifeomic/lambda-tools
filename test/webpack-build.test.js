@@ -347,7 +347,7 @@ for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
       mountpoint: test.context.buildDirectory
     });
     try {
-      const runner = new LambdaRunner(executionEnvironment.container.id, 'async_with_arrow.handle');
+      const runner = new LambdaRunner(executionEnvironment.container.id, null, 'async_with_arrow.handle');
       const result = await runner.invoke({});
       test.deepEqual(result, {});
     } finally {

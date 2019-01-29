@@ -14,8 +14,8 @@ const createEnvironmentVariables = (environment) => Object.entries(environment)
   .map(([ key, value ]) => value === null ? key : `${key}=${value}`);
 
 class Client extends Alpha {
-  constructor ({ handler, container }) {
-    const runner = new LambdaRunner(container, handler);
+  constructor ({ container, environment, handler }) {
+    const runner = new LambdaRunner(container, environment, handler);
 
     const fn = async function handler (event, context, callback) {
       try {
@@ -43,16 +43,18 @@ async function getEntrypoint (docker, imageName) {
 }
 
 class LambdaRunner {
-  constructor (container, handler) {
+  constructor (container, environment, handler) {
     this._container = container;
     this._docker = new Docker();
+    this._environment = environment ? createEnvironmentVariables(environment) : null;
     this._handler = handler;
   }
 
   async invoke (event) {
     const command = await this._buildCommand(event);
     const container = await this._getContainer();
-    const { stderr, stdout } = await executeContainerCommand(container, ...command);
+    const environment = this._environment;
+    const { stderr, stdout } = await executeContainerCommand({container, command, environment});
 
     const output = stdout.toString('utf8').trim();
     const split = output.lastIndexOf('\n');
@@ -92,9 +94,9 @@ exports.useNewContainer = ({ environment, mountpoint, handler, image, useCompose
   Object.assign(globalOptions, { environment, handler, image, mountpoint, network });
 };
 
-exports.useComposeContainer = ({ service, handler }) => {
+exports.useComposeContainer = ({ environment, service, handler }) => {
   const container = `${process.env.COMPOSE_PROJECT_NAME}_${service}_1`;
-  Object.assign(globalOptions, { container, handler });
+  Object.assign(globalOptions, { container, environment, handler });
 };
 
 async function createLambdaExecutionEnvironment (options) {
@@ -179,8 +181,8 @@ exports.useLambda = (test, localOptions = {}) => {
   });
 
   test.beforeEach((test) => {
-    const { container, handler } = getOptions();
-    const client = new Client({ container, handler });
+    const { container, environment, handler } = getOptions();
+    const client = new Client({ container, environment, handler });
 
     client.graphql = (path, query, variables, config) => client.post(path, { query, variables }, config);
     test.context.lambda = client;
