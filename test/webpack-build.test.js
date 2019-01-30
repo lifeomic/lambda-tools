@@ -76,6 +76,28 @@ test('The webpack configuration can be transformed', async (test) => {
   sinon.assert.calledWith(transformer, sinon.match.object);
 });
 
+test('TSConfig files are supported', async (test) => {
+  const sourceDir = path.join(__dirname, 'fixtures', 'lambda-with-tsconfig');
+  const source = path.join(sourceDir, 'index.ts');
+  const tsconfig = path.join(sourceDir, 'tsconfig.json');
+
+  const transformer = sinon.stub().returnsArg(0);
+
+  const result = await build({
+    tsconfig,
+    configTransformer: transformer,
+    entrypoint: source,
+    outputPath: test.context.buildDirectory,
+    serviceName: 'test-service'
+  });
+  test.false(result.hasErrors());
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'index.js')));
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'index.js.map')));
+
+  const config = transformer.firstCall.args[0];
+  test.truthy(config.module.rules.find(rule => rule.loader === 'ts-loader'));
+});
+
 test('Typescript bundles are supported by default', async (test) => {
   const source = path.join(__dirname, 'fixtures', 'ts_lambda_service.ts');
 
