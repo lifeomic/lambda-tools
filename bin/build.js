@@ -65,7 +65,6 @@ const buildOptions = {
 };
 
 if (argv.t) {
-  console.log('inside check');
   // assert typescript and ts-loader are installed
   ['typescript', 'ts-loader'].forEach(dependency => {
     try {
