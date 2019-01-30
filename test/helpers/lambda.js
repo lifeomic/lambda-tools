@@ -14,8 +14,9 @@ function hasTag (tagName) {
   };
 }
 
-function useLambdaContainer (test, imageName) {
+function useLambdaContainer (test, imageName, options = {}) {
   const bundlePath = path.join(FIXTURES_DIRECTORY, 'build', uuid());
+  const { containerConfig = {} } = options;
   let container;
 
   useLambda(test);
@@ -37,7 +38,7 @@ function useLambdaContainer (test, imageName) {
     const containerName = 'container';
     const containerPrefix = process.env.COMPOSE_PROJECT_NAME = uuid();
     container = await createContainer(imageName, `${containerPrefix}_${containerName}_1`, bundlePath);
-    useComposeContainer({ service: containerName, handler: 'lambda_service.handler' });
+    useComposeContainer({ ...containerConfig, service: containerName, handler: 'lambda_service.handler' });
   });
 
   test.beforeEach(function (t) {
