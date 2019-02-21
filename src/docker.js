@@ -82,7 +82,8 @@ exports.getHostAddress = async () => {
     Entrypoint: 'sh',
     HostConfig: {
       AutoRemove: true,
-      NetworkMode: 'host'
+      NetworkMode: 'host',
+      UsernsMode: 'host'
     },
     Image: DEFAULT_IMAGE,
     OpenStdin: true
