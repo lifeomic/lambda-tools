@@ -33,5 +33,5 @@ exports.verifyInvocation = (mockServerClient, functionName, requestBody, times) 
       json: JSON.stringify(requestBody),
       matchType: 'ONLY_MATCHING_FIELDS'
     }
-  }, times, true);
+  }, times, times);
 };

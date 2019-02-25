@@ -29,7 +29,7 @@ test.before(async () => {
   useComposeContainer({ service: containerName, handler: 'lambda_graphql.handler' });
 });
 
-test.always.after(async () => {
+test.after.always(async () => {
   delete process.env.COMPOSE_PROJECT_NAME;
   try {
     container.stop();

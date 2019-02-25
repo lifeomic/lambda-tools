@@ -8,7 +8,9 @@ const { build, useNewContainer, useLambda } = require('../src/lambda');
 const FIXTURES_DIRECTORY = path.join(__dirname, 'fixtures');
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());
 
-test.before(async () => {
+// Ava's `serial` hook decorator needs to be used so that `useNewContainer` is
+// executed before the useLambda hooks are executed
+test.serial.before(async () => {
   const buildResults = await build({
     enableDnsRetry: true,
     entrypoint: path.join(FIXTURES_DIRECTORY, 'runtime_dns.js'),
@@ -30,7 +32,7 @@ test.before(async () => {
 
 useLambda(test);
 
-test.always.after((test) => fs.remove(BUILD_DIRECTORY));
+test.after.always((test) => fs.remove(BUILD_DIRECTORY));
 
 test.serial('DNS lookups can be automatically retried', async (test) => {
   // The test assertions are part of the lambda fixture

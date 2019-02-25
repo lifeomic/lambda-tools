@@ -8,7 +8,7 @@ test.beforeEach((test) => {
   test.context.createContainer = sinon.spy(Docker.prototype, 'createContainer');
 });
 
-test.always.afterEach((test) => {
+test.afterEach.always((test) => {
   test.context.createContainer.restore();
 });
 

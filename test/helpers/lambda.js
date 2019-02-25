@@ -45,7 +45,7 @@ function useLambdaContainer (test, imageName, options = {}) {
     t.context.container = container;
   });
 
-  test.always.after(async () => {
+  test.after.always(async () => {
     delete process.env.COMPOSE_PROJECT_NAME;
     await fs.remove(bundlePath);
 

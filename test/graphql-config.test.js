@@ -19,7 +19,7 @@ test.beforeEach((test) => {
   test.context.useGraphQL = useGraphQL;
 });
 
-test.always.afterEach(resetGraphqlHelper);
+test.afterEach.always(resetGraphqlHelper);
 
 test('When a test endpoint has not been configured an error is thrown', async (test) => {
   test.context.useGraphQL(test.context.mock);
