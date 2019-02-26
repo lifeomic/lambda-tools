@@ -3,9 +3,14 @@ const assert = require('assert');
 const Docker = require('dockerode');
 const uuid = require('uuid/v4');
 const webpack = require('./webpack');
+const tmp = require('tmp-promise');
+const fs = require('fs-extra');
+const unzip = require('unzip');
 
 const { executeContainerCommand, ensureImage } = require('./docker');
 const { promisify } = require('util');
+
+const LAMBDA_TOOLS_WORK_PREFIX = '.lambda-tools-work';
 
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs6.10';
 
@@ -89,9 +94,41 @@ const globalOptions = {};
 exports.build = webpack;
 exports.LambdaRunner = LambdaRunner;
 
-exports.useNewContainer = ({ environment, mountpoint, handler, image, useComposeNetwork }) => {
+async function buildMounpointFromZipfile (zipfile) {
+  // It would be simpler if the standard TMPDIR directory could be used
+  // to extract the zip files, but Docker on Mac is often not configured with
+  // access to the Mac's /var temp directory location
+  const tempDir = await tmp.dir({ dir: process.cwd(), mode: '0755', prefix: LAMBDA_TOOLS_WORK_PREFIX });
+  const tempDirName = tempDir.path;
+  const cleanup = async () => {
+    // Delete unzipped files
+    await fs.emptyDir(tempDirName);
+    await tempDir.cleanup();
+  };
+
+  try {
+    const unzipper = fs.createReadStream(zipfile).pipe(unzip.Extract({
+      path: tempDirName
+    }));
+
+    await new Promise((resolve, reject) => {
+      unzipper.on('close', () => resolve());
+      unzipper.on('error', (error) => reject(error));
+    });
+
+    return {
+      mountpoint: tempDirName,
+      cleanup
+    };
+  } catch (e) {
+    await cleanup();
+    throw e;
+  }
+}
+
+exports.useNewContainer = ({ environment, mountpoint, zipfile, handler, image, useComposeNetwork }) => {
   const network = useComposeNetwork ? `${process.env.COMPOSE_PROJECT_NAME}_default` : undefined;
-  Object.assign(globalOptions, { environment, handler, image, mountpoint, network });
+  Object.assign(globalOptions, { environment, handler, image, mountpoint, zipfile, network });
 };
 
 exports.useComposeContainer = ({ environment, service, handler }) => {
@@ -100,11 +137,22 @@ exports.useComposeContainer = ({ environment, service, handler }) => {
 };
 
 async function createLambdaExecutionEnvironment (options) {
-  const { environment = {}, image = LAMBDA_IMAGE, mountpoint, network: networkId } = options;
+  const { environment = {}, image = LAMBDA_IMAGE, zipfile, network: networkId } = options;
+  let { mountpoint } = options;
 
-  assert(!(options.mountpoint && options.service), 'A mountpoint cannot be used with a compose service');
+  if (mountpoint && zipfile) {
+    throw new Error('Only one of mountpoint or zipfile can be provided');
+  }
 
   const executionEnvironment = {};
+
+  if (zipfile) {
+    const zipMount = await buildMounpointFromZipfile(zipfile);
+    mountpoint = zipMount.mountpoint;
+    executionEnvironment.cleanupMountpoint = zipMount.cleanup;
+  }
+
+  assert(!(mountpoint && options.service), 'A mountpoint cannot be used with a compose service');
 
   if (mountpoint) {
     try {
@@ -145,7 +193,11 @@ async function createLambdaExecutionEnvironment (options) {
 }
 
 async function destroyLambdaExecutionEnvironment (environment) {
-  const {container, network} = environment;
+  const {container, network, cleanupMountpoint} = environment;
+
+  if (cleanupMountpoint) {
+    await cleanupMountpoint();
+  }
 
   if (container) {
     await container.stop();
