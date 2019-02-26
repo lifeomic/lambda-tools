@@ -107,13 +107,16 @@ async function buildMounpointFromZipfile (zipfile) {
   };
 
   try {
-    const unzipper = fs.createReadStream(zipfile).pipe(unzip.Extract({
+    const fsStream = fs.createReadStream(zipfile);
+    const unzipper = fsStream.pipe(unzip.Extract({
       path: tempDirName
     }));
 
     await new Promise((resolve, reject) => {
+      const endOnError = (error) => reject(error);
       unzipper.on('close', () => resolve());
-      unzipper.on('error', (error) => reject(error));
+      fsStream.on('error', endOnError);
+      unzipper.on('error', endOnError);
     });
 
     return {

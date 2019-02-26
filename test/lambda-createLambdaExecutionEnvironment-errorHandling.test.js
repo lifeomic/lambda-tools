@@ -49,7 +49,15 @@ test.serial('Sends AWS_XRAY_CONTEXT_MISSING var to createContainer with no value
 });
 
 test.serial('Cleanups up temp directory when unzipping fails', async (test) => {
-  test.context.sandbox.stub(fs, 'createReadStream').throws();
+  // Create a read stream that immediately yields an error
+  const origReadStream = fs.createReadStream;
+  test.context.sandbox.stub(fs, 'createReadStream').callsFake(function (...args) {
+    const stream = origReadStream.call(this, ...args);
+    test.context.sandbox.stub(stream, 'on')
+      .withArgs('error')
+      .yields(new Error('Failure'));
+    return stream;
+  });
   const emptyDirSpy = test.context.sandbox.spy(fs, 'emptyDir');
   const tempDirSpy = test.context.sandbox.spy(tmp, 'dir');
 
