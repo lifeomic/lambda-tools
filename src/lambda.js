@@ -94,7 +94,7 @@ const globalOptions = {};
 exports.build = webpack;
 exports.LambdaRunner = LambdaRunner;
 
-async function buildMounpointFromZipfile (zipfile) {
+async function buildMountpointFromZipfile (zipfile) {
   // It would be simpler if the standard TMPDIR directory could be used
   // to extract the zip files, but Docker on Mac is often not configured with
   // access to the Mac's /var temp directory location
@@ -150,7 +150,7 @@ async function createLambdaExecutionEnvironment (options) {
   const executionEnvironment = {};
 
   if (zipfile) {
-    const zipMount = await buildMounpointFromZipfile(zipfile);
+    const zipMount = await buildMountpointFromZipfile(zipfile);
     mountpoint = zipMount.mountpoint;
     executionEnvironment.cleanupMountpoint = zipMount.cleanup;
   }
