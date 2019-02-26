@@ -1,6 +1,7 @@
 lambda-tools
 ============
 
+[![npm](https://img.shields.io/npm/v/@lifeomic/lambda-tools.svg)](https://www.npmjs.com/package/@lifeomic/lambda-tools)
 [![Build Status](https://travis-ci.org/lifeomic/lambda-tools.svg?branch=master)](https://travis-ci.org/lifeomic/lambda-tools)
 [![Coverage Status](https://coveralls.io/repos/github/lifeomic/lambda-tools/badge.svg?branch=master)](https://coveralls.io/github/lifeomic/lambda-tools?branch=master)
 [![Greenkeeper badge](https://badges.greenkeeper.io/lifeomic/lambda-tools.svg)](https://greenkeeper.io/)
