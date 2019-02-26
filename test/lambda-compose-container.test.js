@@ -41,5 +41,5 @@ test.serial('The helper reports invocation errors', async (test) => {
   await container.stop();
   // The format of this error message seems to differ based on timing of the
   // container cleanup. We'll just settle for getting an error...
-  await test.throws(test.context.lambda.get('/'));
+  await test.throwsAsync(() => test.context.lambda.get('/'));
 });

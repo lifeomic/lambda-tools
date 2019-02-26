@@ -19,7 +19,7 @@ useNewContainer({
   mountpoint: path.join(__dirname, 'fixtures')
 });
 
-test.always.after((test) => {
+test.after.always((test) => {
   createContainer.restore();
 });
 

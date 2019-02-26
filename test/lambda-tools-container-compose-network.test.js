@@ -31,7 +31,7 @@ useNewContainer({
   useComposeNetwork: true
 });
 
-test.always.after((test) => {
+test.serial.after.always((test) => {
   createContainer.restore();
   network.remove();
 });

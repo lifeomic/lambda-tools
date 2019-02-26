@@ -11,7 +11,7 @@ const { mockServerClient } = require('mockserver-client');
 
 const { getHostAddress, ensureImage } = require('../src/docker');
 
-const MOCKSERVER_IMAGE = 'jamesdbloom/mockserver:mockserver-5.4.1';
+const MOCKSERVER_IMAGE = 'jamesdbloom/mockserver:mockserver-5.5.1';
 
 async function waitForMockServerToBeReady (mockServerClient) {
   await promiseRetry(async function (retry, retryNumber) {
@@ -74,7 +74,7 @@ test.beforeEach(async (test) => {
   };
 });
 
-test.always.after(async (test) => {
+test.after.always(async (test) => {
   if (moduleContext) {
     await moduleContext.container.stop();
   }
@@ -92,7 +92,7 @@ test('Lambda function invocations can be mocked', async (test) => {
     FunctionName: functionName,
     Payload: JSON.stringify(expectedRequestBody)
   }).promise();
-  await test.throws(preMockInvoke);
+  await test.throwsAsync(() => preMockInvoke);
 
   await mockInvocation(mockServerClient, functionName, expectedResponse, expectedRequestBody);
 
@@ -141,7 +141,15 @@ test('Lambda function invocations can be verified', async (test) => {
   // Verifying no invocations should succeed
   await verifyInvocation(mockServerClient, functionName, expectedRequestBody, 0);
   // Verifying one invocation should fail
-  await test.throws(verifyInvocation(mockServerClient, functionName, expectedRequestBody, 1), /Request not found exactly once/);
+  try {
+    await verifyInvocation(mockServerClient, functionName, expectedRequestBody, 1);
+    throw new Error('Verification should have thrown an error');
+  } catch (error) {
+    // mockClientServer throws `string` type errors instead of real Errors.
+    // Ava's `throwsAsync` will fail if the function throws a non-Error, so the
+    // contents needs to be manually asserted.
+    test.regex(error, /Request not found exactly once/);
+  }
 
   // Invoke so that we can retest verify after invocation
   await lambda.invoke({
