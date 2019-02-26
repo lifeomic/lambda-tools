@@ -32,8 +32,8 @@ const executeContainerCommand = async ({container, command, environment}) => {
     exec.output.once('end', resolve);
     exec.output.once('error', reject);
   });
-
-  return { stderr, stdout };
+  const inspectOutput = await exec.inspect();
+  return { stderr, stdout, inspectOutput };
 };
 
 const getDefaultInterface = (routeTable) => {
