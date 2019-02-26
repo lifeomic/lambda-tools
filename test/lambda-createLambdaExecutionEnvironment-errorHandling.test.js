@@ -4,6 +4,8 @@ const Docker = require('dockerode');
 const path = require('path');
 const lambda = require('../src/lambda');
 const assert = require('assert');
+const fs = require('fs-extra');
+const tmp = require('tmp-promise');
 
 test.beforeEach((test) => {
   test.context.sandbox = sinon.createSandbox();
@@ -44,4 +46,31 @@ test.serial('Sends AWS_XRAY_CONTEXT_MISSING var to createContainer with no value
     assert.deepEqual(arg.Env, [ 'AWS_XRAY_CONTEXT_MISSING' ]);
     return true;
   }));
+});
+
+test.serial('Cleanups up temp directory when unzipping fails', async (test) => {
+  // Create a read stream that immediately yields an error
+  const origReadStream = fs.createReadStream;
+  test.context.sandbox.stub(fs, 'createReadStream').callsFake(function (...args) {
+    const stream = origReadStream.call(this, ...args);
+    test.context.sandbox.stub(stream, 'on')
+      .withArgs('error')
+      .yields(new Error('Failure'));
+    return stream;
+  });
+  const emptyDirSpy = test.context.sandbox.spy(fs, 'emptyDir');
+  const tempDirSpy = test.context.sandbox.spy(tmp, 'dir');
+
+  const failingCreate = lambda.createLambdaExecutionEnvironment({
+    environment: { AWS_XRAY_CONTEXT_MISSING: null },
+    zipfile: path.join(__dirname, 'fixtures', 'bundled_service.zip')
+  });
+
+  await test.throwsAsync(() => failingCreate);
+
+  sinon.assert.calledOnce(tempDirSpy);
+
+  const { path: tempDirPath } = await tempDirSpy.returnValues[0];
+  sinon.assert.calledOnce(emptyDirSpy);
+  sinon.assert.calledWithExactly(emptyDirSpy, tempDirPath);
 });
