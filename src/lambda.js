@@ -5,7 +5,7 @@ const uuid = require('uuid/v4');
 const webpack = require('./webpack');
 const tmp = require('tmp-promise');
 const fs = require('fs-extra');
-const unzip = require('unzip');
+const unzip = require('unzipper');
 
 const { executeContainerCommand, ensureImage } = require('./docker');
 const { promisify } = require('util');

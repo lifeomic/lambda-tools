@@ -1,6 +1,6 @@
 const path = require('path');
 const test = require('ava');
-const unzip = require('unzip');
+const unzip = require('unzipper');
 const tmp = require('tmp-promise');
 const sinon = require('sinon');
 
