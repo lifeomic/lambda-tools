@@ -1,7 +1,10 @@
 const path = require('path');
 const test = require('ava');
+const unzip = require('unzip');
+const tmp = require('tmp-promise');
+const sinon = require('sinon');
 
-const { useNewContainer, useLambda, createLambdaExecutionEnvironment } = require('../src/lambda');
+const { useNewContainer, useLambda, createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment } = require('../src/lambda');
 
 useLambda(test);
 
@@ -24,4 +27,26 @@ test('An error is thrown if both zipfile and mountpoint arguments are provided',
       zipfile: 'some.zip'
     })
   , 'Only one of mountpoint or zipfile can be provided');
+});
+
+test('will use mountpointParent as the directory for unzipping if provided', async (test) => {
+  const tempWork = await tmp.dir({dir: process.cwd(), prefix: '.mountpointParent-test-'});
+  try {
+    // Spy on unzipper to make sure the temp path is used
+    const extractSpy = sinon.spy(unzip, 'Extract');
+
+    const env = await createLambdaExecutionEnvironment({
+      environment: { AWS_XRAY_CONTEXT_MISSING: null },
+      zipfile: path.join(__dirname, 'fixtures', 'bundled_service.zip'),
+      mountpointParent: tempWork.path
+    });
+
+    await destroyLambdaExecutionEnvironment(env);
+
+    sinon.assert.calledWith(extractSpy, sinon.match({
+      path: sinon.match((path) => path.startsWith(tempWork.path))
+    }));
+  } finally {
+    await tempWork.cleanup();
+  }
 });

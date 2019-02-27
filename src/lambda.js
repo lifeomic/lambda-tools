@@ -94,11 +94,12 @@ const globalOptions = {};
 exports.build = webpack;
 exports.LambdaRunner = LambdaRunner;
 
-async function buildMountpointFromZipfile (zipfile) {
+async function buildMountpointFromZipfile (zipfile, mountpointParent) {
   // It would be simpler if the standard TMPDIR directory could be used
   // to extract the zip files, but Docker on Mac is often not configured with
   // access to the Mac's /var temp directory location
-  const tempDir = await tmp.dir({ dir: process.cwd(), mode: '0755', prefix: LAMBDA_TOOLS_WORK_PREFIX });
+  const baseDir = mountpointParent || process.cwd();
+  const tempDir = await tmp.dir({ dir: baseDir, mode: '0755', prefix: LAMBDA_TOOLS_WORK_PREFIX });
   const tempDirName = tempDir.path;
   const cleanup = async () => {
     // Delete unzipped files
@@ -129,9 +130,9 @@ async function buildMountpointFromZipfile (zipfile) {
   }
 }
 
-exports.useNewContainer = ({ environment, mountpoint, zipfile, handler, image, useComposeNetwork }) => {
+exports.useNewContainer = ({ environment, mountpoint, zipfile, mountpointParent, handler, image, useComposeNetwork }) => {
   const network = useComposeNetwork ? `${process.env.COMPOSE_PROJECT_NAME}_default` : undefined;
-  Object.assign(globalOptions, { environment, handler, image, mountpoint, zipfile, network });
+  Object.assign(globalOptions, { environment, handler, image, mountpoint, zipfile, mountpointParent, network });
 };
 
 exports.useComposeContainer = ({ environment, service, handler }) => {
@@ -140,7 +141,7 @@ exports.useComposeContainer = ({ environment, service, handler }) => {
 };
 
 async function createLambdaExecutionEnvironment (options) {
-  const { environment = {}, image = LAMBDA_IMAGE, zipfile, network: networkId } = options;
+  const { environment = {}, image = LAMBDA_IMAGE, zipfile, network: networkId, mountpointParent } = options;
   let { mountpoint } = options;
 
   if (mountpoint && zipfile) {
@@ -150,7 +151,7 @@ async function createLambdaExecutionEnvironment (options) {
   const executionEnvironment = {};
 
   if (zipfile) {
-    const zipMount = await buildMountpointFromZipfile(zipfile);
+    const zipMount = await buildMountpointFromZipfile(zipfile, mountpointParent);
     mountpoint = zipMount.mountpoint;
     executionEnvironment.cleanupMountpoint = zipMount.cleanup;
   }
