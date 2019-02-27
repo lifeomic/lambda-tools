@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.2.0] - 2019-02-27
+### New
+- A new `-t` options for the webpack build CLI that allows providing a
+  `tsconfig.json` file for TypeScript compilation
+
 ## [7.1.0] - 2019-02-27
 ### New
 - A new `mountpointParent` option on `useNewContainer` to was added to control
