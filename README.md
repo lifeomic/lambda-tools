@@ -220,6 +220,12 @@ You will also find the following intermediate files:
 - `./dist/lambdas/my-function.js`
 - `./dist/lambdas/my-function.js.map`
 
+**Build a TypeScript lambda function with a custom tsconfig**
+
+```bash
+ lambda-tools-build -t tsconfig-prod.json -o ./dist src/service.ts
+```
+
 **Development mode:**
 
 ```bash

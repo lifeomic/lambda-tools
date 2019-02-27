@@ -39,6 +39,10 @@
     "functions": 100,
     "branches": 100
   },
+  "optionalDependencies": {
+    "ts-loader": "*",
+    "typescript": "*"
+  },
   "devDependencies": {
     "@lifeomic/eslint-plugin-node": "^1.1.1",
     "@types/koa": "^2.0.45",
@@ -55,7 +59,9 @@
     "nyc": "^13.1.0",
     "proxyquire": "^2.0.1",
     "serverless-http": "^1.5.5",
-    "sinon": "^7.1.0"
+    "sinon": "^7.1.0",
+    "ts-loader": "^5.3.3",
+    "typescript": "^3.3.3333"
   },
   "dependencies": {
     "@babel/core": "^7.0.0",

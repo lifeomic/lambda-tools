@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const path = require('path');
+const chalk = require('chalk');
 
 const { build } = require('../src/lambda');
 
@@ -44,6 +45,11 @@ const argv = require('yargs')
     describe: 'zip the JS bundle (default false)',
     type: 'boolean'
   })
+  .option('t', {
+    alias: 'tsconfig',
+    describe: 'relative path to a tsconfig.json file to compile typescript',
+    type: 'string'
+  })
   .demandCommand(1)
   .epilog(epilog)
   .argv;
@@ -54,8 +60,23 @@ const buildOptions = {
   nodeVersion: argv.n,
   outputPath: argv.o,
   serviceName: argv.s,
-  zip: argv.z
+  zip: argv.z,
+  tsconfig: argv.t
 };
+
+if (argv.t) {
+  // assert typescript and ts-loader are installed
+  ['typescript', 'ts-loader'].forEach(dependency => {
+    try {
+      require.resolve(dependency);
+    } catch (_) {
+      console.error(chalk.bold.red(`It looks like you're trying to use TypeScript but do not have '${chalk.bold(
+        dependency
+      )}' installed. Please install it or remove the tsconfig flag.`));
+      process.exit(1);
+    }
+  });
+}
 
 if (argv.w) {
   // Ignore the non-literal module require because the module to load is

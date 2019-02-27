@@ -204,6 +204,22 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
 
   const outputDir = path.resolve(options.outputPath || process.cwd());
 
+  const tsRule = options.tsconfig
+    ? {
+      loader: 'ts-loader',
+      options: {
+        configFile: options.tsconfig
+      }
+    } : {
+      ...babelLoaderConfig,
+      options: {
+        presets: [
+          babelEnvConfig,
+          require('@babel/preset-typescript')
+        ]
+      }
+    };
+
   const config = {
     entry,
     output: {
@@ -238,14 +254,8 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
           }
         },
         {
-          ...babelLoaderConfig,
           test: /\.ts$/,
-          options: {
-            presets: [
-              babelEnvConfig,
-              require('@babel/preset-typescript')
-            ]
-          }
+          ...tsRule
         }
       ]
     },
