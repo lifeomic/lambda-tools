@@ -84,7 +84,7 @@
     "promise-retry": "^1.1.1",
     "source-map-support": "^0.5.3",
     "string-replace-loader": "^2.1.1",
-    "supertest": "^3.0.0",
+    "supertest": "^4.0.0",
     "supports-color": "^6.1.0",
     "terser-webpack-plugin": "^1.1.0",
     "tmp-promise": "^1.0.5",
