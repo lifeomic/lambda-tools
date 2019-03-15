@@ -163,17 +163,17 @@ exports.dynamoDBTestHooks = dynamoDBTestHooks;
 exports.useDynamoDB = (test, useUniqueTables) => {
   const testHooks = dynamoDBTestHooks(useUniqueTables);
 
-  test.before(testHooks.beforeAll);
+  (test.serial || test).before(testHooks.beforeAll);
 
-  test.beforeEach(async (test) => {
+  (test.serial || test).beforeEach(async (test) => {
     const context = await testHooks.beforeEach();
     test.context.dynamodb = context;
   });
 
-  test.afterEach.always(async test => {
+  (test.serial || test).afterEach.always(async test => {
     const context = test.context.dynamodb;
     await testHooks.afterEach(context);
   });
 
-  test.after.always(testHooks.afterAll);
+  (test.serial || test).after.always(testHooks.afterAll);
 };

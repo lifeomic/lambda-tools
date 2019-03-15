@@ -225,18 +225,18 @@ exports.useLambda = (test, localOptions = {}) => {
     return options;
   };
 
-  test.before(async (test) => {
+  (test.serial || test).before(async (test) => {
     executionEnvironment = await createLambdaExecutionEnvironment(getOptions());
     if (executionEnvironment.container) {
       impliedOptions.container = executionEnvironment.container.id;
     }
   });
 
-  test.after.always(async (test) => {
+  (test.serial || test).after.always(async (test) => {
     await destroyLambdaExecutionEnvironment(executionEnvironment);
   });
 
-  test.beforeEach((test) => {
+  (test.serial || test).beforeEach((test) => {
     const { container, environment, handler } = getOptions();
     const client = new Client({ container, environment, handler });
 

@@ -5,18 +5,18 @@ exports.useKinesis = (test, streamName) => {
     endpoint: process.env.KINESIS_ENDPOINT
   });
 
-  test.before(async () => {
+  (test.serial || test).before(async () => {
     await kinesis.createStream({
       ShardCount: 1,
       StreamName: streamName
     }).promise();
   });
 
-  test.beforeEach(function (test) {
+  (test.serial || test).beforeEach(function (test) {
     test.context.kinesis = kinesis;
   });
 
-  test.after(async () => {
+  (test.serial || test).after(async () => {
     await kinesis.deleteStream({
       StreamName: streamName
     });

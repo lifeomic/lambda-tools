@@ -69,7 +69,7 @@ exports.useGraphQL = (test, options) => {
   };
   options = Object.assign({}, defaults, options);
 
-  test.beforeEach((test) => {
+  (test.serial || test).beforeEach((test) => {
     const app = setupGraphQL(test);
     assert(app, 'GraphQL setup must return a Koa application');
     const request = supertest(app.callback());
