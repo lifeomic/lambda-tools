@@ -16,12 +16,19 @@ exports.handler = (event, context, callback) => {
     .onSecondCall().callsArgWith(2, failure)
     .onThirdCall().callsArgWith(2, null, '127.0.0.1', 4);
 
+  const logSpy = sinon.stub(console, 'log');
+
   dns.lookup('example.com', (error, hostname, family) => {
     try {
       assert.ifError(error);
       assert.equal(hostname, '127.0.0.1');
       assert.equal(family, 4);
       sinon.assert.callCount(lookup, 3);
+
+      sinon.assert.callCount(logSpy, 2);
+      for (const attempt of [4, 3]) {
+        sinon.assert.calledWith(logSpy, `DNS lookup of example.com failed and will be retried ${attempt} more times`);
+      }
     } catch (error) {
       callback(error);
       return;
