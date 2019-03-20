@@ -320,6 +320,36 @@ test.serial('Bundles are produced in the current working directory by default', 
   }
 });
 
+async function assertSourceMapBehavior (test, options, expectMappingUrl, expectSourceMapRegister) {
+  const cwd = process.cwd();
+
+  try {
+    process.chdir(path.join(__dirname, '../src'));
+    const buildResults = await build({
+      outputPath: test.context.buildDirectory,
+      entrypoint: path.join(__dirname, 'fixtures', 'lambda_service.js'),
+      serviceName: 'test-service',
+      ...options
+    });
+
+    test.false(buildResults.hasErrors());
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    const contents = await fs.readFile(path.join(test.context.buildDirectory, 'lambda_service.js'), 'utf8');
+    test.is(/sourceMappingURL=/.test(contents), expectMappingUrl, 'Has a souceMapping URL');
+    test.is(/Available options are {auto, browser, node}/.test(contents), expectSourceMapRegister, 'Has source-map/register code');
+  } finally {
+    process.chdir(cwd);
+  }
+}
+
+test.serial('enables sourcemaps at runtime by default', async (test) => {
+  await assertSourceMapBehavior(test, {}, true, true);
+});
+
+test.serial('allow disabling sourcemaps at runtime', async (test) => {
+  await assertSourceMapBehavior(test, { enableRuntimeSourceMaps: false }, false, false);
+});
+
 test.serial('Should handle building entrypoint outside of current working directory', async (test) => {
   const cwd = process.cwd();
 
