@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const test = require('ava');
 const uuid = require('uuid/v4');
 const {createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment, LambdaRunner} = require('../src/lambda');
+const find = require('lodash/find');
 
 const SUPPORTED_NODE_VERSIONS = ['6.10', '8.10'];
 
@@ -95,7 +96,7 @@ test('TSConfig files are supported', async (test) => {
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'index.js.map')));
 
   const config = transformer.firstCall.args[0];
-  test.truthy(config.module.rules.find(rule => rule.loader === 'ts-loader'));
+  test.truthy(config.module.rules.find(rule => find(rule.use, { loader: 'ts-loader' })));
 });
 
 test('Typescript bundles are supported by default', async (test) => {
@@ -110,6 +111,23 @@ test('Typescript bundles are supported by default', async (test) => {
 
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'ts_lambda_service.js')));
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'ts_lambda_service.js.map')));
+});
+
+test('Typescript code has async/await removed for good X-Ray integration', async (test) => {
+  const sourceRoot = path.join(__dirname, 'fixtures', 'typescript-es2017');
+  const source = path.join(sourceRoot, 'async_test.ts');
+
+  const result = await build({
+    tsconfig: path.join(sourceRoot, 'tsconfig.json'),
+    entrypoint: source,
+    outputPath: test.context.buildDirectory,
+    serviceName: 'test-service'
+  });
+  test.false(result.hasErrors());
+
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  const contents = await fs.readFile(path.join(test.context.buildDirectory, 'async_test.js'), 'utf8');
+  test.is(/await /.test(contents), false, 'await found');
 });
 
 test('Node 6 bundles are produced by default', async (test) => {
@@ -318,6 +336,36 @@ test.serial('Bundles are produced in the current working directory by default', 
   } finally {
     process.chdir(cwd);
   }
+});
+
+async function assertSourceMapBehavior (test, options, expectMappingUrl, expectSourceMapRegister) {
+  const cwd = process.cwd();
+
+  try {
+    process.chdir(path.join(__dirname, '../src'));
+    const buildResults = await build({
+      outputPath: test.context.buildDirectory,
+      entrypoint: path.join(__dirname, 'fixtures', 'lambda_service.js'),
+      serviceName: 'test-service',
+      ...options
+    });
+
+    test.false(buildResults.hasErrors());
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    const contents = await fs.readFile(path.join(test.context.buildDirectory, 'lambda_service.js'), 'utf8');
+    test.is(/sourceMappingURL=/.test(contents), expectMappingUrl, 'Has a souceMapping URL');
+    test.is(/Available options are {auto, browser, node}/.test(contents), expectSourceMapRegister, 'Has source-map/register code');
+  } finally {
+    process.chdir(cwd);
+  }
+}
+
+test.serial('enables sourcemaps at runtime by default', async (test) => {
+  await assertSourceMapBehavior(test, {}, true, true);
+});
+
+test.serial('allow disabling sourcemaps at runtime', async (test) => {
+  await assertSourceMapBehavior(test, { enableRuntimeSourceMaps: false }, false, false);
 });
 
 test.serial('Should handle building entrypoint outside of current working directory', async (test) => {

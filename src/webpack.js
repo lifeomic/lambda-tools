@@ -8,6 +8,7 @@ const chalk = require('chalk');
 const { promisify } = require('util');
 const glob = promisify(require('glob'));
 const handleWebpackResult = require('./handleWebpackResult');
+const defaults = require('lodash/defaults');
 
 const { loadPatch } = require('./patches');
 
@@ -153,6 +154,8 @@ async function expandEntrypoints (entrypoints) {
 }
 
 module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }) => {
+  options = defaults(options, { enableRuntimeSourceMaps: true });
+
   // If an entrypoint is a directory then we discover all of the entrypoints
   // within that directory.
   // For example, entrypoint might be "./src/lambdas" and we might discover
@@ -166,8 +169,12 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
   const entry = entrypoints.reduce(
     (accumulator, entry) => {
       const { file, name } = entry;
+      const preloadModules = ['@babel/polyfill'];
+      if (options.enableRuntimeSourceMaps) {
+        preloadModules.push('source-map-support/register');
+      }
       // eslint-disable-next-line security/detect-object-injection
-      accumulator[name] = ['@babel/polyfill', 'source-map-support/register', file];
+      accumulator[name] = [...preloadModules, file];
       return accumulator;
     },
     {}
@@ -204,12 +211,34 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
 
   const outputDir = path.resolve(options.outputPath || process.cwd());
 
+  const removeAsyncAwaitLoader = {
+    loader: 'babel-loader',
+    options: {
+      presets: [ babelEnvConfig ],
+      plugins: [
+        // X-Ray tracing cannot currently track execution across
+        // async/await calls. The issue is tracked upstream at
+        // https://github.com/aws/aws-xray-sdk-node/issues/12 Using
+        // transform-async-to-generator will convert async/await into
+        // generators which can be traced with X-Ray
+        '@babel/plugin-transform-async-to-generator'
+      ]
+    }
+  };
+
   const tsRule = options.tsconfig
     ? {
-      loader: 'ts-loader',
-      options: {
-        configFile: options.tsconfig
-      }
+      use: [
+        // Remove any async/await calls that might be left over from
+        // TypeScript transpiling so that X-Ray integration is good.
+        removeAsyncAwaitLoader,
+        {
+          loader: 'ts-loader',
+          options: {
+            configFile: options.tsconfig
+          }
+        }
+      ]
     } : {
       ...babelLoaderConfig,
       options: {
@@ -224,6 +253,10 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     ? { minimize: false }
     : { minimizer: [new TerserPlugin({ sourceMap: true })] };
 
+  const devtool = options.enableRuntimeSourceMaps
+    ? 'source-map'
+    : 'hidden-source-map';
+
   const config = {
     entry,
     output: {
@@ -232,7 +265,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
       // Zipped bundles use explicit output names to determine the archive name
       filename: '[name]'
     },
-    devtool: 'source-map',
+    devtool,
     plugins,
     module: {
       rules: [
@@ -243,19 +276,8 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
           use: []
         },
         {
-          loader: 'babel-loader',
           test: /\.js$/,
-          options: {
-            presets: [ babelEnvConfig ],
-            plugins: [
-              // X-Ray tracing cannot currently track execution across
-              // async/await calls. The issue is tracked upstream at
-              // https://github.com/aws/aws-xray-sdk-node/issues/12 Using
-              // transform-async-to-generator will convert async/await into
-              // generators which can be traced with X-Ray
-              '@babel/plugin-transform-async-to-generator'
-            ]
-          }
+          ...removeAsyncAwaitLoader
         },
         {
           test: /\.ts$/,
