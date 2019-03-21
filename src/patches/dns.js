@@ -21,7 +21,7 @@
         // Using a logger other than the console would be ideal. Since this
         // code is injected as a patch, it is hard to get access to a better
         // logger
-        console.log(`DNS lookup of ${hostname} failed and will be retried ${remaining} more times`);
+        console.error(`DNS lookup of ${hostname} failed and will be retried ${remaining} more times`);
         setTimeout(
           () => dns._raw.lookup(hostname, options, dnsLookupWrapperResponse),
           DELAY
