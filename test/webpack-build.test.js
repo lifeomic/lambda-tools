@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const test = require('ava');
 const uuid = require('uuid/v4');
 const {createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment, LambdaRunner} = require('../src/lambda');
+const find = require('lodash/find');
 
 const SUPPORTED_NODE_VERSIONS = ['6.10', '8.10'];
 
@@ -95,7 +96,7 @@ test('TSConfig files are supported', async (test) => {
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'index.js.map')));
 
   const config = transformer.firstCall.args[0];
-  test.truthy(config.module.rules.find(rule => rule.loader === 'ts-loader'));
+  test.truthy(config.module.rules.find(rule => find(rule.use, { loader: 'ts-loader' })));
 });
 
 test('Typescript bundles are supported by default', async (test) => {
