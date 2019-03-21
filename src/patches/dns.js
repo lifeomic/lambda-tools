@@ -18,6 +18,10 @@
 
     function dnsLookupWrapperResponse (error, address, family) {
       if (error && error.code === dns.NOTFOUND && --remaining > 0) {
+        // Using a logger other than the console would be ideal. Since this
+        // code is injected as a patch, it is hard to get access to a better
+        // logger
+        console.error(`DNS lookup of ${hostname} failed and will be retried ${remaining} more times`);
         setTimeout(
           () => dns._raw.lookup(hostname, options, dnsLookupWrapperResponse),
           DELAY
