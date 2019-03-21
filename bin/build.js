@@ -25,6 +25,11 @@ const argv = require('yargs')
     describe: 'the version of node that the bundle should be optimized for (default 6.10)',
     type: 'string'
   })
+  .option('disable-runtime-source-maps', {
+    describe: 'disable support for runtime source maps but still generate source maps',
+    type: 'boolean',
+    default: false
+  })
   .option('o', {
     alias: 'output-directory',
     describe: 'the path where the bundle will be produced (default: cwd)',
@@ -61,7 +66,8 @@ const buildOptions = {
   outputPath: argv.o,
   serviceName: argv.s,
   zip: argv.z,
-  tsconfig: argv.t
+  tsconfig: argv.t,
+  enableRuntimeSourceMaps: !argv['disable-runtime-source-maps']
 };
 
 if (argv.t) {

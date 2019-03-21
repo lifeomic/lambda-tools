@@ -8,6 +8,7 @@ const chalk = require('chalk');
 const { promisify } = require('util');
 const glob = promisify(require('glob'));
 const handleWebpackResult = require('./handleWebpackResult');
+const defaults = require('lodash/defaults');
 
 const { loadPatch } = require('./patches');
 
@@ -153,6 +154,8 @@ async function expandEntrypoints (entrypoints) {
 }
 
 module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }) => {
+  options = defaults(options, { enableRuntimeSourceMaps: true });
+
   // If an entrypoint is a directory then we discover all of the entrypoints
   // within that directory.
   // For example, entrypoint might be "./src/lambdas" and we might discover
@@ -166,8 +169,12 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
   const entry = entrypoints.reduce(
     (accumulator, entry) => {
       const { file, name } = entry;
+      const preloadModules = ['@babel/polyfill'];
+      if (options.enableRuntimeSourceMaps) {
+        preloadModules.push('source-map-support/register');
+      }
       // eslint-disable-next-line security/detect-object-injection
-      accumulator[name] = ['@babel/polyfill', 'source-map-support/register', file];
+      accumulator[name] = [...preloadModules, file];
       return accumulator;
     },
     {}
@@ -242,6 +249,10 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
       }
     };
 
+  const devtool = options.enableRuntimeSourceMaps
+    ? 'source-map'
+    : 'hidden-source-map';
+
   const config = {
     entry,
     output: {
@@ -250,7 +261,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
       // Zipped bundles use explicit output names to determine the archive name
       filename: '[name]'
     },
-    devtool: 'source-map',
+    devtool,
     plugins,
     module: {
       rules: [
