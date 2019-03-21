@@ -40,6 +40,11 @@ const argv = require('yargs')
     describe: 'the name of the service the bundle is for',
     type: 'string'
   })
+  .option('skip-minification', {
+    describe: 'disable minification of bundled code',
+    type: 'boolean',
+    default: false
+  })
   .option('w', {
     alias: 'webpack-transform',
     describe: 'a module that exports a function to transform the webpack configuration',
@@ -64,6 +69,7 @@ const buildOptions = {
   entrypoint: argv._,
   nodeVersion: argv.n,
   outputPath: argv.o,
+  skipMinification: argv['skip-minification'],
   serviceName: argv.s,
   zip: argv.z,
   tsconfig: argv.t,

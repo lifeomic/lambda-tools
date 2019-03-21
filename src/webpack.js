@@ -249,6 +249,10 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
       }
     };
 
+  const optimization = options.skipMinification
+    ? { minimize: false }
+    : { minimizer: [new TerserPlugin({ sourceMap: true })] };
+
   const devtool = options.enableRuntimeSourceMaps
     ? 'source-map'
     : 'hidden-source-map';
@@ -282,9 +286,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
       ]
     },
     mode: process.env.WEBPACK_MODE || 'production',
-    optimization: {
-      minimizer: [ new TerserPlugin({ sourceMap: true }) ]
-    },
+    optimization,
     resolve: {
       // Since build is being called by other packages dependencies may be
       // relative to the caller or us. This cause our node modules to be

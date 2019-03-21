@@ -439,3 +439,28 @@ for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
     test.false(result.hasErrors());
   });
 }
+
+async function assertMinification (test, options, expectMinification) {
+  const source = path.join(__dirname, 'fixtures', 'async_test.js');
+  const bundle = path.join(test.context.buildDirectory, 'async_test.js');
+
+  const buildResults = await build({
+    entrypoint: source,
+    outputPath: test.context.buildDirectory,
+    serviceName: 'test-service',
+    ...options
+  });
+  test.false(buildResults.hasErrors());
+
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  const contents = await fs.readFile(bundle, 'utf8');
+  test.is(/handler\(entry\)/.test(contents), !expectMinification);
+}
+
+test('Minification is enabled by default', async (test) => {
+  await assertMinification(test, { }, true);
+});
+
+test('Minification can be skipped', async (test) => {
+  await assertMinification(test, { skipMinification: true }, false);
+});
