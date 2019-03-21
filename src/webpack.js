@@ -204,12 +204,34 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
 
   const outputDir = path.resolve(options.outputPath || process.cwd());
 
+  const removeAsyncAwaitLoader = {
+    loader: 'babel-loader',
+    options: {
+      presets: [ babelEnvConfig ],
+      plugins: [
+        // X-Ray tracing cannot currently track execution across
+        // async/await calls. The issue is tracked upstream at
+        // https://github.com/aws/aws-xray-sdk-node/issues/12 Using
+        // transform-async-to-generator will convert async/await into
+        // generators which can be traced with X-Ray
+        '@babel/plugin-transform-async-to-generator'
+      ]
+    }
+  };
+
   const tsRule = options.tsconfig
     ? {
-      loader: 'ts-loader',
-      options: {
-        configFile: options.tsconfig
-      }
+      use: [
+        // Remove any async/await calls that might be left over from
+        // TypeScript transpiling so that X-Ray integration is good.
+        removeAsyncAwaitLoader,
+        {
+          loader: 'ts-loader',
+          options: {
+            configFile: options.tsconfig
+          }
+        }
+      ]
     } : {
       ...babelLoaderConfig,
       options: {
@@ -239,19 +261,8 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
           use: []
         },
         {
-          loader: 'babel-loader',
           test: /\.js$/,
-          options: {
-            presets: [ babelEnvConfig ],
-            plugins: [
-              // X-Ray tracing cannot currently track execution across
-              // async/await calls. The issue is tracked upstream at
-              // https://github.com/aws/aws-xray-sdk-node/issues/12 Using
-              // transform-async-to-generator will convert async/await into
-              // generators which can be traced with X-Ray
-              '@babel/plugin-transform-async-to-generator'
-            ]
-          }
+          ...removeAsyncAwaitLoader
         },
         {
           test: /\.ts$/,
