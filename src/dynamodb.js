@@ -151,7 +151,11 @@ function dynamoDBTestHooks (useUniqueTables = false) {
   }
 
   async function afterAll () {
-    await connection.cleanup();
+    // If the beforeAll block executed long enough to set a connection,
+    // then it should be cleaned up
+    if (connection) {
+      await connection.cleanup();
+    }
   }
 
   return {
