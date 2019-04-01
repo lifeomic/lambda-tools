@@ -3,6 +3,7 @@
   "version": "7.5.0",
   "description": "Common utilities for Lambda testing and development",
   "main": "src/index.js",
+  "types": "src/index.d.ts",
   "bin": {
     "lambda-tools-build": "./bin/build.js",
     "lambda-tools-host-addr": "./bin/get-host-addr.js"
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@lifeomic/eslint-plugin-node": "^1.1.1",
+    "@types/aws-sdk": "^2.7.0",
     "@types/koa": "^2.0.45",
     "@types/koa-router": "^7.0.28",
     "apollo-server-koa": "^2.0.0",
