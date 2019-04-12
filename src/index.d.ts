@@ -1,5 +1,4 @@
 import * as aws from "aws-sdk";
-import * as docker from "dockerode";
 
 declare namespace dynamodb {
   export interface Context {
@@ -71,7 +70,7 @@ declare namespace lambda {
 
   interface LambdaExecutionEnvironment {
     network?: any;
-    container?: docker.Container;
+    container?: any;
     cleanupMountpoint?: () => Promise<void>;
   }
 
