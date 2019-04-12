@@ -38,7 +38,7 @@ declare namespace lambda {
     environment?: Environment
     mountpoint?: string;
     mountpointParent?: string;
-    zipFile?: string;
+    zipfile?: string;
     handler: string;
     image: string;
     useComposeNetwork?: boolean;
