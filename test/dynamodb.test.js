@@ -102,7 +102,7 @@ test.serial('createTables creates tables according to specified schemas', async 
   try {
     const client = new AWS.DynamoDB(config);
     await createTables(client);
-    assertTablesPresent(
+    await assertTablesPresent(
       t,
       client,
       ['test-table'],
@@ -120,7 +120,7 @@ test.serial('destroyTables destroys created tables', async (t) => {
     const client = new AWS.DynamoDB(config);
     await createTables(client);
 
-    assertTablesPresent(
+    await assertTablesPresent(
       t,
       client,
       ['test-table'],
@@ -128,7 +128,7 @@ test.serial('destroyTables destroys created tables', async (t) => {
     );
 
     await destroyTables(client);
-    assertTablesPresent(
+    await assertTablesPresent(
       t,
       client,
       [],
