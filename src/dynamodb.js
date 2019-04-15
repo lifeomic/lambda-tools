@@ -17,23 +17,29 @@ function buildConfigFromConnection (connection) {
   return {
     credentials: new AWS.Credentials(connection.accessKey, connection.secretAccessKey),
     endpoint: new AWS.Endpoint(connection.url),
-    region: connection.region
+    region: connection.region,
+    httpOptions: {
+      timeout: 3000
+    },
+    maxRetries: 3
   };
 }
 
 async function createTables (dynamoClient, uniqueIdentifier) {
-  await Promise.all(tablesSchema.map(table => {
+  await Promise.all(tablesSchema.map(async table => {
     const newTable = cloneDeep(table);
-    newTable.TableName = getTableName(newTable.TableName, uniqueIdentifier);
-    return dynamoClient.createTable(newTable).promise();
+    const TableName = getTableName(newTable.TableName, uniqueIdentifier);
+    newTable.TableName = TableName;
+    await dynamoClient.createTable(newTable).promise();
+    await dynamoClient.waitFor('tableExists', { TableName });
   }));
 }
 
 async function destroyTables (dynamoClient, uniqueIdentifier) {
-  await Promise.all(tablesSchema.map(({TableName}) => {
-    return dynamoClient.deleteTable({
-      TableName: getTableName(TableName, uniqueIdentifier)
-    }).promise();
+  await Promise.all(tablesSchema.map(async ({TableName}) => {
+    const fullTableName = getTableName(TableName, uniqueIdentifier);
+    await dynamoClient.deleteTable({ TableName: fullTableName }).promise();
+    await dynamoClient.waitFor('tableNotExists', { TableName: fullTableName });
   }));
 }
 
@@ -162,6 +168,10 @@ function dynamoDBTestHooks (useUniqueTables = false) {
     beforeAll, beforeEach, afterEach, afterAll
   };
 }
+
+exports.getConnection = getConnection;
+exports.createTables = createTables;
+exports.destroyTables = destroyTables;
 exports.dynamoDBTestHooks = dynamoDBTestHooks;
 
 exports.useDynamoDB = (test, useUniqueTables) => {
