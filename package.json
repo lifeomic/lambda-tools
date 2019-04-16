@@ -58,7 +58,7 @@
     "graphql-tools": "^4.0.0",
     "koa": "^2.5.0",
     "koa-router": "^7.4.0",
-    "nyc": "^13.1.0",
+    "nyc": "^14.0.0",
     "proxyquire": "^2.0.1",
     "serverless-http": "^1.5.5",
     "sinon": "^7.1.0",
