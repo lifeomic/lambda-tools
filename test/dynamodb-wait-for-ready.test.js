@@ -9,8 +9,8 @@ AWSMock.setSDKInstance(AWS);
 // to force a retry and then success to allow the setup
 // to continue
 const listTablesMock = sinon.stub()
-  .yields(null, [])
-  .onFirstCall().yields(new Error('First error'));
+  .resolves({ TableNames: [] }, [])
+  .onFirstCall().rejects(new Error('First error'));
 
 AWSMock.mock('DynamoDB', 'listTables', listTablesMock);
 
