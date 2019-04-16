@@ -1,7 +1,12 @@
 const test = require('ava');
 const AWS = require('aws-sdk');
+const sinon = require('sinon');
 
 const { tableSchema, getConnection, createTables, destroyTables } = require('../src/dynamodb');
+
+function throwTestError () {
+  throw new Error('test');
+}
 
 test.before(() => {
   tableSchema([
@@ -113,7 +118,38 @@ test.serial('createTables creates tables according to specified schemas', async 
   }
 });
 
-test.serial('destroyTables destroys created tables', async (t) => {
+test.serial('throws when createTables fails', async t => {
+  const { connection, config } = await getConnection();
+
+  try {
+    const client = new AWS.DynamoDB(config);
+    sinon.stub(client, 'createTable').onFirstCall().callsFake(throwTestError);
+    const { message } = await t.throwsAsync(createTables(client));
+    t.is(message, 'Failed to create tables: test-table');
+  } finally {
+    await connection.cleanup();
+  }
+});
+
+test.serial('throws when destroyTables fails', async t => {
+  const { connection, config } = await getConnection();
+
+  try {
+    const client = new AWS.DynamoDB(config);
+    sinon.stub(client, 'listTables').onFirstCall().returns({
+      promise: () => Promise.resolve({
+        TableNames: ['test-table']
+      })
+    });
+    sinon.stub(client, 'deleteTable').onFirstCall().callsFake(throwTestError);
+    const { message } = await t.throwsAsync(destroyTables(client));
+    t.is(message, 'Failed to destroy tables: test-table');
+  } finally {
+    await connection.cleanup();
+  }
+});
+
+test.serial('destroyTables destroys created tables', async t => {
   const { connection, config } = await getConnection();
 
   try {
