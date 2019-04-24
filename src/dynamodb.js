@@ -17,24 +17,61 @@ function buildConfigFromConnection (connection) {
   return {
     credentials: new AWS.Credentials(connection.accessKey, connection.secretAccessKey),
     endpoint: new AWS.Endpoint(connection.url),
-    region: connection.region
+    region: connection.region,
+    httpOptions: {
+      timeout: 3000
+    },
+    maxRetries: 3
   };
 }
 
 async function createTables (dynamoClient, uniqueIdentifier) {
-  await Promise.all(tablesSchema.map(table => {
-    const newTable = cloneDeep(table);
-    newTable.TableName = getTableName(newTable.TableName, uniqueIdentifier);
-    return dynamoClient.createTable(newTable).promise();
-  }));
+  const failedProvisons = [];
+  await Promise.all(
+    tablesSchema.map(async table => {
+      const newTable = cloneDeep(table);
+      const TableName = getTableName(newTable.TableName, uniqueIdentifier);
+      newTable.TableName = TableName;
+
+      try {
+        await dynamoClient.createTable(newTable).promise();
+        await dynamoClient.waitFor('tableExists', { TableName }).promise();
+      } catch (err) {
+        failedProvisons.push(TableName);
+        console.error(`Failed to create table "${TableName}"`, err);
+      }
+    })
+  );
+
+  if (failedProvisons.length) {
+    throw new Error(`Failed to create tables: ${failedProvisons.join(', ')}`);
+  }
 }
 
 async function destroyTables (dynamoClient, uniqueIdentifier) {
-  await Promise.all(tablesSchema.map(({TableName}) => {
-    return dynamoClient.deleteTable({
-      TableName: getTableName(TableName, uniqueIdentifier)
-    }).promise();
-  }));
+  const failedDeletions = [];
+  const { TableNames } = await dynamoClient.listTables().promise();
+  const schemaTableNames = tablesSchema
+    .map(({ TableName }) => getTableName(TableName, uniqueIdentifier));
+  const tablesToDestroy = TableNames
+    .filter(name => schemaTableNames.includes(getTableName(name, uniqueIdentifier)));
+
+  await Promise.all(
+    tablesToDestroy
+      .map(async TableName => {
+        try {
+          await dynamoClient.deleteTable({ TableName }).promise();
+          await dynamoClient.waitFor('tableNotExists', { TableName }).promise();
+        } catch (err) {
+          failedDeletions.push(TableName);
+          console.error(`Failed to destroy table "${TableName}"`, err);
+        }
+      })
+  );
+
+  if (failedDeletions.length) {
+    throw new Error(`Failed to destroy tables: ${failedDeletions.join(', ')}`);
+  }
 }
 
 async function waitForDynamoDBToBeReady (dynamoClient) {
@@ -146,7 +183,7 @@ function dynamoDBTestHooks (useUniqueTables = false) {
   }
 
   async function afterEach (context) {
-    const {dynamoClient, uniqueIdentifier} = context;
+    const { dynamoClient, uniqueIdentifier } = context;
     await destroyTables(dynamoClient, uniqueIdentifier);
   }
 
@@ -162,6 +199,10 @@ function dynamoDBTestHooks (useUniqueTables = false) {
     beforeAll, beforeEach, afterEach, afterAll
   };
 }
+
+exports.getConnection = getConnection;
+exports.createTables = createTables;
+exports.destroyTables = destroyTables;
 exports.dynamoDBTestHooks = dynamoDBTestHooks;
 
 exports.useDynamoDB = (test, useUniqueTables) => {

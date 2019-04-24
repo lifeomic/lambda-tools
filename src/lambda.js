@@ -108,6 +108,7 @@ async function buildMountpointFromZipfile (zipfile, mountpointParent) {
   };
 
   try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const fsStream = fs.createReadStream(zipfile);
     const unzipper = fsStream.pipe(unzip.Extract({
       path: tempDirName
