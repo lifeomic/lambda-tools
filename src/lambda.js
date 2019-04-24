@@ -215,7 +215,7 @@ async function destroyLambdaExecutionEnvironment (environment) {
 exports.createLambdaExecutionEnvironment = createLambdaExecutionEnvironment;
 exports.destroyLambdaExecutionEnvironment = destroyLambdaExecutionEnvironment;
 
-exports.useLambda = (test, localOptions = {}) => {
+function useLambdaHooks(localOptions = {}) {
   const impliedOptions = {};
 
   let executionEnvironment = null;
@@ -225,22 +225,42 @@ exports.useLambda = (test, localOptions = {}) => {
     return options;
   };
 
-  test.before(async (test) => {
+  async function beforeAll () {
     executionEnvironment = await createLambdaExecutionEnvironment(getOptions());
     if (executionEnvironment.container) {
       impliedOptions.container = executionEnvironment.container.id;
     }
-  });
+  }
 
-  test.after.always(async (test) => {
+  async function afterAll () {
     await destroyLambdaExecutionEnvironment(executionEnvironment);
-  });
+  }
 
-  test.beforeEach((test) => {
+  async function beforeEach () {
     const { container, environment, handler } = getOptions();
     const client = new Client({ container, environment, handler });
 
     client.graphql = (path, query, variables, config) => client.post(path, { query, variables }, config);
-    test.context.lambda = client;
+    return client;
+  };
+
+  return { beforeAll, beforeEach, afterAll };
+};
+
+exports.useLambdaHooks = useLambdaHooks;
+
+exports.useLambda = (test, localOptions = {}) => {
+  const hooks = useLambdaHooks(localOptions);
+
+  test.before(async () => {
+    await hooks.beforeAll();
+  });
+
+  test.after.always(async () => {
+    await hooks.afterAll();
+  });
+
+  test.beforeEach(async (test) => {
+    test.context.lambda = await hooks.beforeEach();
   });
 };
