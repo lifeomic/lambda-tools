@@ -946,6 +946,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/aws-lambda@^8.10.19":
+  version "8.10.24"
+  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.24.tgz#89a20cd91957322e26dbfea7f651b970460c8c0c"
+  integrity sha512-9F70bcb2oBGZUZCyisE1Ap3vwgt04uiSmr4s9mhQf89vBrttgraBs2Rc8l9YrKiemCndCH7wxnYNWk5qEuv6rA==
+
 "@types/aws-sdk@^2.7.0":
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/@types/aws-sdk/-/aws-sdk-2.7.0.tgz#83588b3d14ebdca1d4ce5e023387577568ce82f3"
@@ -2749,6 +2754,13 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
+chai-as-promised@^7.1.1:
+  version "7.1.1"
+  resolved "https://registry.yarnpkg.com/chai-as-promised/-/chai-as-promised-7.1.1.tgz#08645d825deb8696ee61725dbf590c012eb00ca0"
+  integrity sha512-azL6xMoi+uxu6z4rhWQ1jbdUhOMhis2PvscD/xjLqNMkv3BPPp2JyyuTHOrf9BOosGpNQ11v6BKv/g57RXbiaA==
+  dependencies:
+    check-error "^1.0.2"
+
 chainsaw@~0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/chainsaw/-/chainsaw-0.1.0.tgz#5eab50b28afe58074d0d58291388828b5e5fbc98"
@@ -2789,6 +2801,11 @@ chardet@^0.7.0:
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/chardet/-/chardet-0.7.0.tgz#90094849f0937f2eedc2425d0d28a9e5f0cbad9e"
   integrity sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==
+
+check-error@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/check-error/-/check-error-1.0.2.tgz#574d312edd88bb5dd8912e9286dd6c0aed4aac82"
+  integrity sha1-V00xLt2Iu13YkS6Sht1sCu1KrII=
 
 chokidar@^2.0.2:
   version "2.0.4"
@@ -7410,10 +7427,14 @@ serialize-javascript@^1.4.0:
   resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-1.5.0.tgz#1aa336162c88a890ddad5384baebc93a655161fe"
   integrity sha512-Ga8c8NjAAp46Br4+0oZ2WxJCwIzwP60Gq1YPgU+39PiTVxyed/iKE/zyZI6+UlVYH5Q4PaQdHhcegIFPZTUfoQ==
 
-serverless-http@^1.5.5:
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/serverless-http/-/serverless-http-1.7.2.tgz#2862e511b70b59c6a6a1d7545b7826344b3da183"
-  integrity sha512-6FKPAiofnyCwpipEX8DOC0q0gQgml+B+9+Tf6Sy1uWX7Zvy/vAcZDEDuiRNsibZTfQlCxflHeh46YeiIeTRHyw==
+serverless-http@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/serverless-http/-/serverless-http-2.0.0.tgz#c9f50419c298c1277f798b149e2bc4d54a2494ce"
+  integrity sha512-1Sa+PMRhvg2EkEwGuyrQLcKEJMU97YBYH14+TKV6UyY1WAqlasb477GZI9fNTX3nOvt65+tEbatTPlDDvZ1ykQ==
+  dependencies:
+    chai-as-promised "^7.1.1"
+  optionalDependencies:
+    "@types/aws-lambda" "^8.10.19"
 
 set-blocking@^2.0.0, set-blocking@~2.0.0:
   version "2.0.0"
