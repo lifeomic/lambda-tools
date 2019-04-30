@@ -216,7 +216,7 @@ async function destroyLambdaExecutionEnvironment (environment) {
 exports.createLambdaExecutionEnvironment = createLambdaExecutionEnvironment;
 exports.destroyLambdaExecutionEnvironment = destroyLambdaExecutionEnvironment;
 
-function useLambdaHooks(localOptions = {}) {
+function useLambdaHooks (localOptions) {
   const impliedOptions = {};
 
   let executionEnvironment = null;
@@ -243,10 +243,10 @@ function useLambdaHooks(localOptions = {}) {
 
     client.graphql = (path, query, variables, config) => client.post(path, { query, variables }, config);
     return client;
-  };
+  }
 
   return { beforeAll, beforeEach, afterAll };
-};
+}
 
 exports.useLambdaHooks = useLambdaHooks;
 
