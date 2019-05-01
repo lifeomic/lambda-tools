@@ -1,4 +1,5 @@
 import * as aws from "aws-sdk";
+import { TestInterface } from "ava";
 
 declare namespace dynamodb {
   export interface Context {
@@ -52,7 +53,7 @@ declare namespace lambda {
   interface WebpackOptions {
     entrypoint: string;
     serviceName?: string;
-    zip?: string;
+    zip?: boolean;
     nodeVersion?: string;
     outputPath?: string;
     configTransformer?: (config: any) => Promise<any>;
@@ -91,7 +92,7 @@ declare namespace lambda {
     invoke(event: any): Promise<any>;
   }
 
-  export function useLambda(test: any, options?: LocalOptions): void;
+  export function useLambda(test: TestInterface, options?: LocalOptions): void;
   export function useLambdaHooks(options?: LocalOptions): TestHooks;
   export function useNewContainer(options?: NewContainerOptions): void;
   export function useComposeContainer(options?: ComposeContainerOptions): void;
