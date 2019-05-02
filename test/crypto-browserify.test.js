@@ -1,8 +1,9 @@
-const crypto = require('crypto');
 const fs = require('fs-extra');
 const path = require('path');
 const test = require('ava');
 const uuid = require('uuid/v4');
+
+const NODE_PRE_11_DEFAULT_CIPHER_LIST = 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:DHE-RSA-AES256-SHA384:ECDHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA256:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA';
 
 const { build, useNewContainer, useLambda } = require('../src/lambda');
 
@@ -36,5 +37,5 @@ test.after.always((test) => fs.remove(BUILD_DIRECTORY));
 
 test.serial('crypto is substituted for crypto-browserify', async (test) => {
   const result = await test.context.lambda.raw({}, {});
-  test.deepEqual(result, crypto.constants.defaultCoreCipherList);
+  test.deepEqual(result, NODE_PRE_11_DEFAULT_CIPHER_LIST);
 });
