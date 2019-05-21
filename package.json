@@ -89,7 +89,7 @@
     "supertest": "^4.0.1",
     "supports-color": "^6.1.0",
     "terser-webpack-plugin": "^1.1.0",
-    "tmp-promise": "^1.1.0",
+    "tmp-promise": "^2.0.1",
     "unzipper": "^0.9.11",
     "uuid": "^3.3.2",
     "webpack": "^4.18.0",
