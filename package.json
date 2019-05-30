@@ -46,7 +46,6 @@
   },
   "devDependencies": {
     "@lifeomic/eslint-plugin-node": "^1.1.1",
-    "@types/aws-sdk": "^2.7.0",
     "@types/koa": "^2.0.45",
     "@types/koa-router": "^7.0.28",
     "apollo-server-koa": "^2.0.0",
@@ -73,7 +72,7 @@
     "@lifeomic/alpha": "^0.14.0",
     "archiver": "^3.0.0",
     "ava": "^1.4.1",
-    "aws-sdk": "^2.313.0",
+    "aws-sdk": "^2.290.0",
     "babel-loader": "^8.0.2",
     "chalk": "^2.4.1",
     "dockerode": "^2.5.3",
