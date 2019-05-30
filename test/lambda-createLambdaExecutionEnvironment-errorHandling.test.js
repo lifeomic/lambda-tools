@@ -43,7 +43,7 @@ test.serial('Sends AWS_XRAY_CONTEXT_MISSING var to createContainer with no value
   });
 
   sinon.assert.calledWithMatch(createSpy, sinon.match((arg) => {
-    assert.deepEqual(arg.Env, [ 'AWS_XRAY_CONTEXT_MISSING' ]);
+    assert.deepStrictEqual(arg.Env, ['AWS_XRAY_CONTEXT_MISSING']);
     return true;
   }));
 });
