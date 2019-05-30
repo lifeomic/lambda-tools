@@ -38,7 +38,7 @@ exports.assertError = (response, path, messageTest) => {
 
   assert(error, `No error found with path '${path}'. The paths with errors were: ${errorPaths.join(',')}`);
   if (isString(messageTest)) {
-    assert.equal(error.message, messageTest);
+    assert.strictEqual(error.message, messageTest);
   } else {
     assert(messageTest(error.message), 'message did not match');
   }

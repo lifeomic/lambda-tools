@@ -5,7 +5,7 @@ const uuid = require('uuid/v4');
 const { build, useComposeContainer, useLambda } = require('../src/lambda');
 const { createContainer } = require('./helpers/lambda');
 
-const LAMBDA_IMAGE = 'lambci/lambda:nodejs6.10';
+const LAMBDA_IMAGE = 'lambci/lambda:nodejs8.10';
 
 const buildDirectory = path.join(__dirname, 'fixtures', 'build', uuid());
 let container = null;

@@ -21,8 +21,8 @@ exports.handler = (event, context, callback) => {
   dns.lookup('example.com', (error, hostname, family) => {
     try {
       assert.ifError(error);
-      assert.equal(hostname, '127.0.0.1');
-      assert.equal(family, 4);
+      assert.strictEqual(hostname, '127.0.0.1');
+      assert.strictEqual(family, 4);
       sinon.assert.callCount(lookup, 3);
 
       sinon.assert.callCount(consoleSpy, 2);

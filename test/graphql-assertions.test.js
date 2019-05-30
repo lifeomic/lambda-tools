@@ -1,5 +1,6 @@
 const Koa = require('koa');
 const test = require('ava');
+const assert = require('assert');
 
 const { assertError, assertSuccess, setupGraphQL, useGraphQL } = require('../src/graphql');
 const { ApolloServer, gql } = require('apollo-server-koa');
@@ -81,13 +82,24 @@ test('assertError throws if no error matches the path', async (test) => {
 test('assertError throws if the error does not match the message', async (test) => {
   const query = '{ error }';
   const response = await test.context.graphql(query);
-  test.throws(() => assertError(response, 'error', 'some other message'), `'boom!' == 'some other message'`);
+
+  // The message generated from AssertionErrors is different depending on
+  // Node version, so a hardcoded message cannot be used for the assertion.
+  let expectedMessage;
+  try {
+    assert.strictEqual('boom!', 'some other message');
+    expectedMessage = 'Failed to generate expected failure';
+  } catch (e) {
+    expectedMessage = e.message;
+  }
+
+  test.throws(() => assertError(response, 'error', 'some other message'), expectedMessage);
 });
 
 test('assertError throws if the path is undefined and no error has undefined path', test => {
   const response = {
     body: {
-      errors: [ {message: 'foo', path: ['some', 'path']} ]
+      errors: [{ message: 'foo', path: ['some', 'path'] }]
     }
   };
   test.throws(() => assertError(response, undefined, 'something'), `No error found with path 'undefined'. The paths with errors were: some.path`);
@@ -97,8 +109,8 @@ test('assertError doesn\'t throw on mixed path/no-path errors', test => {
   const response = {
     body: {
       errors: [
-        {message: 'bar', path: undefined},
-        {message: 'foo', path: ['some', 'path']}
+        { message: 'bar', path: undefined },
+        { message: 'foo', path: ['some', 'path'] }
       ]
     }
   };
