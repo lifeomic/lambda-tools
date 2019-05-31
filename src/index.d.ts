@@ -19,6 +19,7 @@ declare namespace dynamodb {
     schema: ReadonlyArray<aws.DynamoDB.Types.CreateTableInput>
   ): void;
   export function dynamoDBTestHooks(useUniqueTables?: boolean): Hooks;
+  export function useDynamoDB(test: TestInterface, useUniqueTables?: boolean): void;
 }
 
 declare namespace lambda {
@@ -33,7 +34,7 @@ declare namespace lambda {
     image?: string;
     useComposeNetwork?: boolean;
   }
-  
+
   interface NewContainerOptions {
     environment?: Environment
     mountpoint?: string;
@@ -43,13 +44,13 @@ declare namespace lambda {
     image: string;
     useComposeNetwork?: boolean;
   }
-  
+
   interface ComposeContainerOptions {
     environment?: Environment
     service: string;
     handler: string;
   }
-  
+
   interface WebpackOptions {
     entrypoint: string;
     serviceName?: string;
