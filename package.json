@@ -89,7 +89,7 @@
     "supports-color": "^6.1.0",
     "terser-webpack-plugin": "^1.1.0",
     "tmp-promise": "^2.0.1",
-    "unzipper": "^0.9.11",
+    "unzipper": "^0.10.0",
     "uuid": "^3.3.2",
     "webpack": "^4.18.0",
     "webpack-babel-env-deps": "^1.4.3",
