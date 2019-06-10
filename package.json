@@ -69,7 +69,7 @@
     "@babel/polyfill": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
     "@babel/preset-typescript": "^7.0.0",
-    "@lifeomic/alpha": "^0.14.0",
+    "@lifeomic/alpha": "^1.0.0",
     "archiver": "^3.0.0",
     "ava": "^2.0.0",
     "aws-sdk": "^2.290.0",
