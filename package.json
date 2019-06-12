@@ -86,7 +86,7 @@
     "source-map-support": "^0.5.3",
     "string-replace-loader": "^2.1.1",
     "supertest": "^4.0.1",
-    "supports-color": "^6.1.0",
+    "supports-color": "^7.0.0",
     "terser-webpack-plugin": "^1.1.0",
     "tmp-promise": "^2.0.1",
     "unzipper": "^0.10.0",
