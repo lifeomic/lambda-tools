@@ -5956,10 +5956,10 @@ mixin-deep@^1.2.0:
   dependencies:
     minimist "0.0.8"
 
-mockserver-client@5.5.4:
-  version "5.5.4"
-  resolved "https://registry.yarnpkg.com/mockserver-client/-/mockserver-client-5.5.4.tgz#19cec45a43032bfd8eddea211e7b6e2825733d91"
-  integrity sha512-HCbdfaQ0Oa3FYbfbvz5L0pQkzhoHsRGMt2Mg7FxBrzQiRyhSFjcMMYNgWoBKQUMoacWAjkyDo0RnpMSCyFghXA==
+mockserver-client@5.6.0:
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/mockserver-client/-/mockserver-client-5.6.0.tgz#8583fa8e0a776b6ab9da3d1e6f2591de6187c20e"
+  integrity sha512-YkG5VIFoB4EhMeggKwIRLrhm4hv8JDgdIRYsZcHQ1R0DWhqcVX6L9hAyaHL0MiZebskmlQDLFqtswh+9lqAv+A==
   dependencies:
     q "~2.0"
     websocket "^1.0.28"
