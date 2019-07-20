@@ -212,9 +212,7 @@ function useKinesisDocker (test, useUniqueStreams) {
 
   test.afterEach.always(async test => {
     const context = test.context.kinesis;
-    if (context.kinesisClient) {
-      await testHooks.afterEach(context);
-    }
+    await testHooks.afterEach(context);
   });
 
   test.after.always(testHooks.afterAll);
