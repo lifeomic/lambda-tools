@@ -50,13 +50,13 @@ async function createStreams (kinesisClient, uniqueIdentifier) {
 async function destroyStreams (kinesisClient, uniqueIdentifier) {
   const failedDeletions = [];
   const { StreamNames } = await kinesisClient.listStreams().promise();
-  const schemaTableNames = kinesisStreams
+  const streamNames = kinesisStreams
     .map(({ StreamName }) => getStreamName(StreamName, uniqueIdentifier));
-  const tablesToDestroy = StreamNames
-    .filter(name => schemaTableNames.includes(getStreamName(name, uniqueIdentifier)));
+  const streamsToDestroy = StreamNames
+    .filter(name => streamNames.includes(getStreamName(name, uniqueIdentifier)));
 
   await Promise.all(
-    tablesToDestroy
+    streamsToDestroy
       .map(async StreamName => {
         try {
           await kinesisClient.deleteStream({ StreamName }).promise();
@@ -98,7 +98,7 @@ async function waitForKinesisToBeReady (kinesisClient) {
     } catch (error) {
       retry(new NestedError(`Kinesis is still not ready after ${retryNumber} connection attempts`, error));
     }
-  }, {factor: 1, minTimeout: 100, retries: 100});
+  }, {factor: 1, minTimeout: 500, retries: 20});
 }
 
 async function getConnection () {

@@ -14,14 +14,14 @@ test.after(() => {
   streams([]);
 });
 
-// no uuid in table name (old way, basic regression test to ensure forward
+// no uuid in stream name (old way, basic regression test to ensure forward
 // compatibility)
 test.serial('The helper provides kinesis clients and streams', async (test) => {
   const {kinesisClient} = test.context.kinesis;
   test.true(kinesisClient instanceof AWS.Kinesis);
 
   const listStreamsResponse = await kinesisClient.listStreams().promise();
-  const streamName = 'test-stream'; // no uuid/table name lookup
+  const streamName = 'test-stream'; // no uuid-stream name lookup
   test.true(listStreamsResponse.StreamNames.includes(streamName));
 
   const item = {

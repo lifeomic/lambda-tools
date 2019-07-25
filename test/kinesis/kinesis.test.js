@@ -26,7 +26,7 @@ async function assertStreamsPresent (t, client, expected, message) {
   );
 }
 
-test.serial('createStreams creates tables according to specified schemas', async (t) => {
+test.serial('createStreams creates streams according to specified schemas', async (t) => {
   const { connection, config } = await getConnection();
 
   try {
@@ -36,7 +36,7 @@ test.serial('createStreams creates tables according to specified schemas', async
       t,
       client,
       ['test-stream'],
-      'createTables should have added "test-stream"'
+      'createStream should have added "test-stream"'
     );
   } finally {
     await connection.cleanup();

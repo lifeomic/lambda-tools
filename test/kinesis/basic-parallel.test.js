@@ -57,7 +57,7 @@ test('The helper provides kinesis client and streams', async (test) => {
   test.deepEqual(JSON.parse(payload), item);
 });
 
-test('The helper includes a unique identifier in the table names', async (test) => {
+test('The helper includes a unique identifier in the stream names', async (test) => {
   const {streamNames, uniqueIdentifier} = test.context.kinesis;
   const streamName = streamNames['test-stream'];
 

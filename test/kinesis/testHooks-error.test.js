@@ -14,7 +14,7 @@ test('The afterAll hook handles errors in the beforeAll hook gracefully', async 
 
   try {
     await test.throwsAsync(beforeAll, { instanceOf: Error, message: error.message });
-    await afterAll();
+    await test.notThrowsAsync(afterAll());
   } finally {
     ensureStub.restore();
   }
