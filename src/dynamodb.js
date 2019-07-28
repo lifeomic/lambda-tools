@@ -81,7 +81,7 @@ async function waitForDynamoDBToBeReady (dynamoClient) {
     } catch (error) {
       retry(new NestedError(`DynamoDB is still not ready after ${retryNumber} connection attempts`, error));
     }
-  }, {factor: 1, minTimeout: 100, retries: 1000});
+  }, {factor: 1, minTimeout: 500, retries: 20});
 }
 
 async function getConnection () {
