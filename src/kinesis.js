@@ -3,11 +3,10 @@ const uuid = require('uuid');
 const Docker = require('dockerode');
 const cloneDeep = require('lodash/cloneDeep');
 const fromPairs = require('lodash/fromPairs');
-const NestedError = require('nested-error-stacks');
-const promiseRetry = require('promise-retry');
 
 const { getHostAddress, ensureImage } = require('./docker');
 const Environment = require('./Environment');
+const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 
 const KINESIS_IMAGE = 'localstack/localstack:latest';
 
@@ -43,6 +42,11 @@ async function createStreams (kinesisClient, uniqueIdentifier) {
   );
 
   if (failedProvisons.length) {
+    try {
+      await destroyStreams(kinesisClient, uniqueIdentifier);
+    } catch (err) {
+      console.error('Failed to destroy streams after create failed', err);
+    }
     throw new Error(`Failed to create streams: ${failedProvisons.join(', ')}`);
   }
 }
@@ -79,39 +83,9 @@ function buildStreamNameMapping (uniqueIdentifier) {
   }));
 }
 
-function buildConfigFromConnection (connection) {
-  return {
-    credentials: new AWS.Credentials(connection.accessKey, connection.secretAccessKey),
-    endpoint: new AWS.Endpoint(connection.url),
-    region: connection.region,
-    httpOptions: {
-      timeout: 3000
-    },
-    maxRetries: 3
-  };
-}
-
-async function waitForKinesisToBeReady (kinesisClient) {
-  await promiseRetry(async function (retry, retryNumber) {
-    try {
-      await kinesisClient.listStreams({Limit: 1}).promise();
-    } catch (error) {
-      retry(new NestedError(`Kinesis is still not ready after ${retryNumber} connection attempts`, error));
-    }
-  }, {factor: 1, minTimeout: 500, retries: 20});
-}
-
-async function getConnection () {
+async function getConnection (externalConfig) {
   if (process.env.KINESIS_ENDPOINT) {
-    const connection = {
-      accessKey: process.env.AWS_ACCESS_KEY_ID,
-      cleanup: () => {},
-      region: 'us-east-1',
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      url: process.env.KINESIS_ENDPOINT
-    };
-    const config = buildConfigFromConnection(connection);
-    return {connection, config};
+    return buildConnectionAndConfig({url: process.env.KINESIS_ENDPOINT, externalConfig});
   }
 
   const docker = new Docker();
@@ -137,20 +111,19 @@ async function getConnection () {
   const host = await getHostAddress();
   const port = containerData.NetworkSettings.Ports['4568/tcp'][0].HostPort;
 
-  const connection = {
+  const {config, connection} = buildConnectionAndConfig({
     accessKey: 'bogus',
     cleanup: () => {
       environment.restore();
       return container.stop();
     },
-    region: 'us-east-1',
     secretAccessKey: 'bogus',
-    url: `http://${host}:${port}`
-  };
+    url: `http://${host}:${port}`,
+    externalConfig
+  });
 
-  const config = buildConfigFromConnection(connection);
   const kinesisClient = new AWS.Kinesis(config);
-  await waitForKinesisToBeReady(kinesisClient);
+  await waitForReady('Kinesis', async () => kinesisClient.listStreams().promise());
 
   environment.set('AWS_ACCESS_KEY_ID', connection.accessKey);
   environment.set('AWS_SECRET_ACCESS_KEY', connection.secretAccessKey);
@@ -161,8 +134,8 @@ async function getConnection () {
 }
 
 function kinesisTestHooks (useUniqueStreams) {
-  let connection, config;
-  let service;
+  let connection;
+  let config;
 
   async function beforeAll () {
     const result = await getConnection();
@@ -172,7 +145,7 @@ function kinesisTestHooks (useUniqueStreams) {
 
   async function beforeEach () {
     const uniqueIdentifier = useUniqueStreams ? uuid() : '';
-    service = new AWS.Kinesis(config);
+    const service = new AWS.Kinesis(config);
     await createStreams(service, uniqueIdentifier);
     return {
       kinesisClient: service,
@@ -183,6 +156,9 @@ function kinesisTestHooks (useUniqueStreams) {
   }
 
   async function afterEach (context) {
+    if (!context) {
+      return;
+    }
     const {kinesisClient, uniqueIdentifier} = context;
     await destroyStreams(kinesisClient, uniqueIdentifier);
   }
