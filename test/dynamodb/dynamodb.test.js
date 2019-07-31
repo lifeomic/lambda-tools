@@ -2,37 +2,52 @@ const test = require('ava');
 const AWS = require('aws-sdk');
 const sinon = require('sinon');
 
-const { tableSchema, getConnection, createTables, destroyTables } = require('../src/dynamodb');
+const { tableSchema, getConnection, createTables, destroyTables } = require('../../src/dynamodb');
 
 function throwTestError () {
   throw new Error('test');
 }
 
-test.before(() => {
-  tableSchema([
+const TEST_TABLE_SCHEMA = {
+  TableName: 'test-table',
+  AttributeDefinitions: [
     {
-      TableName: 'test-table',
-      AttributeDefinitions: [
-        {
-          AttributeName: 'hashKey',
-          AttributeType: 'S'
-        },
-        {
-          AttributeName: 'rangeKey',
-          AttributeType: 'S'
-        },
-        {
-          AttributeName: 'gsiHashKey',
-          AttributeType: 'S'
-        },
-        {
-          AttributeName: 'lsiRangeKey',
-          AttributeType: 'S'
-        }
-      ],
+      AttributeName: 'hashKey',
+      AttributeType: 'S'
+    },
+    {
+      AttributeName: 'rangeKey',
+      AttributeType: 'S'
+    },
+    {
+      AttributeName: 'gsiHashKey',
+      AttributeType: 'S'
+    },
+    {
+      AttributeName: 'lsiRangeKey',
+      AttributeType: 'S'
+    }
+  ],
+  KeySchema: [
+    {
+      AttributeName: 'hashKey',
+      KeyType: 'HASH'
+    },
+    {
+      AttributeName: 'rangeKey',
+      KeyType: 'RANGE'
+    }
+  ],
+  ProvisionedThroughput: {
+    ReadCapacityUnits: 10,
+    WriteCapacityUnits: 10
+  },
+  GlobalSecondaryIndexes: [
+    {
+      IndexName: 'test-gsi',
       KeySchema: [
         {
-          AttributeName: 'hashKey',
+          AttributeName: 'gsiHashKey',
           KeyType: 'HASH'
         },
         {
@@ -44,51 +59,38 @@ test.before(() => {
         ReadCapacityUnits: 10,
         WriteCapacityUnits: 10
       },
-      GlobalSecondaryIndexes: [
+      Projection: {
+        ProjectionType: 'ALL'
+      }
+    }
+  ],
+  LocalSecondaryIndexes: [
+    {
+      IndexName: 'example-lsi',
+      KeySchema: [
         {
-          IndexName: 'test-gsi',
-          KeySchema: [
-            {
-              AttributeName: 'gsiHashKey',
-              KeyType: 'HASH'
-            },
-            {
-              AttributeName: 'rangeKey',
-              KeyType: 'RANGE'
-            }
-          ],
-          ProvisionedThroughput: {
-            ReadCapacityUnits: 10,
-            WriteCapacityUnits: 10
-          },
-          Projection: {
-            ProjectionType: 'ALL'
-          }
+          AttributeName: 'hashKey',
+          KeyType: 'HASH'
+        },
+        {
+          AttributeName: 'lsiRangeKey',
+          KeyType: 'RANGE'
         }
       ],
-      LocalSecondaryIndexes: [
-        {
-          IndexName: 'example-lsi',
-          KeySchema: [
-            {
-              AttributeName: 'hashKey',
-              KeyType: 'HASH'
-            },
-            {
-              AttributeName: 'lsiRangeKey',
-              KeyType: 'RANGE'
-            }
-          ],
-          Projection: {
-            ProjectionType: 'ALL'
-          }
-        }
-      ]
+      Projection: {
+        ProjectionType: 'ALL'
+      }
     }
+  ]
+};
+
+test.beforeEach(() => {
+  tableSchema([
+    TEST_TABLE_SCHEMA
   ]);
 });
 
-test.after(() => {
+test.afterEach(() => {
   tableSchema([]);
 });
 
@@ -126,6 +128,33 @@ test.serial('throws when createTables fails', async t => {
     sinon.stub(client, 'createTable').onFirstCall().callsFake(throwTestError);
     const { message } = await t.throwsAsync(createTables(client));
     t.is(message, 'Failed to create tables: test-table');
+  } finally {
+    await connection.cleanup();
+  }
+});
+
+test.serial('throws when createTables fails, logs if destory fails', async t => {
+  const { connection, config } = await getConnection();
+
+  const TableName = 'test-table-2';
+
+  tableSchema([
+    Object.assign({}, TEST_TABLE_SCHEMA, {TableName}),
+    TEST_TABLE_SCHEMA
+  ]);
+
+  try {
+    const client = new AWS.DynamoDB(config);
+    sinon.stub(client, 'createTable')
+      .callThrough()
+      .onSecondCall().callsFake(throwTestError);
+    const deleteTable = sinon.stub(client, 'deleteTable')
+      .onFirstCall().callsFake(throwTestError);
+
+    const { message } = await t.throwsAsync(createTables(client));
+    t.is(message, 'Failed to create tables: test-table');
+    sinon.assert.calledOnce(deleteTable);
+    sinon.assert.calledWithExactly(deleteTable, {TableName});
   } finally {
     await connection.cleanup();
   }

@@ -1,4 +1,4 @@
-const Environment = require('../src/Environment');
+const Environment = require('../../src/Environment');
 const test = require('ava');
 const sinon = require('sinon');
 const AWS = require('aws-sdk');
@@ -11,7 +11,7 @@ const listTablesMock = sinon.stub()
 
 AWSMock.mock('DynamoDB', 'listTables', listTablesMock);
 
-const { useDynamoDB } = require('../src/dynamodb');
+const { useDynamoDB } = require('../../src/dynamodb');
 const environment = new Environment();
 
 test.before(() => {
