@@ -3,8 +3,6 @@ const cloneDeep = require('lodash/cloneDeep');
 const fromPairs = require('lodash/fromPairs');
 const Docker = require('dockerode');
 const Environment = require('./Environment');
-const promiseRetry = require('promise-retry');
-const NestedError = require('nested-error-stacks');
 const uuid = require('uuid/v4');
 
 const { getHostAddress, ensureImage } = require('./docker');
