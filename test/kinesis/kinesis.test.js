@@ -54,10 +54,8 @@ test.serial('throws when createStreams fails', async t => {
   const { kinesisClient } = t.context;
 
   sinon.stub(kinesisClient, 'createStream').onFirstCall().callsFake(throwTestError);
-  const deleteStream = sinon.spy(kinesisClient, 'deleteStream');
   const { message } = await t.throwsAsync(createStreams(kinesisClient));
   t.is(message, 'Failed to create streams: test-stream');
-  sinon.assert.notCalled(deleteStream);
 });
 
 test.serial('deletes created streams when createStreams fails', async t => {
@@ -78,7 +76,7 @@ test.serial('deletes created streams when createStreams fails', async t => {
   const {StreamNames} = await kinesisClient.listStreams().promise();
   t.deepEqual(StreamNames, []);
   sinon.assert.calledOnce(deleteStream);
-  sinon.assert.calledWithExactly(deleteStream, {TableName: 'test-stream-created'});
+  sinon.assert.calledWithExactly(deleteStream, {StreamName: 'test-stream-created'});
 });
 
 test.serial('throws when createStream fails, logs if destory fails', async t => {

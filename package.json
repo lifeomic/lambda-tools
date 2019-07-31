@@ -71,7 +71,7 @@
     "@babel/preset-typescript": "^7.0.0",
     "@lifeomic/alpha": "^0.14.0",
     "archiver": "^3.0.0",
-    "ava": "^2.0.0",
+    "ava": "^2.2.0",
     "aws-sdk": "^2.290.0",
     "babel-loader": "^8.0.2",
     "chalk": "^2.4.1",
