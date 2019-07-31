@@ -135,7 +135,7 @@ test.serial('throws when createTables fails', async t => {
   }
 });
 
-test.serial('throws when createTables fails', async t => {
+test.serial('deletes created tables when createTables fails', async t => {
   const { connection, config } = await getConnection();
 
   tableSchema([
@@ -153,7 +153,7 @@ test.serial('throws when createTables fails', async t => {
     const { message } = await t.throwsAsync(createTables(client));
     t.is(message, 'Failed to create tables: test-table-not-created');
     const {TableNames} = await client.listTables().promise();
-    t.is(TableNames, []);
+    t.deepEqual(TableNames, []);
     sinon.assert.calledOnce(deleteTable);
     sinon.assert.calledWithExactly(deleteTable, {TableName: 'test-table-created'});
   } finally {
