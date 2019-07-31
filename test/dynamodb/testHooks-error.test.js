@@ -19,3 +19,9 @@ test('The afterAll hook handles errors in the beforeAll hook gracefully', async 
     ensureStub.restore();
   }
 });
+
+test('The afterEach hook will ignore a missing context', async t => {
+  const { dynamoDBTestHooks } = require('../../src/dynamodb');
+  const {afterEach} = dynamoDBTestHooks(false);
+  await t.notThrowsAsync(afterEach(undefined));
+});
