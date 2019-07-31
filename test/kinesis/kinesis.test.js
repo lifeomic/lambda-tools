@@ -54,8 +54,31 @@ test.serial('throws when createStreams fails', async t => {
   const { kinesisClient } = t.context;
 
   sinon.stub(kinesisClient, 'createStream').onFirstCall().callsFake(throwTestError);
+  const deleteStream = sinon.spy(kinesisClient, 'deleteStream');
   const { message } = await t.throwsAsync(createStreams(kinesisClient));
   t.is(message, 'Failed to create streams: test-stream');
+  sinon.assert.notCalled(deleteStream);
+});
+
+test.serial('deletes created tables when createStreams fails', async t => {
+  const { kinesisClient } = t.context;
+
+  streams([
+    'test-stream-not-created',
+    'test-stream-created'
+  ]);
+
+  sinon.stub(kinesisClient, 'createStream')
+    .callThrough()
+    .onFirstCall().callsFake(throwTestError);
+  const deleteStream = sinon.spy(kinesisClient, 'deleteStream');
+
+  const { message } = await t.throwsAsync(createStreams(kinesisClient));
+  t.is(message, 'Failed to create streams: test-stream-not-created');
+  const {StreamNames} = await kinesisClient.listStreams().promise();
+  t.is(StreamNames, []);
+  sinon.assert.calledOnce(deleteStream);
+  sinon.assert.calledWithExactly(deleteStream, {TableName: 'test-stream-created'});
 });
 
 test.serial('throws when createStream fails, logs if destory fails', async t => {
@@ -71,15 +94,15 @@ test.serial('throws when createStream fails, logs if destory fails', async t => 
   sinon.stub(kinesisClient, 'createStream')
     .callThrough()
     .onSecondCall().callsFake(throwTestError);
-  const deleteTable = sinon.stub(kinesisClient, 'deleteStream')
+  const deleteStream = sinon.stub(kinesisClient, 'deleteStream')
     .callThrough()
     .onFirstCall().callsFake(throwTestError);
 
   const { message } = await t.throwsAsync(createStreams(kinesisClient));
 
   t.is(message, 'Failed to create streams: test-stream');
-  sinon.assert.calledOnce(deleteTable);
-  sinon.assert.calledWithExactly(deleteTable, {StreamName});
+  sinon.assert.calledOnce(deleteStream);
+  sinon.assert.calledWithExactly(deleteStream, {StreamName});
 
   await kinesisClient.deleteStream({StreamName}).promise();
 });

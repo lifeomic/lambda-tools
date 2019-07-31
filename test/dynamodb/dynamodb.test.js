@@ -126,8 +126,36 @@ test.serial('throws when createTables fails', async t => {
   try {
     const client = new AWS.DynamoDB(config);
     sinon.stub(client, 'createTable').onFirstCall().callsFake(throwTestError);
+    const deleteTable = sinon.spy(client, 'deleteTable');
     const { message } = await t.throwsAsync(createTables(client));
     t.is(message, 'Failed to create tables: test-table');
+    sinon.assert.notCalled(deleteTable);
+  } finally {
+    await connection.cleanup();
+  }
+});
+
+test.serial('throws when createTables fails', async t => {
+  const { connection, config } = await getConnection();
+
+  tableSchema([
+    Object.assign({}, TEST_TABLE_SCHEMA, {TableName: 'test-table-not-created'}),
+    Object.assign({}, TEST_TABLE_SCHEMA, {TableName: 'test-table-created'})
+  ]);
+
+  try {
+    const client = new AWS.DynamoDB(config);
+    sinon.stub(client, 'createTable')
+      .callThrough()
+      .onFirstCall().callsFake(throwTestError);
+    const deleteTable = sinon.spy(client, 'deleteTable');
+
+    const { message } = await t.throwsAsync(createTables(client));
+    t.is(message, 'Failed to create tables: test-table-not-created');
+    const {TableNames} = await client.listTables().promise();
+    t.is(TableNames, []);
+    sinon.assert.calledOnce(deleteTable);
+    sinon.assert.calledWithExactly(deleteTable, {TableName: 'test-table-created'});
   } finally {
     await connection.cleanup();
   }
