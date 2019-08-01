@@ -131,12 +131,12 @@ async function getConnection () {
   return {connection, config};
 }
 
-function kinesisTestHooks (useUniqueStreams, externalConfig) {
+function kinesisTestHooks (useUniqueStreams) {
   let connection;
   let config;
 
   async function beforeAll () {
-    const result = await getConnection(externalConfig);
+    const result = await getConnection();
     connection = result.connection;
     config = result.config;
   }
@@ -174,8 +174,8 @@ function kinesisTestHooks (useUniqueStreams, externalConfig) {
   };
 }
 
-function useKinesisDocker (test, useUniqueStreams, externalConfig) {
-  const testHooks = kinesisTestHooks(useUniqueStreams, externalConfig);
+function useKinesisDocker (test, useUniqueStreams) {
+  const testHooks = kinesisTestHooks(useUniqueStreams);
 
   test.before(testHooks.beforeAll);
 

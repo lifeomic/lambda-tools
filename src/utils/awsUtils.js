@@ -16,7 +16,6 @@ function buildConfigFromConnection (connection) {
 
 function buildConnectionAndConfig ({
   url,
-  externalConfig,
   cleanup = () => {}
 }) {
   const connection = {
@@ -26,7 +25,7 @@ function buildConnectionAndConfig ({
     accessKey: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
   };
-  const config = buildConfigFromConnection(connection, externalConfig);
+  const config = buildConfigFromConnection(connection);
   return {connection, config};
 }
 
