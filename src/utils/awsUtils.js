@@ -2,32 +2,29 @@ const AWS = require('aws-sdk');
 const NestedError = require('nested-error-stacks');
 const promiseRetry = require('promise-retry');
 
-function buildConfigFromConnection (connection, {
-  httpOptions = {timeout: 10000},
-  maxRetries = 10
-} = {}) {
+function buildConfigFromConnection (connection) {
   return Object.assign({
     credentials: new AWS.Credentials(connection.accessKey, connection.secretAccessKey),
     endpoint: new AWS.Endpoint(connection.url),
     region: connection.region,
-    httpOptions,
-    maxRetries
+    httpOptions: {
+      timeout: 10000
+    },
+    maxRetries: 10
   });
 }
 
 function buildConnectionAndConfig ({
   url,
   externalConfig,
-  cleanup = () => {},
-  accessKey = process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
+  cleanup = () => {}
 }) {
   const connection = {
-    accessKey,
+    url,
     cleanup,
-    region: 'us-east-1',
-    secretAccessKey,
-    url
+    region: process.env.AWS_DEFAULT_REGION,
+    accessKey: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
   };
   const config = buildConfigFromConnection(connection, externalConfig);
   return {connection, config};
@@ -40,7 +37,7 @@ async function waitForReady (awsType, retryFunc) {
     } catch (error) {
       retry(new NestedError(`${awsType} is still not ready after ${retryNumber} connection attempts`, error));
     }
-  }, {factor: 1, minTimeout: 500, retries: 20});
+  }, {minTimeout: 500, retries: 20});
 }
 
 module.exports = {

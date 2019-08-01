@@ -66,9 +66,9 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
   }
 }
 
-async function getConnection (externalConfig) {
+async function getConnection () {
   if (process.env.DYNAMODB_ENDPOINT) {
-    return buildConnectionAndConfig({url: process.env.DYNAMODB_ENDPOINT, externalConfig});
+    return buildConnectionAndConfig({url: process.env.DYNAMODB_ENDPOINT});
   }
 
   const docker = new Docker();
@@ -91,25 +91,22 @@ async function getConnection (externalConfig) {
   const host = await getHostAddress();
   const port = containerData.NetworkSettings.Ports['8000/tcp'][0].HostPort;
 
+  environment.set('AWS_ACCESS_KEY_ID', 'bogus');
+  environment.set('AWS_SECRET_ACCESS_KEY', 'bogus');
+  environment.set('AWS_REGION', 'us-east-1');
+  environment.set('DYNAMODB_ENDPOINT', `http://${host}:${port}`);
+
   const {connection, config} = buildConnectionAndConfig({
-    accessKey: 'bogus',
-    secretAccessKey: 'bogus',
-    url: `http://${host}:${port}`,
+    url: process.env.DYNAMODB_ENDPOINT,
     cleanup: () => {
       environment.restore();
       return container.stop();
-    },
-    externalConfig
+    }
   });
 
   const dynamoClient = new AWS.DynamoDB(config);
 
   await waitForReady('DynamoDB', async () => dynamoClient.listTables().promise());
-
-  environment.set('AWS_ACCESS_KEY_ID', connection.accessKey);
-  environment.set('AWS_SECRET_ACCESS_KEY', connection.secretAccessKey);
-  environment.set('AWS_REGION', connection.region);
-  environment.set('DYNAMODB_ENDPOINT', connection.url);
 
   return {connection, config};
 }
@@ -128,11 +125,11 @@ exports.tableSchema = (schema) => {
   tablesSchema = cloneDeep(schema);
 };
 
-function dynamoDBTestHooks (useUniqueTables = false, externalConfig) {
+function dynamoDBTestHooks (useUniqueTables = false) {
   let connection, config;
 
   async function beforeAll () {
-    const result = await getConnection(externalConfig);
+    const result = await getConnection();
     connection = result.connection;
     config = result.config;
   }
@@ -182,8 +179,8 @@ exports.createTables = createTables;
 exports.destroyTables = destroyTables;
 exports.dynamoDBTestHooks = dynamoDBTestHooks;
 
-exports.useDynamoDB = (test, useUniqueTables, externalConfig) => {
-  const testHooks = dynamoDBTestHooks(useUniqueTables, externalConfig);
+exports.useDynamoDB = (test, useUniqueTables) => {
+  const testHooks = dynamoDBTestHooks(useUniqueTables);
 
   test.before(testHooks.beforeAll);
 

@@ -83,9 +83,9 @@ function buildStreamNameMapping (uniqueIdentifier) {
   }));
 }
 
-async function getConnection (externalConfig) {
+async function getConnection () {
   if (process.env.KINESIS_ENDPOINT) {
-    return buildConnectionAndConfig({url: process.env.KINESIS_ENDPOINT, externalConfig});
+    return buildConnectionAndConfig({url: process.env.KINESIS_ENDPOINT});
   }
 
   const docker = new Docker();
@@ -111,24 +111,21 @@ async function getConnection (externalConfig) {
   const host = await getHostAddress();
   const port = containerData.NetworkSettings.Ports['4568/tcp'][0].HostPort;
 
+  environment.set('AWS_ACCESS_KEY_ID', 'bogus');
+  environment.set('AWS_SECRET_ACCESS_KEY', 'bogus');
+  environment.set('AWS_REGION', 'us-east-1');
+  environment.set('KINESIS_ENDPOINT', `http://${host}:${port}`);
+
   const {config, connection} = buildConnectionAndConfig({
-    accessKey: 'bogus',
     cleanup: () => {
       environment.restore();
       return container.stop();
     },
-    secretAccessKey: 'bogus',
-    url: `http://${host}:${port}`,
-    externalConfig
+    url: process.env.KINESIS_ENDPOINT
   });
 
   const kinesisClient = new AWS.Kinesis(config);
   await waitForReady('Kinesis', async () => kinesisClient.listStreams().promise());
-
-  environment.set('AWS_ACCESS_KEY_ID', connection.accessKey);
-  environment.set('AWS_SECRET_ACCESS_KEY', connection.secretAccessKey);
-  environment.set('AWS_REGION', connection.region);
-  environment.set('KINESIS_ENDPOINT', connection.url);
 
   return {connection, config};
 }

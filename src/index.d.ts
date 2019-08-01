@@ -1,15 +1,6 @@
 import * as aws from "aws-sdk";
 import { TestInterface } from "ava";
-
-export interface Config {
-  credentials: aws.Credentials,
-  endpoint: aws.Endpoint,
-  region: string,
-  httpOptions: {
-    timeout: number
-  },
-  maxRetries: number
-}
+import {ServiceConfigurationOptions} from "aws-sdk/lib/service";
 
 export interface HttpError {
   message: string;
@@ -32,7 +23,7 @@ declare namespace dynamodb {
 
     tableNames: {[key: string]: string},
     uniqueIdentifier: string,
-    config: Config
+    config: ServiceConfigurationOptions
   }
 
   export interface Hooks {
@@ -46,13 +37,13 @@ declare namespace dynamodb {
     schema: ReadonlyArray<aws.DynamoDB.Types.CreateTableInput>
   ): void;
   export function dynamoDBTestHooks(useUniqueTables?: boolean): Hooks;
-  export function useDynamoDB(test: TestInterface, useUniqueTables?: boolean, config?: Config): void;
+  export function useDynamoDB(test: TestInterface, useUniqueTables?: boolean): void;
 }
 
 declare namespace kinesis {
   export interface Context {
     kinesisClient: aws.Kinesis;
-    config: Config;
+    config: ServiceConfigurationOptions;
     streamNames: {[key: string]: string};
     uniqueIdentifier: string;
   }
@@ -67,8 +58,8 @@ declare namespace kinesis {
   export function streams(
     streams: ReadonlyArray<string>
   ): void;
-  export function kinesisTestHooks(useUniqueStreams?: boolean, externalConfig?: Config): Hooks;
-  export function useKinesisDocker(test: TestInterface, useUniqueTables?: boolean, externalConfig?: Config): void;
+  export function kinesisTestHooks(useUniqueStreams?: boolean): Hooks;
+  export function useKinesisDocker(test: TestInterface, useUniqueTables?: boolean): void;
   export function useKinesis(test: TestInterface, useUniqueTables?: boolean): void;
 }
 
