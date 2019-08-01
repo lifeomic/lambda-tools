@@ -1,11 +1,29 @@
 import * as aws from "aws-sdk";
 import { TestInterface } from "ava";
+import {ServiceConfigurationOptions} from "aws-sdk/lib/service";
+
+export interface HttpError {
+  message: string;
+  path: string[];
+}
+
+export interface Response {
+  statusCode: number;
+  error: string;
+  body: {
+    errors: HttpError[];
+  };
+}
 
 declare namespace dynamodb {
   export interface Context {
     documentClient: aws.DynamoDB.DocumentClient;
     dynamoClient: aws.DynamoDB;
     streamsClient: aws.DynamoDBStreams;
+
+    tableNames: {[key: string]: string},
+    uniqueIdentifier: string,
+    config: ServiceConfigurationOptions
   }
 
   export interface Hooks {
@@ -20,6 +38,36 @@ declare namespace dynamodb {
   ): void;
   export function dynamoDBTestHooks(useUniqueTables?: boolean): Hooks;
   export function useDynamoDB(test: TestInterface, useUniqueTables?: boolean): void;
+}
+
+declare namespace kinesis {
+  export interface Context {
+    kinesisClient: aws.Kinesis;
+    config: ServiceConfigurationOptions;
+    streamNames: {[key: string]: string};
+    uniqueIdentifier: string;
+  }
+
+  export interface Hooks {
+    beforeAll(): Promise<void>;
+    beforeEach(): Promise<Context>;
+    afterEach(context: Context): Promise<void>;
+    afterAll(): Promise<void>;
+  }
+
+  export function streams(
+    streams: ReadonlyArray<string>
+  ): void;
+  export function kinesisTestHooks(useUniqueStreams?: boolean): Hooks;
+  export function useKinesisDocker(test: TestInterface, useUniqueTables?: boolean): void;
+  export function useKinesis(test: TestInterface, useUniqueTables?: boolean): void;
+}
+
+declare namespace graphql {
+  export function useGraphQL(test: TestInterface): void;
+  export function setupGraphQL(setupGraphQL: Function): void;
+  export function assertSuccess(response: Response): void;
+  export function assertError(response: Response, path: {}, messageTest: string)
 }
 
 declare namespace lambda {

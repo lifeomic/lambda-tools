@@ -14,7 +14,7 @@ const listTablesMock = sinon.stub()
 
 AWSMock.mock('DynamoDB', 'listTables', listTablesMock);
 
-const { useDynamoDB } = require('../src/dynamodb');
+const { useDynamoDB } = require('../../src/dynamodb');
 
 useDynamoDB(test);
 
