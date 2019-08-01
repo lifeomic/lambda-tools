@@ -79,6 +79,9 @@ test('The helper sets default configuration environment variables', async (test)
 test('The helper provides a config object', async (test) => {
   const {config} = test.context.dynamodb;
 
+  console.log(JSON.stringify(config, null, 2));
+  console.log(config.endpoint.constructor.name);
+
   test.true(config.credentials instanceof AWS.Credentials);
   test.true(config.endpoint instanceof AWS.Endpoint);
   test.truthy(config.region);
