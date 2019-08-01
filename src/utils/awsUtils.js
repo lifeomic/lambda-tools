@@ -21,7 +21,7 @@ function buildConnectionAndConfig ({
   const connection = {
     url,
     cleanup,
-    region: process.env.AWS_DEFAULT_REGION,
+    region: process.env.AWS_REGION || 'us-east-1',
     accessKey: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
   };
