@@ -90,14 +90,15 @@ async function getConnection () {
   const containerData = await container.inspect();
   const host = await getHostAddress();
   const port = containerData.NetworkSettings.Ports['8000/tcp'][0].HostPort;
+  const url = `http://${host}:${port}`;
 
   environment.set('AWS_ACCESS_KEY_ID', 'bogus');
   environment.set('AWS_SECRET_ACCESS_KEY', 'bogus');
   environment.set('AWS_REGION', 'us-east-1');
-  environment.set('DYNAMODB_ENDPOINT', `http://${host}:${port}`);
+  environment.set('DYNAMODB_ENDPOINT', url);
 
   const {connection, config} = buildConnectionAndConfig({
-    url: process.env.DYNAMODB_ENDPOINT,
+    url,
     cleanup: () => {
       environment.restore();
       return container.stop();
