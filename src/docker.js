@@ -11,22 +11,32 @@ const DEFAULT_IMAGE = 'alpine:3.6';
 const DEFAULT_ROUTE_PATTERN = /^default\b.*$/m;
 const INTERFACE_ADDRESS_PATTERN = /\binet addr:\d{1,3}\.\d{1,3}.\d{1,3}\.\d{1,3}\b/m;
 
-const executeContainerCommand = async ({container, command, environment}) => {
+const executeContainerCommand = async ({container, command, environment, stdin}) => {
   const options = {
     AttachStderr: true,
     AttachStdout: true,
     Cmd: command
   };
 
+  const usingStdin = stdin !== undefined;
+
   if (environment) {
     options.Env = environment;
+  }
+
+  if (usingStdin) {
+    options.AttachStdin = true;
+    options.StdinOnce = true;
   }
 
   const exec = await container.exec(options);
 
   const stderr = new WriteBuffer();
   const stdout = new WriteBuffer();
-  await exec.start();
+  await exec.start(usingStdin ? {stdin: true, hijack: true} : undefined);
+  if (usingStdin) {
+    exec.output.end(Buffer.from(stdin));
+  }
   container.modem.demuxStream(exec.output, stdout, stderr);
   await new Promise((resolve, reject) => {
     exec.output.once('end', resolve);

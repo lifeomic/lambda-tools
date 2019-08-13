@@ -1,6 +1,6 @@
 const test = require('ava');
 
-const { useLambdaContainer } = require('./helpers/lambda');
+const { useLambdaContainer } = require('../helpers/lambda');
 
 const containerConfig = {
   environment: {

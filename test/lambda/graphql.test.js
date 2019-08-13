@@ -2,19 +2,19 @@ const path = require('path');
 const test = require('ava');
 const uuid = require('uuid/v4');
 
-const { build, useComposeContainer, useLambda } = require('../src/lambda');
-const { createContainer } = require('./helpers/lambda');
+const { build, useComposeContainer, useLambda } = require('../../src/lambda');
+const { createContainer, FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs8.10';
 
-const buildDirectory = path.join(__dirname, 'fixtures', 'build', uuid());
+const buildDirectory = path.join(FIXTURES_DIRECTORY, 'build', uuid());
 let container = null;
 
 useLambda(test);
 
 test.before(async () => {
   const buildResults = await build({
-    entrypoint: path.join(__dirname, 'fixtures', 'lambda_graphql.js'),
+    entrypoint: path.join(FIXTURES_DIRECTORY, 'lambda_graphql.js'),
     outputPath: buildDirectory
   });
 
