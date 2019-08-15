@@ -7,9 +7,6 @@ function buildConfigFromConnection (connection) {
     credentials: new AWS.Credentials(connection.accessKey, connection.secretAccessKey),
     endpoint: new AWS.Endpoint(connection.url),
     region: connection.region,
-    httpOptions: {
-      timeout: 10000
-    },
     maxRetries: 10
   });
 }
