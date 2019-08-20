@@ -141,7 +141,7 @@ Configures the `lambda` helper to provision a new Docker container managed by
  - **handler** - _required._ The reference to the Lambda handler function in
    the form `<module>.<function name>`
  - **image** - the docker image used to provide the Lambda runtime. By default
-   `lambci/lambda:nodejs6.10` is used.
+   `lambci/lambda:nodejs8.10` is used.
  - **useComposeNetwork** - a flag indicating if the container should be attached
    to a docker-compose managed network. By default the container uses a
    dedicated isolated network. If set to `true`, the `COMPOSE_PROJECT_NAME`

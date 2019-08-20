@@ -1,7 +1,7 @@
 const test = require('ava');
-const WriteBuffer = require('../src/WriteBuffer');
+const WriteBuffer = require('../../src/WriteBuffer');
 
-const { useLambdaContainer } = require('./helpers/lambda');
+const { useLambdaContainer } = require('../helpers/lambda');
 
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs6.10';
 
