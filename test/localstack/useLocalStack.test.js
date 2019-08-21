@@ -29,4 +29,5 @@ services.forEach(nextServiceName => {
 
 test('will error when missing services', t => {
   t.throws(() => useLocalStack(test, {}));
+  t.throws(() => useLocalStack(test));
 });

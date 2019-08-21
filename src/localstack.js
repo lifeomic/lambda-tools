@@ -11,9 +11,7 @@ const { Writable } = require('stream');
 class TempWriteBuffer extends Writable {
   constructor (resolve) {
     super();
-    if (resolve) {
-      this.reset();
-    }
+    this.reset();
     this.resolve = resolve;
   }
 
