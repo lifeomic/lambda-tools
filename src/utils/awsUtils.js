@@ -33,7 +33,7 @@ async function waitForReady (awsType, retryFunc) {
     } catch (error) {
       retry(new NestedError(`${awsType} is still not ready after ${retryNumber} connection attempts`, error));
     }
-  }, {minTimeout: 500, retries: 2});
+  }, {minTimeout: 500, retries: 20});
 }
 
 module.exports = {
