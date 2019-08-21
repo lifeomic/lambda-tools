@@ -22,7 +22,7 @@ class TempWriteBuffer extends Writable {
   }
 
   toString (encoding) {
-    return this._buffer ? this._buffer.map((chunk) => chunk.toString(encoding)).join('') : '';
+    return this._buffer.map((chunk) => chunk.toString(encoding)).join('');
   }
 
   _write (chunk, encoding, callback) {
