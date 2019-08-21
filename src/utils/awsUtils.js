@@ -19,8 +19,8 @@ function buildConnectionAndConfig ({
     url,
     cleanup,
     region: process.env.AWS_REGION || 'us-east-1',
-    accessKey: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    accessKey: process.env.AWS_ACCESS_KEY_ID || 'bogus',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'bogus'
   };
   const config = buildConfigFromConnection(connection);
   return {connection, config};
@@ -33,7 +33,7 @@ async function waitForReady (awsType, retryFunc) {
     } catch (error) {
       retry(new NestedError(`${awsType} is still not ready after ${retryNumber} connection attempts`, error));
     }
-  }, {minTimeout: 500, retries: 20});
+  }, {minTimeout: 500, retries: 2});
 }
 
 module.exports = {
