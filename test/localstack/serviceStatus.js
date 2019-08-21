@@ -21,4 +21,12 @@ services.forEach(serviceName => {
     const service = mappedServices[serviceName];
     await t.notThrowsAsync(service.isReady(service.client));
   });
+
+  // It appears this is necessary to get code coverage.
+  test(`${serviceName} can configure a valid client`, async t => {
+    const {mappedServices} = t.context;
+    const {config, connection} = mappedServices[serviceName];
+    const client = LOCALSTACK_SERVICES[serviceName].getClient({config, connection});
+    await t.notThrowsAsync(LOCALSTACK_SERVICES[serviceName].isReady(client));
+  });
 });

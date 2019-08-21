@@ -1,6 +1,8 @@
 import * as aws from "aws-sdk";
 import { TestInterface } from "ava";
-import {ServiceConfigurationOptions} from "aws-sdk/lib/service";
+import { ServiceConfigurationOptions } from "aws-sdk/lib/service";
+import { Client as ElasticSearchClient } from "@elastic/elasticsearch";
+import { AxiosInstance, AxiosPromise } from "axios";
 
 export interface HttpError {
   message: string;
@@ -55,9 +57,7 @@ declare namespace kinesis {
     afterAll(): Promise<void>;
   }
 
-  export function streams(
-    streams: ReadonlyArray<string>
-  ): void;
+  export function streams(streams: ReadonlyArray<string>): void;
   export function kinesisTestHooks(useUniqueStreams?: boolean): Hooks;
   export function useKinesisDocker(test: TestInterface, useUniqueTables?: boolean): void;
   export function useKinesis(test: TestInterface, useUniqueTables?: boolean): void;
@@ -70,12 +70,64 @@ declare namespace graphql {
   export function assertError(response: Response, path: {}, messageTest: string)
 }
 
+declare namespace localStack {
+  export interface LocalStackService<T> {
+    config: ServiceConfigurationOptions;
+    client: T;
+    isReady(client: T): Promise<any>;
+  }
+
+  export interface LocalStackServices {
+    apigateway: LocalStackService<aws.APIGateway>;
+    cloudformation: LocalStackService<aws.CloudFormation>;
+    cloudwatch: LocalStackService<aws.CloudWatch>;
+    cloudwatchlogs: LocalStackService<aws.CloudWatchLogs>;
+    dynamodb: LocalStackService<aws.DynamoDB>;
+    dynamodbstreams: LocalStackService<aws.DynamoDBStreams>;
+    ec2: LocalStackService<aws.EC2>;
+    es: LocalStackService<aws.ES>;
+    elasticsearch: LocalStackService<ElasticSearchClient>;
+    // eLocalStackService<vents: aws.CloudWatchEvents>;
+    firehose: LocalStackService<aws.Firehose>;
+    iam: LocalStackService<aws.IAM>;
+    kinesis: LocalStackService<aws.Kinesis>;
+    lambda: LocalStackService<aws.Lambda>;
+    redshift: LocalStackService<aws.Redshift>;
+    route53: LocalStackService<aws.Route53>;
+    s3: LocalStackService<aws.S3>;
+    secretsmanager: LocalStackService<aws.SecretsManager>;
+    ses: LocalStackService<aws.SES>;
+    sns: LocalStackService<aws.SNS>;
+    sqs: LocalStackService<aws.SQS>;
+    ssm: LocalStackService<aws.SSM>;
+    stepfunctions: LocalStackService<aws.StepFunctions>;
+    sts: LocalStackService<aws.STS>;
+  }
+
+  export interface Context {
+    services: LocalStackServices;
+  }
+
+  export interface Hooks {
+    beforeAll(): Promise<Context>;
+    afterAll(): Promise<void>;
+  }
+
+  export interface Config {
+    versionNumberTag: string;
+    services: Array<keyof LocalStackServices>;
+  }
+
+  export function localStackHooks(config: Config): Hooks;
+  export function useLocalStack(test: TestInterface, config: Config): void;
+}
+
 declare namespace lambda {
-  interface Environment {
+  export interface Environment {
     [key:string]: string | null;
   }
 
-  interface LocalOptions {
+  export interface LocalOptions {
     environment?: Environment
     mountPoint?: string;
     handler?: string;
@@ -83,7 +135,7 @@ declare namespace lambda {
     useComposeNetwork?: boolean;
   }
 
-  interface NewContainerOptions {
+  export interface NewContainerOptions {
     environment?: Environment
     mountpoint?: string;
     mountpointParent?: string;
@@ -93,13 +145,13 @@ declare namespace lambda {
     useComposeNetwork?: boolean;
   }
 
-  interface ComposeContainerOptions {
+  export interface ComposeContainerOptions {
     environment?: Environment
     service: string;
     handler: string;
   }
 
-  interface WebpackOptions {
+  export interface WebpackOptions {
     entrypoint: string;
     serviceName?: string;
     zip?: boolean;
@@ -108,7 +160,7 @@ declare namespace lambda {
     configTransformer?: (config: any) => Promise<any>;
   }
 
-  interface CreateLambdaExecutionEnvironmentOptions {
+  export interface CreateLambdaExecutionEnvironmentOptions {
     environment?: Environment;
     image?: string;
     zipfile?: string;
@@ -118,22 +170,27 @@ declare namespace lambda {
     service?: string;
   }
 
-  interface LambdaExecutionEnvironment {
+  export interface LambdaExecutionEnvironment {
     network?: any;
     container?: any;
     cleanupMountpoint?: () => Promise<void>;
   }
 
-  interface DestroyLambdaExecutionEnvironmentOptions {
+  export interface DestroyLambdaExecutionEnvironmentOptions {
     cleanupMountpoint?: boolean;
     container?: boolean;
     network?: boolean;
   }
 
-  interface TestHooks {
+  export interface AlphaClient extends AxiosInstance {
+    raw<T = any>(event: {}, environment: Environment, handler: string): Promise<T>;
+    graphql<T = any>(path, query, variables, config): AxiosPromise<T>
+  }
+
+  export interface TestHooks {
     beforeAll(): Promise<void>;
     afterAll(): Promise<void>;
-    beforeEach(): Promise<any>;
+    beforeEach(): Promise<AlphaClient>;
   }
 
   export class LambdaRunner {
