@@ -41,6 +41,10 @@ class Client extends Alpha {
     super(fn);
     this.raw = promisify(fn);
   }
+
+  graphql (path, query, variables, config) {
+    return this.post(path, {query, variables}, config);
+  }
 }
 
 async function getEntrypoint (docker, imageName) {
@@ -247,10 +251,7 @@ function useLambdaHooks (localOptions) {
 
   async function beforeEach () {
     const { container, environment, handler } = getOptions();
-    const client = new Client({ container, environment, handler });
-
-    client.graphql = (path, query, variables, config) => client.post(path, { query, variables }, config);
-    return client;
+    return new Client({ container, environment, handler });
   }
 
   return { beforeAll, beforeEach, afterAll };
