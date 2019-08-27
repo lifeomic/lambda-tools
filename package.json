@@ -45,7 +45,7 @@
     "typescript": "*"
   },
   "devDependencies": {
-    "@lifeomic/eslint-plugin-node": "^1.1.1",
+    "@lifeomic/eslint-plugin-node": "^2.0.1",
     "@types/koa": "^2.0.45",
     "@types/koa-router": "^7.0.28",
     "apollo-server-koa": "^2.0.0",
