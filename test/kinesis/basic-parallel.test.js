@@ -15,7 +15,7 @@ test.after(() => {
 });
 
 test('The helper provides kinesis client and streams', async (test) => {
-  const {streamNames, kinesisClient} = test.context.kinesis;
+  const { streamNames, kinesisClient } = test.context.kinesis;
   test.true(kinesisClient instanceof AWS.Kinesis);
 
   const listStreamsResponse = await kinesisClient.listStreams().promise();
@@ -58,7 +58,7 @@ test('The helper provides kinesis client and streams', async (test) => {
 });
 
 test('The helper includes a unique identifier in the stream names', async (test) => {
-  const {streamNames, uniqueIdentifier} = test.context.kinesis;
+  const { streamNames, uniqueIdentifier } = test.context.kinesis;
   const streamName = streamNames['test-stream'];
 
   test.true(typeof uniqueIdentifier === 'string');
@@ -74,7 +74,7 @@ test('The helper sets default configuration environment variables', async (test)
 });
 
 test('The helper provides a config object', async (test) => {
-  const {config} = test.context.kinesis;
+  const { config } = test.context.kinesis;
 
   test.true(config.credentials instanceof AWS.Credentials);
   test.true(config.endpoint instanceof AWS.Endpoint);

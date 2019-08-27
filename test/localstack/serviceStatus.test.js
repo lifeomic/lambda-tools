@@ -1,15 +1,15 @@
 const test = require('ava');
 
-const {LOCALSTACK_SERVICES, getConnection} = require('../../src/localstack');
+const { LOCALSTACK_SERVICES, getConnection } = require('../../src/localstack');
 const services = Object.keys(LOCALSTACK_SERVICES);
 
 test.before(async t => {
-  const {mappedServices, cleanup} = await getConnection({services});
-  Object.assign(t.context, {mappedServices, cleanup});
+  const { mappedServices, cleanup } = await getConnection({ services });
+  Object.assign(t.context, { mappedServices, cleanup });
 });
 
 test.after.always(t => {
-  const {cleanup} = t.context;
+  const { cleanup } = t.context;
   if (cleanup) {
     cleanup();
   }
@@ -17,16 +17,16 @@ test.after.always(t => {
 
 services.forEach(serviceName => {
   test(`${serviceName} should be available`, async t => {
-    const {mappedServices} = t.context;
+    const { mappedServices } = t.context;
     const service = mappedServices[serviceName];
     await t.notThrowsAsync(service.isReady(service.client));
   });
 
   // It appears this is necessary to get code coverage.
   test(`${serviceName} can configure a valid client`, async t => {
-    const {mappedServices} = t.context;
-    const {config, connection} = mappedServices[serviceName];
-    const client = LOCALSTACK_SERVICES[serviceName].getClient({config, connection});
+    const { mappedServices } = t.context;
+    const { config, connection } = mappedServices[serviceName];
+    const client = LOCALSTACK_SERVICES[serviceName].getClient({ config, connection });
     await t.notThrowsAsync(LOCALSTACK_SERVICES[serviceName].isReady(client));
   });
 });

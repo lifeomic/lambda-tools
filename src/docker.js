@@ -11,7 +11,7 @@ const DEFAULT_IMAGE = 'alpine:3.6';
 const DEFAULT_ROUTE_PATTERN = /^default\b.*$/m;
 const INTERFACE_ADDRESS_PATTERN = /\binet addr:\d{1,3}\.\d{1,3}.\d{1,3}\.\d{1,3}\b/m;
 
-const executeContainerCommand = async ({container, command, environment, stdin}) => {
+const executeContainerCommand = async ({ container, command, environment, stdin }) => {
   const options = {
     AttachStderr: true,
     AttachStdout: true,
@@ -33,7 +33,7 @@ const executeContainerCommand = async ({container, command, environment, stdin})
 
   const stderr = new WriteBuffer();
   const stdout = new WriteBuffer();
-  await exec.start(usingStdin ? {stdin: true, hijack: true} : undefined);
+  await exec.start(usingStdin ? { stdin: true, hijack: true } : undefined);
   if (usingStdin) {
     exec.output.end(Buffer.from(stdin));
   }
@@ -102,10 +102,10 @@ exports.getHostAddress = async () => {
   await container.start();
 
   try {
-    const { stdout: routeTable } = await executeContainerCommand({container, command: ['route']});
+    const { stdout: routeTable } = await executeContainerCommand({ container, command: ['route'] });
     const defaultInterface = getDefaultInterface(routeTable.toString('utf8'));
 
-    const { stdout: ifconfig } = await executeContainerCommand({container, command: ['ifconfig', defaultInterface]});
+    const { stdout: ifconfig } = await executeContainerCommand({ container, command: ['ifconfig', defaultInterface] });
     return getInterfaceAddress(ifconfig.toString('utf8'));
   } finally {
     // Don't wait for the container to stop (this can take a while).

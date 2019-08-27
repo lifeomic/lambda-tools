@@ -10,7 +10,7 @@ const containerConfig = {
 
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs6.10';
 
-useLambdaContainer(test, LAMBDA_IMAGE, {containerConfig});
+useLambdaContainer(test, LAMBDA_IMAGE, { containerConfig });
 
 test('Compose containers can use a custom environment', async (test) => {
   const response = await test.context.lambda.get('/');

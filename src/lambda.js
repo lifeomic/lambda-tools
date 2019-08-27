@@ -43,7 +43,7 @@ class Client extends Alpha {
   }
 
   graphql (path, query, variables, config) {
-    return this.post(path, {query, variables}, config);
+    return this.post(path, { query, variables }, config);
   }
 }
 
@@ -72,7 +72,7 @@ class LambdaRunner {
     const command = await this._buildCommand();
     const container = await this._getContainer();
     const environment = this._environment;
-    const { stderr, stdout } = await executeContainerCommand({container, command, environment, stdin: convertEvent(event)});
+    const { stderr, stdout } = await executeContainerCommand({ container, command, environment, stdin: convertEvent(event) });
 
     const output = stdout.toString('utf8').trim();
     const split = output.lastIndexOf('\n');
@@ -210,7 +210,7 @@ async function createLambdaExecutionEnvironment (options) {
 }
 
 async function destroyLambdaExecutionEnvironment (environment) {
-  const {container, network, cleanupMountpoint} = environment;
+  const { container, network, cleanupMountpoint } = environment;
 
   if (cleanupMountpoint) {
     await cleanupMountpoint();

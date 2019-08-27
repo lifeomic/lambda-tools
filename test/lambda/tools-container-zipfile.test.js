@@ -5,7 +5,7 @@ const tmp = require('tmp-promise');
 const sinon = require('sinon');
 
 const { useNewContainer, useLambda, createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment } = require('../../src/lambda');
-const {FIXTURES_DIRECTORY} = require('../helpers/lambda');
+const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 useLambda(test);
 
@@ -31,7 +31,7 @@ test('An error is thrown if both zipfile and mountpoint arguments are provided',
 });
 
 test('will use mountpointParent as the directory for unzipping if provided', async (test) => {
-  const tempWork = await tmp.dir({dir: process.cwd(), prefix: '.mountpointParent-test-'});
+  const tempWork = await tmp.dir({ dir: process.cwd(), prefix: '.mountpointParent-test-' });
   try {
     // Spy on unzipper to make sure the temp path is used
     const extractSpy = sinon.spy(unzip, 'Extract');

@@ -13,10 +13,10 @@ test.before(async t => {
 });
 
 test.beforeEach((t) => {
-  const {config} = t.context;
+  const { config } = t.context;
   streams(['test-stream']);
   const kinesisClient = new AWS.Kinesis(config);
-  Object.assign(t.context, {kinesisClient});
+  Object.assign(t.context, { kinesisClient });
 });
 
 test.afterEach(() => {
@@ -24,7 +24,7 @@ test.afterEach(() => {
 });
 
 test.after(async t => {
-  const {connection} = t.context;
+  const { connection } = t.context;
   await connection.cleanup();
 });
 
@@ -73,10 +73,10 @@ test.serial('deletes created streams when createStreams fails', async t => {
 
   const { message } = await t.throwsAsync(createStreams(kinesisClient));
   t.is(message, 'Failed to create streams: test-stream-not-created');
-  const {StreamNames} = await kinesisClient.listStreams().promise();
+  const { StreamNames } = await kinesisClient.listStreams().promise();
   t.deepEqual(StreamNames, []);
   sinon.assert.calledOnce(deleteStream);
-  sinon.assert.calledWithExactly(deleteStream, {StreamName: 'test-stream-created'});
+  sinon.assert.calledWithExactly(deleteStream, { StreamName: 'test-stream-created' });
 });
 
 test.serial('throws when createStream fails, logs if destory fails', async t => {
@@ -100,9 +100,9 @@ test.serial('throws when createStream fails, logs if destory fails', async t => 
 
   t.is(message, 'Failed to create streams: test-stream');
   sinon.assert.calledOnce(deleteStream);
-  sinon.assert.calledWithExactly(deleteStream, {StreamName});
+  sinon.assert.calledWithExactly(deleteStream, { StreamName });
 
-  await kinesisClient.deleteStream({StreamName}).promise();
+  await kinesisClient.deleteStream({ StreamName }).promise();
 });
 
 test.serial('throws when destroyStreams fails', async t => {

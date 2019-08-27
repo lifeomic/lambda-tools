@@ -37,7 +37,7 @@ test.serial('The helper can log Lambda execution output', async (test) => {
 // We rely on test ordering to ensure that this test case does not interfere
 // with the others in this suite (this test case stops the container)
 test.serial('The helper reports invocation errors', async (test) => {
-  const {container} = test.context;
+  const { container } = test.context;
   await container.stop();
   // The format of this error message seems to differ based on timing of the
   // container cleanup. We'll just settle for getting an error...

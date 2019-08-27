@@ -19,7 +19,7 @@ test('getConnection defaults to the latest localstack version', async t => {
   const idx = random(0, services.length - 1);
   const serviceName = services[idx];
 
-  await t.throwsAsync(getConnection({services: [serviceName]}), { instanceOf: Error, message: error.message });
+  await t.throwsAsync(getConnection({ services: [serviceName] }), { instanceOf: Error, message: error.message });
   sinon.assert.calledOnce(ensureStub);
   sinon.assert.calledWithExactly(ensureStub, sinon.match.any, 'localstack/localstack:latest');
 });
@@ -39,19 +39,19 @@ test('getConnection allows specifying the localstack version', async t => {
   const serviceName = services[idx];
   const versionTag = uuid();
 
-  await t.throwsAsync(getConnection({versionTag, services: [serviceName]}), { instanceOf: Error, message: error.message });
+  await t.throwsAsync(getConnection({ versionTag, services: [serviceName] }), { instanceOf: Error, message: error.message });
   sinon.assert.calledOnce(ensureStub);
   sinon.assert.calledWithExactly(ensureStub, sinon.match.any, `localstack/localstack:${versionTag}`);
 });
 
 test('getConnection throws when missing services', async t => {
-  const {getConnection} = require('../../src/localstack');
+  const { getConnection } = require('../../src/localstack');
   await t.throwsAsync(getConnection());
-  await t.throwsAsync(getConnection({services: []}), 'No services provided');
+  await t.throwsAsync(getConnection({ services: [] }), 'No services provided');
 });
 
 test('getConnection throws when invalid services are requested', async t => {
   const serviceName = uuid();
-  const {getConnection} = require('../../src/localstack');
-  await t.throwsAsync(getConnection({services: [serviceName]}), `The following services are provided, (${serviceName}`);
+  const { getConnection } = require('../../src/localstack');
+  await t.throwsAsync(getConnection({ services: [serviceName] }), `The following services are provided, (${serviceName}`);
 });

@@ -4,7 +4,7 @@ const test = require('ava');
 const uuid = require('uuid/v4');
 
 const { useNewContainer, useLambda } = require('../../src/lambda');
-const {FIXTURES_DIRECTORY} = require('../helpers/lambda');
+const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 const prefix = process.env.COMPOSE_PROJECT_NAME = uuid();
 const networkName = `${prefix}_default`;

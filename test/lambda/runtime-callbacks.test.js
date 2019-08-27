@@ -5,7 +5,7 @@ const uuid = require('uuid/v4');
 const WriteBuffer = require('../../src/WriteBuffer');
 
 const { build, useNewContainer, useLambda } = require('../../src/lambda');
-const {FIXTURES_DIRECTORY} = require('../helpers/lambda');
+const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());
 
