@@ -5,8 +5,8 @@ const path = require('path');
 const sinon = require('sinon');
 const test = require('ava');
 const uuid = require('uuid/v4');
-const {createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment, LambdaRunner} = require('../src/lambda');
-const {FIXTURES_DIRECTORY} = require('./helpers/lambda');
+const { createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment, LambdaRunner } = require('../src/lambda');
+const { FIXTURES_DIRECTORY } = require('./helpers/lambda');
 const find = require('lodash/find');
 
 const SUPPORTED_NODE_VERSIONS = ['6.10', '8.10'];

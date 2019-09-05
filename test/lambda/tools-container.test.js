@@ -2,7 +2,7 @@ const test = require('ava');
 
 const { useNewContainer, useLambda } = require('../../src/lambda');
 
-const {FIXTURES_DIRECTORY} = require('../helpers/lambda');
+const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 useLambda(test);
 

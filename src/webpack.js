@@ -205,7 +205,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
   ];
 
   const babelLoaderConfig = {
-    exclude: [ babelEnvDeps.exclude({engines: {node: '>=' + nodeVersion}}) ],
+    exclude: [ babelEnvDeps.exclude({ engines: { node: '>=' + nodeVersion } }) ],
     loader: 'babel-loader'
   };
 

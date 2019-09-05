@@ -5,7 +5,7 @@ const promiseRetry = require('promise-retry');
 const NestedError = require('nested-error-stacks');
 const uuid = require('uuid');
 
-const {mockInvocation, verifyInvocation} = require('../src').mockServerLambda;
+const { mockInvocation, verifyInvocation } = require('../src').mockServerLambda;
 
 const { mockServerClient } = require('mockserver-client');
 
@@ -24,7 +24,7 @@ async function waitForMockServerToBeReady (mockServerClient) {
     } catch (error) {
       retry(new NestedError(`MockServer is still not ready after ${retryNumber} connection attempts`, error));
     }
-  }, {factor: 1, minTimeout: 100, retries: 1000});
+  }, { factor: 1, minTimeout: 100, retries: 1000 });
 }
 
 let moduleContext;
@@ -57,11 +57,11 @@ test.before(async () => {
   const msClient = mockServerClient(host, port);
   await waitForMockServerToBeReady(msClient);
 
-  moduleContext = {host, port, mockServerClient: msClient, container};
+  moduleContext = { host, port, mockServerClient: msClient, container };
 });
 
 test.beforeEach(async (test) => {
-  const {host, port} = moduleContext;
+  const { host, port } = moduleContext;
   const lambda = new AWS.Lambda({
     credentials: new AWS.Credentials('dummy-access-key', 'dummy-key-secret'),
     region: 'us-east-1',
@@ -81,11 +81,11 @@ test.after.always(async (test) => {
 });
 
 test('Lambda function invocations can be mocked', async (test) => {
-  const {lambda, mockServerClient} = test.context;
+  const { lambda, mockServerClient } = test.context;
 
   const functionName = `test-${uuid()}`;
-  const expectedResponse = {response: 'result'};
-  const expectedRequestBody = {test: 'value'};
+  const expectedResponse = { response: 'result' };
+  const expectedRequestBody = { test: 'value' };
 
   // Verify that invocations fail before mocking
   const preMockInvoke = lambda.invoke({
@@ -109,11 +109,11 @@ test('Lambda function invocations can be mocked', async (test) => {
 });
 
 test('Lambda function invocations can be mocked without specifying the request body', async (test) => {
-  const {lambda, mockServerClient} = test.context;
+  const { lambda, mockServerClient } = test.context;
 
   const functionName = `test-${uuid()}`;
-  const expectedResponse = {response: 'result'};
-  const expectedRequestBody = {test: 'value'};
+  const expectedResponse = { response: 'result' };
+  const expectedRequestBody = { test: 'value' };
 
   await mockInvocation(mockServerClient, functionName, expectedResponse);
 
@@ -130,11 +130,11 @@ test('Lambda function invocations can be mocked without specifying the request b
 });
 
 test('Lambda function invocations can be verified', async (test) => {
-  const {lambda, mockServerClient} = test.context;
+  const { lambda, mockServerClient } = test.context;
 
   const functionName = `test-${uuid()}`;
-  const expectedResponse = {verifyResponse: 'result'};
-  const expectedRequestBody = {verifyRequest: 'value'};
+  const expectedResponse = { verifyResponse: 'result' };
+  const expectedRequestBody = { verifyRequest: 'value' };
 
   await mockInvocation(mockServerClient, functionName, expectedResponse, expectedRequestBody);
 

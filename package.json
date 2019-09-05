@@ -1,6 +1,6 @@
 {
   "name": "@lifeomic/lambda-tools",
-  "version": "8.3.0",
+  "version": "8.3.1-alpha",
   "description": "Common utilities for Lambda testing and development",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -45,13 +45,13 @@
     "typescript": "*"
   },
   "devDependencies": {
-    "@lifeomic/eslint-plugin-node": "^1.1.1",
+    "@lifeomic/eslint-plugin-node": "^2.0.1",
     "@types/koa": "^2.0.45",
     "@types/koa-router": "^7.0.28",
     "apollo-server-koa": "^2.0.0",
     "aws-sdk-mock": "^4.0.0",
     "coveralls": "^3.0.1",
-    "eslint": "^5.1.0",
+    "eslint": "^6.0.0",
     "graphql": "^14.0.2",
     "graphql-tools": "^4.0.0",
     "koa": "^2.5.0",

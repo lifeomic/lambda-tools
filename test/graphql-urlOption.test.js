@@ -18,7 +18,7 @@ const graphql = new ApolloServer({
 });
 
 const alternateUrl = '/graphql-alt';
-useGraphQL(test, {url: alternateUrl});
+useGraphQL(test, { url: alternateUrl });
 
 test.before(() => {
   setupGraphQL((test) => {

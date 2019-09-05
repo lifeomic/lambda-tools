@@ -17,7 +17,7 @@ test.after(() => {
 // no uuid in stream name (old way, basic regression test to ensure forward
 // compatibility)
 test.serial('The helper provides kinesis clients and streams', async (test) => {
-  const {kinesisClient} = test.context.kinesis;
+  const { kinesisClient } = test.context.kinesis;
   test.true(kinesisClient instanceof AWS.Kinesis);
 
   const listStreamsResponse = await kinesisClient.listStreams().promise();
@@ -60,7 +60,7 @@ test.serial('The helper provides kinesis clients and streams', async (test) => {
 });
 
 test.serial('The helper does not include a unique identifier in the stream names', async (test) => {
-  const {streamNames, uniqueIdentifier} = test.context.kinesis;
+  const { streamNames, uniqueIdentifier } = test.context.kinesis;
   const streamName = streamNames['test-stream'];
 
   test.true(typeof uniqueIdentifier === 'string');

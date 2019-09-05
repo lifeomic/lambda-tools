@@ -10,7 +10,7 @@ test('The afterAll hook handles errors in the beforeAll hook gracefully', async 
     .rejects(error);
 
   const { localStackHooks } = require('../../src/localstack');
-  const { afterAll, beforeAll } = localStackHooks({services: ['es']});
+  const { afterAll, beforeAll } = localStackHooks({ services: ['es'] });
 
   try {
     await t.throwsAsync(beforeAll, { instanceOf: Error, message: error.message });
@@ -21,6 +21,6 @@ test('The afterAll hook handles errors in the beforeAll hook gracefully', async 
 });
 
 test('localStackHooks throws when missing services', t => {
-  const {localStackHooks} = require('../../src/localstack');
+  const { localStackHooks } = require('../../src/localstack');
   t.throws(localStackHooks);
 });

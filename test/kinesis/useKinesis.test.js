@@ -1,5 +1,5 @@
 const test = require('ava');
-const {useKinesis} = require('../../src/kinesis');
+const { useKinesis } = require('../../src/kinesis');
 const sinon = require('sinon');
 
 const AWS = require('aws-sdk');

@@ -68,7 +68,7 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
 
 async function getConnection () {
   if (process.env.DYNAMODB_ENDPOINT) {
-    return buildConnectionAndConfig({url: process.env.DYNAMODB_ENDPOINT});
+    return buildConnectionAndConfig({ url: process.env.DYNAMODB_ENDPOINT });
   }
 
   const docker = new Docker();
@@ -97,7 +97,7 @@ async function getConnection () {
   environment.set('AWS_REGION', 'us-east-1');
   environment.set('DYNAMODB_ENDPOINT', url);
 
-  const {connection, config} = buildConnectionAndConfig({
+  const { connection, config } = buildConnectionAndConfig({
     url,
     cleanup: () => {
       environment.restore();
@@ -109,7 +109,7 @@ async function getConnection () {
 
   await waitForReady('DynamoDB', async () => dynamoClient.listTables().promise());
 
-  return {connection, config};
+  return { connection, config };
 }
 
 function getTableName (tableName, uniqueIdentifier) {
@@ -117,7 +117,7 @@ function getTableName (tableName, uniqueIdentifier) {
 }
 
 function buildTableNameMapping (schemas, uniqueIdentifier) {
-  return fromPairs(schemas.map(({TableName}) => {
+  return fromPairs(schemas.map(({ TableName }) => {
     return [TableName, getTableName(TableName, uniqueIdentifier)];
   }));
 }

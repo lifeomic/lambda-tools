@@ -139,8 +139,8 @@ test.serial('deletes created tables when createTables fails', async t => {
   const { connection, config } = await getConnection();
 
   tableSchema([
-    Object.assign({}, TEST_TABLE_SCHEMA, {TableName: 'test-table-not-created'}),
-    Object.assign({}, TEST_TABLE_SCHEMA, {TableName: 'test-table-created'})
+    Object.assign({}, TEST_TABLE_SCHEMA, { TableName: 'test-table-not-created' }),
+    Object.assign({}, TEST_TABLE_SCHEMA, { TableName: 'test-table-created' })
   ]);
 
   try {
@@ -152,10 +152,10 @@ test.serial('deletes created tables when createTables fails', async t => {
 
     const { message } = await t.throwsAsync(createTables(client));
     t.is(message, 'Failed to create tables: test-table-not-created');
-    const {TableNames} = await client.listTables().promise();
+    const { TableNames } = await client.listTables().promise();
     t.deepEqual(TableNames, []);
     sinon.assert.calledOnce(deleteTable);
-    sinon.assert.calledWithExactly(deleteTable, {TableName: 'test-table-created'});
+    sinon.assert.calledWithExactly(deleteTable, { TableName: 'test-table-created' });
   } finally {
     await connection.cleanup();
   }
@@ -167,7 +167,7 @@ test.serial('throws when createTables fails, logs if destory fails', async t => 
   const TableName = 'test-table-2';
 
   tableSchema([
-    Object.assign({}, TEST_TABLE_SCHEMA, {TableName}),
+    Object.assign({}, TEST_TABLE_SCHEMA, { TableName }),
     TEST_TABLE_SCHEMA
   ]);
 
@@ -182,7 +182,7 @@ test.serial('throws when createTables fails, logs if destory fails', async t => 
     const { message } = await t.throwsAsync(createTables(client));
     t.is(message, 'Failed to create tables: test-table');
     sinon.assert.calledOnce(deleteTable);
-    sinon.assert.calledWithExactly(deleteTable, {TableName});
+    sinon.assert.calledWithExactly(deleteTable, { TableName });
   } finally {
     await connection.cleanup();
   }

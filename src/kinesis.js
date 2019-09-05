@@ -78,14 +78,14 @@ async function destroyStreams (kinesisClient, uniqueIdentifier) {
 }
 
 function buildStreamNameMapping (uniqueIdentifier) {
-  return fromPairs(kinesisStreams.map(({StreamName}) => {
+  return fromPairs(kinesisStreams.map(({ StreamName }) => {
     return [StreamName, getStreamName(StreamName, uniqueIdentifier)];
   }));
 }
 
 async function getConnection () {
   if (process.env.KINESIS_ENDPOINT) {
-    return buildConnectionAndConfig({url: process.env.KINESIS_ENDPOINT});
+    return buildConnectionAndConfig({ url: process.env.KINESIS_ENDPOINT });
   }
 
   const docker = new Docker();
@@ -117,7 +117,7 @@ async function getConnection () {
   environment.set('AWS_REGION', 'us-east-1');
   environment.set('KINESIS_ENDPOINT', url);
 
-  const {config, connection} = buildConnectionAndConfig({
+  const { config, connection } = buildConnectionAndConfig({
     cleanup: () => {
       environment.restore();
       return container.stop();
@@ -128,7 +128,7 @@ async function getConnection () {
   const kinesisClient = new AWS.Kinesis(config);
   await waitForReady('Kinesis', async () => kinesisClient.listStreams().promise());
 
-  return {connection, config};
+  return { connection, config };
 }
 
 function kinesisTestHooks (useUniqueStreams) {
@@ -157,7 +157,7 @@ function kinesisTestHooks (useUniqueStreams) {
     if (!context) {
       return;
     }
-    const {kinesisClient, uniqueIdentifier} = context;
+    const { kinesisClient, uniqueIdentifier } = context;
     await destroyStreams(kinesisClient, uniqueIdentifier);
   }
 

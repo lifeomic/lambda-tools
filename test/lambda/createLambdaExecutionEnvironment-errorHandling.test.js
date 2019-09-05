@@ -6,7 +6,7 @@ const lambda = require('../../src/lambda');
 const assert = require('assert');
 const fs = require('fs-extra');
 const tmp = require('tmp-promise');
-const {FIXTURES_DIRECTORY} = require('../helpers/lambda');
+const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 test.beforeEach((test) => {
   test.context.sandbox = sinon.createSandbox();
