@@ -57,7 +57,7 @@ async function destroyStreams (kinesisClient, uniqueIdentifier) {
   const streamNames = kinesisStreams
     .map(({ StreamName }) => getStreamName(StreamName, uniqueIdentifier));
   const streamsToDestroy = StreamNames
-    .filter(name => streamNames.includes(getStreamName(name, uniqueIdentifier)));
+    .filter(name => streamNames.includes(name));
 
   await Promise.all(
     streamsToDestroy
