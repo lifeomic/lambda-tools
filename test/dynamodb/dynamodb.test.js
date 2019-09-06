@@ -1,6 +1,7 @@
 const test = require('ava');
 const AWS = require('aws-sdk');
 const sinon = require('sinon');
+const uuid = require('uuid/v4');
 
 const { tableSchema, getConnection, createTables, destroyTables } = require('../../src/dynamodb');
 
@@ -206,28 +207,39 @@ test.serial('throws when destroyTables fails', async t => {
   }
 });
 
-test.serial('destroyTables destroys created tables', async t => {
+async function destroyTableTest (t, useUniqueTables) {
   const { connection, config } = await getConnection();
+  const uniqueIdentifier = useUniqueTables ? uuid() : '';
+  const tableName = useUniqueTables
+    ? `test-table-${uniqueIdentifier}` : 'test-table';
 
   try {
     const client = new AWS.DynamoDB(config);
-    await createTables(client);
+    await createTables(client, uniqueIdentifier);
 
     await assertTablesPresent(
       t,
       client,
-      ['test-table'],
-      'createTables should have added "test-table"'
+      [tableName],
+      `createTables should have added "${tableName}"`
     );
 
-    await destroyTables(client);
+    await destroyTables(client, uniqueIdentifier);
     await assertTablesPresent(
       t,
       client,
       [],
-      'destroyTables should have destroyed "test-table"'
+      `destroyTables should have destroyed "${tableName}"`
     );
   } finally {
     await connection.cleanup();
   }
+}
+
+test.serial('destroyTables destroys created tables', async t => {
+  await destroyTableTest(t, false);
+});
+
+test.serial('destroyTables destroys created tables when uniqueIdentifier is used', async t => {
+  await destroyTableTest(t, true);
 });

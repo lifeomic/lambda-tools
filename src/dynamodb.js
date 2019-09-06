@@ -46,7 +46,7 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
   const schemaTableNames = tablesSchema
     .map(({ TableName }) => getTableName(TableName, uniqueIdentifier));
   const tablesToDestroy = TableNames
-    .filter(name => schemaTableNames.includes(getTableName(name, uniqueIdentifier)));
+    .filter(name => schemaTableNames.includes(name));
 
   await Promise.all(
     tablesToDestroy
