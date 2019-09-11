@@ -3,27 +3,14 @@ const cloneDeep = require('lodash/cloneDeep');
 const fromPairs = require('lodash/fromPairs');
 const Docker = require('dockerode');
 const Environment = require('./Environment');
-const promiseRetry = require('promise-retry');
-const NestedError = require('nested-error-stacks');
 const uuid = require('uuid/v4');
 
 const { getHostAddress, ensureImage } = require('./docker');
+const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 
 const DYNAMODB_IMAGE = 'cnadiminti/dynamodb-local:latest';
 
 let tablesSchema = [];
-
-function buildConfigFromConnection (connection) {
-  return {
-    credentials: new AWS.Credentials(connection.accessKey, connection.secretAccessKey),
-    endpoint: new AWS.Endpoint(connection.url),
-    region: connection.region,
-    httpOptions: {
-      timeout: 3000
-    },
-    maxRetries: 3
-  };
-}
 
 async function createTables (dynamoClient, uniqueIdentifier) {
   const failedProvisons = [];
@@ -44,6 +31,11 @@ async function createTables (dynamoClient, uniqueIdentifier) {
   );
 
   if (failedProvisons.length) {
+    try {
+      await destroyTables(dynamoClient, uniqueIdentifier);
+    } catch (err) {
+      console.error(`Failed to destroy tables after error`, err);
+    }
     throw new Error(`Failed to create tables: ${failedProvisons.join(', ')}`);
   }
 }
@@ -54,7 +46,7 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
   const schemaTableNames = tablesSchema
     .map(({ TableName }) => getTableName(TableName, uniqueIdentifier));
   const tablesToDestroy = TableNames
-    .filter(name => schemaTableNames.includes(getTableName(name, uniqueIdentifier)));
+    .filter(name => schemaTableNames.includes(name));
 
   await Promise.all(
     tablesToDestroy
@@ -74,27 +66,9 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
   }
 }
 
-async function waitForDynamoDBToBeReady (dynamoClient) {
-  await promiseRetry(async function (retry, retryNumber) {
-    try {
-      await dynamoClient.listTables().promise();
-    } catch (error) {
-      retry(new NestedError(`DynamoDB is still not ready after ${retryNumber} connection attempts`, error));
-    }
-  }, {factor: 1, minTimeout: 100, retries: 1000});
-}
-
 async function getConnection () {
   if (process.env.DYNAMODB_ENDPOINT) {
-    const connection = {
-      accessKey: process.env.AWS_ACCESS_KEY_ID,
-      cleanup: () => {},
-      region: 'us-east-1',
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      url: process.env.DYNAMODB_ENDPOINT
-    };
-    const config = buildConfigFromConnection(connection);
-    return {connection, config};
+    return buildConnectionAndConfig({ url: process.env.DYNAMODB_ENDPOINT });
   }
 
   const docker = new Docker();
@@ -116,28 +90,26 @@ async function getConnection () {
   const containerData = await container.inspect();
   const host = await getHostAddress();
   const port = containerData.NetworkSettings.Ports['8000/tcp'][0].HostPort;
+  const url = `http://${host}:${port}`;
 
-  const connection = {
-    accessKey: 'bogus',
+  environment.set('AWS_ACCESS_KEY_ID', 'bogus');
+  environment.set('AWS_SECRET_ACCESS_KEY', 'bogus');
+  environment.set('AWS_REGION', 'us-east-1');
+  environment.set('DYNAMODB_ENDPOINT', url);
+
+  const { connection, config } = buildConnectionAndConfig({
+    url,
     cleanup: () => {
       environment.restore();
       return container.stop();
-    },
-    region: 'us-east-1',
-    secretAccessKey: 'bogus',
-    url: `http://${host}:${port}`
-  };
+    }
+  });
 
-  const config = buildConfigFromConnection(connection);
   const dynamoClient = new AWS.DynamoDB(config);
-  await waitForDynamoDBToBeReady(dynamoClient);
 
-  environment.set('AWS_ACCESS_KEY_ID', connection.accessKey);
-  environment.set('AWS_SECRET_ACCESS_KEY', connection.secretAccessKey);
-  environment.set('AWS_REGION', connection.region);
-  environment.set('DYNAMODB_ENDPOINT', connection.url);
+  await waitForReady('DynamoDB', async () => dynamoClient.listTables().promise());
 
-  return {connection, config};
+  return { connection, config };
 }
 
 function getTableName (tableName, uniqueIdentifier) {
@@ -145,7 +117,7 @@ function getTableName (tableName, uniqueIdentifier) {
 }
 
 function buildTableNameMapping (schemas, uniqueIdentifier) {
-  return fromPairs(schemas.map(({TableName}) => {
+  return fromPairs(schemas.map(({ TableName }) => {
     return [TableName, getTableName(TableName, uniqueIdentifier)];
   }));
 }
@@ -183,6 +155,9 @@ function dynamoDBTestHooks (useUniqueTables = false) {
   }
 
   async function afterEach (context) {
+    if (!context) {
+      return;
+    }
     const { dynamoClient, uniqueIdentifier } = context;
     await destroyTables(dynamoClient, uniqueIdentifier);
   }
@@ -211,13 +186,11 @@ exports.useDynamoDB = (test, useUniqueTables) => {
   test.before(testHooks.beforeAll);
 
   test.beforeEach(async (test) => {
-    const context = await testHooks.beforeEach();
-    test.context.dynamodb = context;
+    test.context.dynamodb = await testHooks.beforeEach();
   });
 
   test.afterEach.always(async test => {
-    const context = test.context.dynamodb;
-    await testHooks.afterEach(context);
+    await testHooks.afterEach(test.context.dynamodb);
   });
 
   test.after.always(testHooks.afterAll);

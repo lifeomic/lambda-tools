@@ -6,7 +6,7 @@ const uuid = require('uuid/v4');
 const { build, useComposeContainer, useLambda } = require('../../src/lambda');
 const { promisify } = require('util');
 
-const FIXTURES_DIRECTORY = path.join(__dirname, '..', 'fixtures');
+const FIXTURES_DIRECTORY = path.join(__dirname, '../fixtures');
 
 function hasTag (tagName) {
   return function (image) {
@@ -53,6 +53,7 @@ function useLambdaContainer (test, imageName, options = {}) {
     try {
       await container.stop();
     } catch (error) {
+      console.warn(error);
       // swallow errors...
     }
   });
@@ -91,5 +92,6 @@ async function createContainer (image, name, mountpoint) {
 
 module.exports = {
   createContainer,
-  useLambdaContainer
+  useLambdaContainer,
+  FIXTURES_DIRECTORY
 };

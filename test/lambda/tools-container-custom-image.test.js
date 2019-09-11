@@ -1,9 +1,9 @@
 const Docker = require('dockerode');
-const path = require('path');
 const sinon = require('sinon');
 const test = require('ava');
 
-const { useNewContainer, useLambda } = require('../src/lambda');
+const { useNewContainer, useLambda } = require('../../src/lambda');
+const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 let createContainer = null;
 
@@ -16,7 +16,7 @@ useLambda(test);
 useNewContainer({
   handler: 'bundled_service.handler',
   image: 'lambci/lambda:nodejs8.10',
-  mountpoint: path.join(__dirname, 'fixtures')
+  mountpoint: FIXTURES_DIRECTORY
 });
 
 test.after.always((test) => {

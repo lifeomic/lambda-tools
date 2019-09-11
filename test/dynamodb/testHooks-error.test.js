@@ -4,12 +4,12 @@ const sinon = require('sinon');
 test('The afterAll hook handles errors in the beforeAll hook gracefully', async (test) => {
   // Stub the docker module to throw errors when fetching images.
   // This needs to happen before the dynamodb helper module is imported
-  const docker = require('../src/docker');
+  const docker = require('../../src/docker');
   const error = new Error('Stubbed failure');
   const ensureStub = sinon.stub(docker, 'ensureImage')
     .rejects(error);
 
-  const { dynamoDBTestHooks } = require('../src/dynamodb');
+  const { dynamoDBTestHooks } = require('../../src/dynamodb');
   const { afterAll, beforeAll } = dynamoDBTestHooks(false);
 
   try {
@@ -18,4 +18,10 @@ test('The afterAll hook handles errors in the beforeAll hook gracefully', async 
   } finally {
     ensureStub.restore();
   }
+});
+
+test('The afterEach hook will ignore a missing context', async t => {
+  const { dynamoDBTestHooks } = require('../../src/dynamodb');
+  const { afterEach } = dynamoDBTestHooks(false);
+  await t.notThrowsAsync(afterEach(undefined));
 });

@@ -1,5 +1,5 @@
 const Docker = require('dockerode');
-const {ensureImage} = require('../../src/docker');
+const { ensureImage } = require('../../src/docker');
 const DEFAULT_IMAGE = 'alpine:3.6';
 
 async function createDefaultContainer () {

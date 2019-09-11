@@ -6,7 +6,7 @@ const { ApolloServer, gql } = require('apollo-server-koa');
 const app = new Koa();
 
 const graphql = new ApolloServer({
-  context: ({ctx}) => ({
+  context: ({ ctx }) => ({
     header: ctx.request.get('test-header')
   }),
   resolvers: {

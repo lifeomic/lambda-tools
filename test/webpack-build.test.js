@@ -5,23 +5,24 @@ const path = require('path');
 const sinon = require('sinon');
 const test = require('ava');
 const uuid = require('uuid/v4');
-const {createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment, LambdaRunner} = require('../src/lambda');
+const { createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment, LambdaRunner } = require('../src/lambda');
+const { FIXTURES_DIRECTORY } = require('./helpers/lambda');
 const find = require('lodash/find');
 
 const SUPPORTED_NODE_VERSIONS = ['6.10', '8.10'];
 
 test.beforeEach((test) => {
-  test.context.buildDirectory = path.join(__dirname, 'fixtures', 'build', uuid());
+  test.context.buildDirectory = path.join(FIXTURES_DIRECTORY, 'build', uuid());
 });
 
 test.afterEach(() => {
   sinon.restore();
 });
 
-test.afterEach.always((test) => fs.remove(test.context.buildDirectory));
+test.afterEach.always(async (test) => fs.remove(test.context.buildDirectory));
 
 test('Setting WEBPACK_MODE to development disables minification', async (test) => {
-  const source = path.join(__dirname, 'fixtures', 'lambda_service.js');
+  const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');
   const bundle = path.join(test.context.buildDirectory, 'lambda_service.js');
 
   let buildResults = await build({
@@ -52,7 +53,7 @@ test('Setting WEBPACK_MODE to development disables minification', async (test) =
 });
 
 test('The webpack configuration can be transformed', async (test) => {
-  const source = path.join(__dirname, 'fixtures', 'lambda_service.js');
+  const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');
   const bundle = path.join(test.context.buildDirectory, 'lambda_service.js');
 
   const transformer = sinon.stub().callsFake(function (config) {
@@ -78,7 +79,7 @@ test('The webpack configuration can be transformed', async (test) => {
 });
 
 test('TSConfig files are supported', async (test) => {
-  const sourceDir = path.join(__dirname, 'fixtures', 'lambda-with-tsconfig');
+  const sourceDir = path.join(FIXTURES_DIRECTORY, 'lambda-with-tsconfig');
   const source = path.join(sourceDir, 'index.ts');
   const tsconfig = path.join(sourceDir, 'tsconfig.json');
 
@@ -100,7 +101,7 @@ test('TSConfig files are supported', async (test) => {
 });
 
 test('Typescript bundles are supported by default', async (test) => {
-  const source = path.join(__dirname, 'fixtures', 'ts_lambda_service.ts');
+  const source = path.join(FIXTURES_DIRECTORY, 'ts_lambda_service.ts');
 
   const result = await build({
     entrypoint: source,
@@ -114,7 +115,7 @@ test('Typescript bundles are supported by default', async (test) => {
 });
 
 test('Typescript code has async/await removed for good X-Ray integration', async (test) => {
-  const sourceRoot = path.join(__dirname, 'fixtures', 'typescript-es2017');
+  const sourceRoot = path.join(FIXTURES_DIRECTORY, 'typescript-es2017');
   const source = path.join(sourceRoot, 'async_test.ts');
 
   const result = await build({
@@ -131,7 +132,7 @@ test('Typescript code has async/await removed for good X-Ray integration', async
 });
 
 test('Node 6 bundles are produced by default', async (test) => {
-  const source = path.join(__dirname, 'fixtures', 'lambda_service.js');
+  const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');
 
   const transformer = sinon.stub().returnsArg(0);
 
@@ -152,7 +153,7 @@ test('Node 6 bundles are produced by default', async (test) => {
 });
 
 test('A custom Node version can be used', async (test) => {
-  const source = path.join(__dirname, 'fixtures', 'lambda_service.js');
+  const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');
 
   const nodeVersion = '8.10';
   const transformer = sinon.stub().returnsArg(0);
@@ -175,7 +176,7 @@ test('A custom Node version can be used', async (test) => {
 });
 
 test('Lambda archives can be produced', async (test) => {
-  const source = path.join(__dirname, 'fixtures', 'lambda_service.js');
+  const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');
   const bundle = path.join(test.context.buildDirectory, 'lambda_service.js.zip');
 
   const buildResults = await build({
@@ -193,7 +194,7 @@ test('Lambda archives can be produced', async (test) => {
 });
 
 test('Lambda archives can be produced repeatably', async (test) => {
-  const source = path.join(__dirname, 'fixtures', 'lambda_service.js');
+  const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');
   const bundle = path.join(test.context.buildDirectory, 'lambda_service.js.zip');
 
   const buildConfig = {
@@ -218,8 +219,8 @@ test('Lambda archives can be produced repeatably', async (test) => {
 test('Multiple bundles can be produced at one time', async (test) => {
   const buildResults = await build({
     entrypoint: [
-      path.join(__dirname, 'fixtures', 'lambda_graphql.js'),
-      path.join(__dirname, 'fixtures', 'lambda_service.js')
+      path.join(FIXTURES_DIRECTORY, 'lambda_graphql.js'),
+      path.join(FIXTURES_DIRECTORY, 'lambda_service.js')
     ],
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service'
@@ -233,8 +234,8 @@ test('Multiple bundles can be produced at one time', async (test) => {
 test('Multiple bundles can be produced with mixed source types', async (test) => {
   const buildResults = await build({
     entrypoint: [
-      path.join(__dirname, 'fixtures', 'lambda_service.js'),
-      path.join(__dirname, 'fixtures', 'ts_lambda_service.ts')
+      path.join(FIXTURES_DIRECTORY, 'lambda_service.js'),
+      path.join(FIXTURES_DIRECTORY, 'ts_lambda_service.ts')
     ],
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service'
@@ -248,8 +249,8 @@ test('Multiple bundles can be produced with mixed source types', async (test) =>
 test('Bundles can use custom names', async (test) => {
   const buildResults = await build({
     entrypoint: [
-      path.join(__dirname, 'fixtures', 'lambda_graphql.js:graphql.js'),
-      path.join(__dirname, 'fixtures', 'lambda_service.js:lambda/service.js')
+      path.join(FIXTURES_DIRECTORY, 'lambda_graphql.js:graphql.js'),
+      path.join(FIXTURES_DIRECTORY, 'lambda_service.js:lambda/service.js')
     ],
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service'
@@ -263,8 +264,8 @@ test('Bundles can use custom names', async (test) => {
 test('Bundles for multiple entries can be zipped', async (test) => {
   await build({
     entrypoint: [
-      path.join(__dirname, 'fixtures', 'lambda_graphql.js:graphql.js'),
-      path.join(__dirname, 'fixtures', 'lambda_service.js:lambda/service.js')
+      path.join(FIXTURES_DIRECTORY, 'lambda_graphql.js:graphql.js'),
+      path.join(FIXTURES_DIRECTORY, 'lambda_service.js:lambda/service.js')
     ],
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service',
@@ -276,9 +277,9 @@ test('Bundles for multiple entries can be zipped', async (test) => {
 });
 
 test.serial('Expand input entrypoint directory into multiple entrypoints', async (test) => {
-  const multiLambdasDir = path.join(__dirname, `fixtures/build/multi-lambdas-${uuid()}`);
+  const multiLambdasDir = path.join(test.context.buildDirectory, 'multi-lambdas');
   await fs.mkdirp(multiLambdasDir);
-  await fs.copy(path.join(__dirname, 'fixtures/multi-lambdas'), multiLambdasDir);
+  await fs.copy(path.join(FIXTURES_DIRECTORY, 'multi-lambdas'), multiLambdasDir);
   const emptyDir = path.join(multiLambdasDir, 'empty');
   await fs.mkdirp(emptyDir);
 
@@ -327,7 +328,7 @@ test.serial('Bundles are produced in the current working directory by default', 
   try {
     process.chdir(test.context.buildDirectory);
     const buildResults = await build({
-      entrypoint: path.join(__dirname, 'fixtures', 'lambda_service.js'),
+      entrypoint: path.join(FIXTURES_DIRECTORY, 'lambda_service.js'),
       serviceName: 'test-service'
     });
     test.false(buildResults.hasErrors());
@@ -345,7 +346,7 @@ async function assertSourceMapBehavior (test, options, expectMappingUrl, expectS
     process.chdir(path.join(__dirname, '../src'));
     const buildResults = await build({
       outputPath: test.context.buildDirectory,
-      entrypoint: path.join(__dirname, 'fixtures', 'lambda_service.js'),
+      entrypoint: path.join(FIXTURES_DIRECTORY, 'lambda_service.js'),
       serviceName: 'test-service',
       ...options
     });
@@ -375,7 +376,7 @@ test.serial('Should handle building entrypoint outside of current working direct
     process.chdir(path.join(__dirname, '../src'));
     const buildResults = await build({
       outputPath: test.context.buildDirectory,
-      entrypoint: path.join(__dirname, 'fixtures', 'lambda_service.js'),
+      entrypoint: path.join(FIXTURES_DIRECTORY, 'lambda_service.js'),
       serviceName: 'test-service',
       zip: true
     });
@@ -388,7 +389,7 @@ test.serial('Should handle building entrypoint outside of current working direct
 for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
   // Test that a common pattern can be packed without a regression
   test.serial(`Can webpack files that use await inside for...of statements targetting ${nodeVersion}`, async (test) => {
-    const source = path.join(__dirname, 'fixtures', 'async_test.js');
+    const source = path.join(FIXTURES_DIRECTORY, 'async_test.js');
 
     const result = await build({
       nodeVersion,
@@ -400,7 +401,7 @@ for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
   });
 
   test.serial(`Can webpack files that use arrow functions inside async functions when targetting ${nodeVersion}`, async (test) => {
-    const source = path.join(__dirname, 'fixtures', 'async_with_arrow.js');
+    const source = path.join(FIXTURES_DIRECTORY, 'async_with_arrow.js');
 
     const result = await build({
       nodeVersion,
@@ -427,7 +428,7 @@ for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
 
   // Test that EJS modules can be packed because they are used by graphql
   test.serial(`Can webpack modules that use .mjs modules when targetting ${nodeVersion}`, async (test) => {
-    const source = path.join(__dirname, 'fixtures', 'es_modules/index.js');
+    const source = path.join(FIXTURES_DIRECTORY, 'es_modules/index.js');
 
     const result = await build({
       nodeVersion,
@@ -441,7 +442,7 @@ for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
 }
 
 async function assertMinification (test, options, expectMinification) {
-  const source = path.join(__dirname, 'fixtures', 'async_test.js');
+  const source = path.join(FIXTURES_DIRECTORY, 'async_test.js');
   const bundle = path.join(test.context.buildDirectory, 'async_test.js');
 
   const buildResults = await build({

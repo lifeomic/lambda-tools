@@ -69,6 +69,65 @@ the form of `<tableNameProvidedInSchema>-<uuid>`. The unique table name can be
 fetched from the `tableNames` map. Otherwise, the table name will be the default
 provided in the schema. This allows tests to be run in parallel.
 
+
+# Kinesis
+
+Many services use [Kinesis][kinesis] as a message processing system.
+Testing service code against a Kinesis service layer requires either mocking
+the Kinesis interface (using something like [aws-sdk-mock][aws-sdk-mock]) or
+pointing the test code at a provisioned Kinesis instance. LocalStack has published
+[LocalStack Docker][localstack-docker] so that testing can be done without having to
+use real AWS resources, making testing even easier to do using
+tools like [docker-compose][docker-compose] and [dockerode][dockerode].
+
+`kinesis-tools` supports both methods of integrating with Kinesis. For simple
+unit tests, the `kinesis` helper can be used to provision and link a Kinesis
+docker container with [ava][ava] test suites. The helper will define all
+relevant environment variables and will inject a preconfigured
+[Kinesis client][kinesis-client] into the test context. The setup and tear
+down will also create and destroy streams, as defined in a provided stream name array, between
+test cases. The helper will also automatically handle port binding differences
+between regular and nested Docker environments.
+
+`lambda-tools` managed containers are able to join an existing docker-compose
+network allowing them to reuse an existing Kinesis instance by simply setting
+the appropriate environment variables. If the `kinesis` helper sees the
+`KINESIS_ENDPOINT` environment variable, it will not provision a new Kinesis
+service and will instead point all clients at and perform all stream
+manipulations in the referenced Kinesis instance. In this case AWS specific
+environment variables, like `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`,
+will also be used when constructing the test clients.
+
+## `kinesis.streams(streams)`
+
+Declares the list of stream names that should be used by all test cases using the
+`useKinesis()` helper.  Each stream will be created with one shard.
+
+## `kinesis.useKinesis(test, streamName)`
+
+Prepares an [ava][ava] test suite for use with a provided Kinesis instance. The test context will
+include a AWS.Kinesis client on the `kinesis` attribute.
+
+The streamName is used to create a new kinesis stream before all tests, and delete the stream at the end.
+This method can be used to create multiple streams.
+
+## `kinesis.useKinesisDocker(test, useUniqueStreams)`
+
+Prepares an [ava][ava] test suite for use with Kinesis. The test context will
+include the following clients on the `kinesis` attribute:
+
+| Attribute        | Description/Type            |
+|------------------|-----------------------------|
+| kinesisClient    | AWS.Kinesis |
+| streamNames      | Map of base stream name to uuid stream name. E.g. `users` to `users-abcdef12345`|
+| uniqueIdentifier | The unique identifier appended to each stream name. E.g. `abcdef12345`|
+| config           | The aws kinesis config object, useful for passing to AWS.Kineis, or other kinesis wrappers.|
+
+If `useUniqueStreams` is true, dynamically generated stream names will be used, in
+the form of `<streamNameProvided>-<uuid>`. The unique stream name can be
+fetched from the `streamNames` map. Otherwise, the stream name will be the default
+provided in the streams array. This allows tests to be run in parallel.
+
 # GraphQL
 
 `lambda-tools` provides helpers for wrapping [`Koa`][koa] instances in a client
@@ -141,7 +200,7 @@ Configures the `lambda` helper to provision a new Docker container managed by
  - **handler** - _required._ The reference to the Lambda handler function in
    the form `<module>.<function name>`
  - **image** - the docker image used to provide the Lambda runtime. By default
-   `lambci/lambda:nodejs6.10` is used.
+   `lambci/lambda:nodejs8.10` is used.
  - **useComposeNetwork** - a flag indicating if the container should be attached
    to a docker-compose managed network. By default the container uses a
    dedicated isolated network. If set to `true`, the `COMPOSE_PROJECT_NAME`
@@ -184,6 +243,10 @@ documentation may be accessed using the `lambda-tool-build --help` command.
 [dynamodb-local]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html "DynamoDB Local"
 [koa]: http://koajs.com/ "koa"
 [supertest]: https://github.com/visionmedia/supertest "supertest"
+[kinesis]: https://aws.amazon.com/documentation/kinesis/ "Kinesis"
+[kinesis-client]: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Kinesis.html "Kinesis Client"
+[localStack]: https://github.com/localstack/localstack "LocalStack"
+[localStack-docker]: https://hub.docker.com/r/localstack/localstack/ "LocalStack Docker"
 
 **Build all lambda functions within a directory:**
 

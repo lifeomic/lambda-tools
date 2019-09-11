@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const test = require('ava');
 
-const { tableSchema, useDynamoDB } = require('../src/dynamodb');
+const { tableSchema, useDynamoDB } = require('../../src/dynamodb');
 
 useDynamoDB(test, true);
 
@@ -34,7 +34,7 @@ test.after(() => {
 });
 
 test('The helper provides database clients and tables', async (test) => {
-  const {tableNames, dynamoClient, documentClient} = test.context.dynamodb;
+  const { tableNames, dynamoClient, documentClient } = test.context.dynamodb;
   test.true(dynamoClient instanceof AWS.DynamoDB);
   test.true(documentClient instanceof AWS.DynamoDB.DocumentClient);
 
@@ -61,7 +61,7 @@ test('The helper provides database clients and tables', async (test) => {
 });
 
 test('The helper includes a unique identifier in the table names', async (test) => {
-  const {tableNames, uniqueIdentifier} = test.context.dynamodb;
+  const { tableNames, uniqueIdentifier } = test.context.dynamodb;
   const tableName = tableNames['test-table'];
 
   test.true(typeof uniqueIdentifier === 'string');
@@ -77,7 +77,7 @@ test('The helper sets default configuration environment variables', async (test)
 });
 
 test('The helper provides a config object', async (test) => {
-  const {config} = test.context.dynamodb;
+  const { config } = test.context.dynamodb;
 
   test.true(config.credentials instanceof AWS.Credentials);
   test.true(config.endpoint instanceof AWS.Endpoint);

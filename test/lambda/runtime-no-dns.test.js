@@ -3,18 +3,18 @@ const path = require('path');
 const test = require('ava');
 const uuid = require('uuid/v4');
 
-const { build, useNewContainer, useLambda } = require('../src/lambda');
+const { build, useNewContainer, useLambda } = require('../../src/lambda');
+const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
-const FIXTURES_DIRECTORY = path.join(__dirname, 'fixtures');
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());
 
 // Ava's `serial` hook decorator needs to be used so that `useNewContainer` is
 // executed before the useLambda hooks are executed
 test.serial.before(async () => {
   const buildResults = await build({
-    entrypoint: path.join(FIXTURES_DIRECTORY, 'runtime_promises.js'),
+    entrypoint: path.join(FIXTURES_DIRECTORY, 'runtime_dns.js'),
     outputPath: BUILD_DIRECTORY,
-    serviceName: 'runtime-promises'
+    serviceName: 'runtime-dns'
   });
 
   if (buildResults.hasErrors()) {
@@ -23,19 +23,18 @@ test.serial.before(async () => {
   }
 
   useNewContainer({
-    handler: 'runtime_promises.handler',
-    // Using Node 6.10 gives a more thorough test since this isn't normally
-    // supported.
-    image: 'lambci/lambda:nodejs6.10',
+    handler: 'runtime_dns.handler',
+    image: 'lambci/lambda:nodejs8.10',
     mountpoint: BUILD_DIRECTORY
   });
 });
 
 useLambda(test);
 
-test.after.always((test) => fs.remove(BUILD_DIRECTORY));
+test.after.always(async (test) => fs.remove(BUILD_DIRECTORY));
 
-test.serial(`A lambda handler can return a promise`, async (test) => {
+test.serial('DNS lookups are not retried by default', async (test) => {
+  // The test assertions are part of the lambda fixture
   const result = await test.context.lambda.raw({}, {});
-  test.is(result, 'hello from the promised land!');
+  test.not(result, 'success!');
 });

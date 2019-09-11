@@ -4,7 +4,7 @@ const test = require('ava');
 const uuid = require('uuid/v4');
 
 const { promisify } = require('util');
-const { useLambdaContainer } = require('./helpers/lambda');
+const { useLambdaContainer, FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 async function buildDerivativeImage () {
   const docker = new Docker();
@@ -14,7 +14,7 @@ async function buildDerivativeImage () {
   await followProgress(
     await docker.buildImage(
       {
-        context: path.join(__dirname, 'fixtures', 'lambci-derivative'),
+        context: path.join(FIXTURES_DIRECTORY, 'lambci-derivative'),
         src: [ 'Dockerfile' ]
       },
       { t: name }

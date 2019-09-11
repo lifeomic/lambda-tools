@@ -1,13 +1,14 @@
-const path = require('path');
 const test = require('ava');
 
-const { useNewContainer, useLambda } = require('../src/lambda');
+const { useNewContainer, useLambda } = require('../../src/lambda');
+
+const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 useLambda(test);
 
 useNewContainer({
   handler: 'bundled_service.handler',
-  mountpoint: path.join(__dirname, 'fixtures')
+  mountpoint: FIXTURES_DIRECTORY
 });
 
 test('The helper client can create a new container', async (test) => {

@@ -6,17 +6,25 @@ const webpack = require('./webpack');
 const tmp = require('tmp-promise');
 const fs = require('fs-extra');
 const unzip = require('unzipper');
+const isObjectLike = require('lodash/isObjectLike');
 
 const { executeContainerCommand, ensureImage } = require('./docker');
 const { promisify } = require('util');
 
 const LAMBDA_TOOLS_WORK_PREFIX = '.lambda-tools-work';
 
-const LAMBDA_IMAGE = 'lambci/lambda:nodejs6.10';
+const LAMBDA_IMAGE = 'lambci/lambda:nodejs8.10';
 
 // null value means 'delete this variable'. Docker deletes variables that only have the key, without '=value'
 const createEnvironmentVariables = (environment) => Object.entries(environment)
   .map(([ key, value ]) => value === null ? key : `${key}=${value}`);
+
+const convertEvent = (event) => {
+  if (isObjectLike(event)) {
+    return JSON.stringify(event);
+  }
+  return `${event}`;
+};
 
 class Client extends Alpha {
   constructor ({ container, environment, handler }) {
@@ -32,6 +40,10 @@ class Client extends Alpha {
 
     super(fn);
     this.raw = promisify(fn);
+  }
+
+  graphql (path, query, variables, config) {
+    return this.post(path, { query, variables }, config);
   }
 }
 
@@ -51,15 +63,16 @@ class LambdaRunner {
   constructor (container, environment, handler) {
     this._container = container;
     this._docker = new Docker();
-    this._environment = environment ? createEnvironmentVariables(environment) : null;
+    this._environment = environment ? createEnvironmentVariables(environment) : [];
     this._handler = handler;
+    this._environment.push('DOCKER_LAMBDA_USE_STDIN=1');
   }
 
   async invoke (event) {
-    const command = await this._buildCommand(event);
+    const command = await this._buildCommand();
     const container = await this._getContainer();
     const environment = this._environment;
-    const { stderr, stdout } = await executeContainerCommand({container, command, environment});
+    const { stderr, stdout } = await executeContainerCommand({ container, command, environment, stdin: convertEvent(event) });
 
     const output = stdout.toString('utf8').trim();
     const split = output.lastIndexOf('\n');
@@ -73,14 +86,13 @@ class LambdaRunner {
     return JSON.parse(result);
   }
 
-  async _buildCommand (event) {
+  async _buildCommand () {
     const container = await this._getContainer();
     const description = await container.inspect();
     const entrypoint = await getEntrypoint(this._docker, description.Image);
 
     return entrypoint.slice().concat(
-      this._handler,
-      JSON.stringify(event)
+      this._handler
     );
   }
 
@@ -198,7 +210,7 @@ async function createLambdaExecutionEnvironment (options) {
 }
 
 async function destroyLambdaExecutionEnvironment (environment) {
-  const {container, network, cleanupMountpoint} = environment;
+  const { container, network, cleanupMountpoint } = environment;
 
   if (cleanupMountpoint) {
     await cleanupMountpoint();
@@ -239,10 +251,7 @@ function useLambdaHooks (localOptions) {
 
   async function beforeEach () {
     const { container, environment, handler } = getOptions();
-    const client = new Client({ container, environment, handler });
-
-    client.graphql = (path, query, variables, config) => client.post(path, { query, variables }, config);
-    return client;
+    return new Client({ container, environment, handler });
   }
 
   return { beforeAll, beforeEach, afterAll };

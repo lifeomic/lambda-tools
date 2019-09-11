@@ -1,10 +1,10 @@
 const Docker = require('dockerode');
-const path = require('path');
 const sinon = require('sinon');
 const test = require('ava');
 const uuid = require('uuid/v4');
 
-const { useNewContainer, useLambda } = require('../src/lambda');
+const { useNewContainer, useLambda } = require('../../src/lambda');
+const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 const prefix = process.env.COMPOSE_PROJECT_NAME = uuid();
 const networkName = `${prefix}_default`;
@@ -27,7 +27,7 @@ useLambda(test);
 
 useNewContainer({
   handler: 'bundled_service.handler',
-  mountpoint: path.join(__dirname, 'fixtures'),
+  mountpoint: FIXTURES_DIRECTORY,
   useComposeNetwork: true
 });
 

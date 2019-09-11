@@ -2,10 +2,11 @@ const test = require('ava');
 const sinon = require('sinon');
 const Docker = require('dockerode');
 const path = require('path');
-const lambda = require('../src/lambda');
+const lambda = require('../../src/lambda');
 const assert = require('assert');
 const fs = require('fs-extra');
 const tmp = require('tmp-promise');
+const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 test.beforeEach((test) => {
   test.context.sandbox = sinon.createSandbox();
@@ -25,7 +26,7 @@ test.serial('Cleanups up the network and container on failure after start', asyn
   const networkRemoveSpy = test.context.sandbox.spy(Docker.Network.prototype, 'remove');
 
   const create = lambda.createLambdaExecutionEnvironment({
-    mountpoint: path.join(__dirname, 'fixtures', 'build')
+    mountpoint: path.join(FIXTURES_DIRECTORY, 'build')
   });
 
   await test.throwsAsync(() => create, error.message);
@@ -39,7 +40,7 @@ test.serial('Sends AWS_XRAY_CONTEXT_MISSING var to createContainer with no value
 
   await lambda.createLambdaExecutionEnvironment({
     environment: { AWS_XRAY_CONTEXT_MISSING: null },
-    mountpoint: path.join(__dirname, 'fixtures', 'build')
+    mountpoint: path.join(FIXTURES_DIRECTORY, 'build')
   });
 
   sinon.assert.calledWithMatch(createSpy, sinon.match((arg) => {
@@ -63,7 +64,7 @@ test.serial('Cleanups up temp directory when unzipping fails', async (test) => {
 
   const failingCreate = lambda.createLambdaExecutionEnvironment({
     environment: { AWS_XRAY_CONTEXT_MISSING: null },
-    zipfile: path.join(__dirname, 'fixtures', 'bundled_service.zip')
+    zipfile: path.join(FIXTURES_DIRECTORY, 'bundled_service.zip')
   });
 
   await test.throwsAsync(() => failingCreate);

@@ -1,7 +1,7 @@
-const path = require('path');
 const test = require('ava');
 
-const { useNewContainer, useLambda } = require('../src/lambda');
+const { useNewContainer, useLambda } = require('../../src/lambda');
+const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 useLambda(test);
 
@@ -11,7 +11,7 @@ useNewContainer({
     'TEST_PARAMETER': 'test value'
   },
   handler: 'bundled_service.handler',
-  mountpoint: path.join(__dirname, 'fixtures')
+  mountpoint: FIXTURES_DIRECTORY
 });
 
 test('Managed containers can use a custom environment', async (test) => {

@@ -1,7 +1,7 @@
 const AWS = require('aws-sdk');
 const test = require('ava');
 
-const { tableSchema, useDynamoDB } = require('../src/dynamodb');
+const { tableSchema, useDynamoDB } = require('../../src/dynamodb');
 
 useDynamoDB(test);
 
@@ -36,7 +36,7 @@ test.after(() => {
 // no uuid in table name (old way, basic regression test to ensure forward
 // compatibility)
 test.serial('The helper provides database clients and tables', async (test) => {
-  const {dynamoClient, documentClient} = test.context.dynamodb;
+  const { dynamoClient, documentClient } = test.context.dynamodb;
   test.true(dynamoClient instanceof AWS.DynamoDB);
   test.true(documentClient instanceof AWS.DynamoDB.DocumentClient);
 
@@ -63,7 +63,7 @@ test.serial('The helper provides database clients and tables', async (test) => {
 });
 
 test.serial('The helper does not include a unique identifier in the table names', async (test) => {
-  const {tableNames, uniqueIdentifier} = test.context.dynamodb;
+  const { tableNames, uniqueIdentifier } = test.context.dynamodb;
   const tableName = tableNames['test-table'];
 
   test.true(typeof uniqueIdentifier === 'string');
