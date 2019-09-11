@@ -1,6 +1,7 @@
 const test = require('ava');
 const AWS = require('aws-sdk');
 const sinon = require('sinon');
+const uuid = require('uuid/v4');
 
 const { streams, getConnection, createStreams, destroyStreams } = require('../../src/kinesis');
 
@@ -118,23 +119,34 @@ test.serial('throws when destroyStreams fails', async t => {
   t.is(message, 'Failed to destroy streams: test-stream');
 });
 
-test.serial('destroyStreams destroys created stream', async t => {
+async function destroyStreamTest (t, useUniqueStreams) {
   const { kinesisClient } = t.context;
+  const uniqueIdentifier = useUniqueStreams ? uuid() : '';
+  const streamName = useUniqueStreams
+    ? `test-stream-${uniqueIdentifier}` : 'test-stream';
 
-  await createStreams(kinesisClient);
+  await createStreams(kinesisClient, uniqueIdentifier);
 
   await assertStreamsPresent(
     t,
     kinesisClient,
-    ['test-stream'],
-    'createStreams should have added "test-stream"'
+    [streamName],
+    `createStreams should have added "${streamName}"`
   );
 
-  await destroyStreams(kinesisClient);
+  await destroyStreams(kinesisClient, uniqueIdentifier);
   await assertStreamsPresent(
     t,
     kinesisClient,
     [],
-    'createStreams should have destroyed "test-stream"'
+    `createStreams should have destroyed "${streamName}"`
   );
+}
+
+test.serial('destroyStreams destroys created stream', async t => {
+  await destroyStreamTest(t, false);
+});
+
+test.serial('destroyStreams destroys created stream when uniqueIdentifier is used', async t => {
+  await destroyStreamTest(t, true);
 });
