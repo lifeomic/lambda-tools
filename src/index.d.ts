@@ -38,7 +38,7 @@ declare namespace dynamodb {
   export function tableSchema(
     schema: ReadonlyArray<aws.DynamoDB.Types.CreateTableInput>
   ): void;
-  export function dynamoDBTestHooks(useUniqueTables?: boolean): Hooks;
+  export function dynamoDBTestHooks(useUniqueTables?: boolean, {inMemory}?: {inMemory: boolean}): Hooks;
   export function useDynamoDB(test: TestInterface, useUniqueTables?: boolean): void;
 }
 

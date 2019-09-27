@@ -66,14 +66,11 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
   }
 }
 
-async function getConnection () {
-  if (process.env.DYNAMODB_ENDPOINT) {
-    return buildConnectionAndConfig({ url: process.env.DYNAMODB_ENDPOINT });
-  }
-
-  const docker = new Docker();
-  const environment = new Environment();
-
+/**
+ * @param params.inMemory Whether to run local DynamoDB in in-memory mode.
+ * 'false' persists data to disk.
+ */
+async function launchDynamoContainer ({ docker = new Docker(), inMemory = false } = { docker: new Docker(), inMemory: false }) {
   await ensureImage(docker, DYNAMODB_IMAGE);
 
   const container = await docker.createContainer({
@@ -82,7 +79,8 @@ async function getConnection () {
       PublishAllPorts: true
     },
     ExposedPorts: { '8000/tcp': {} },
-    Image: DYNAMODB_IMAGE
+    Image: DYNAMODB_IMAGE,
+    ...(inMemory ? { Cmd: ['-inMemory', '-sharedDb'] } : {})
   });
 
   await container.start();
@@ -92,6 +90,21 @@ async function getConnection () {
   const port = containerData.NetworkSettings.Ports['8000/tcp'][0].HostPort;
   const url = `http://${host}:${port}`;
 
+  return { url, stopContainer: () => container.stop() };
+}
+
+/**
+ * @param params.inMemory Whether to run local DynamoDB in in-memory mode.
+ * 'false' persists data to disk.
+ */
+async function getConnection ({ inMemory = false } = { inMemory: false }) {
+  if (process.env.DYNAMODB_ENDPOINT) {
+    return buildConnectionAndConfig({ url: process.env.DYNAMODB_ENDPOINT });
+  }
+
+  const { url, stopContainer } = await launchDynamoContainer({ inMemory });
+
+  const environment = new Environment();
   environment.set('AWS_ACCESS_KEY_ID', 'bogus');
   environment.set('AWS_SECRET_ACCESS_KEY', 'bogus');
   environment.set('AWS_REGION', 'us-east-1');
@@ -101,7 +114,7 @@ async function getConnection () {
     url,
     cleanup: () => {
       environment.restore();
-      return container.stop();
+      return stopContainer();
     }
   });
 
@@ -126,11 +139,17 @@ exports.tableSchema = (schema) => {
   tablesSchema = cloneDeep(schema);
 };
 
-function dynamoDBTestHooks (useUniqueTables = false) {
+/**
+ * @param {boolean} useUniqueTables
+ * @param {object} params
+ * @param params.inMemory Determines whether to run the local DynamoDB instance
+ * in in-memory mode, or to persist the data to disk
+ */
+function dynamoDBTestHooks (useUniqueTables = false, { inMemory = false } = { inMemory: false }) {
   let connection, config;
 
   async function beforeAll () {
-    const result = await getConnection();
+    const result = await getConnection({ inMemory });
     connection = result.connection;
     config = result.config;
   }
@@ -179,6 +198,7 @@ exports.getConnection = getConnection;
 exports.createTables = createTables;
 exports.destroyTables = destroyTables;
 exports.dynamoDBTestHooks = dynamoDBTestHooks;
+exports.launchDynamoContainer = launchDynamoContainer;
 
 exports.useDynamoDB = (test, useUniqueTables) => {
   const testHooks = dynamoDBTestHooks(useUniqueTables);
