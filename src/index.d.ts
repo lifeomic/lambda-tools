@@ -39,7 +39,7 @@ declare namespace dynamodb {
     schema: ReadonlyArray<aws.DynamoDB.Types.CreateTableInput>
   ): void;
   export function dynamoDBTestHooks(useUniqueTables?: boolean, {inMemory}?: {inMemory: boolean}): Hooks;
-  export function useDynamoDB(test: TestInterface, useUniqueTables?: boolean): void;
+  export function useDynamoDB(test: TestInterface, useUniqueTables?: boolean, {inMemory}?: {inMemory: boolean}): void;
 }
 
 declare namespace kinesis {

@@ -67,7 +67,9 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
 }
 
 /**
- * @param params.inMemory Whether to run local DynamoDB in in-memory mode.
+ * @param {object} opts
+ * @param {object} opts.docker Used to mock the Docker library in tests
+ * @param {boolean} opts.inMemory Whether to run local DynamoDB in in-memory mode.
  * 'false' persists data to disk.
  */
 async function launchDynamoContainer ({ docker = new Docker(), inMemory = false } = { docker: new Docker(), inMemory: false }) {
@@ -94,15 +96,16 @@ async function launchDynamoContainer ({ docker = new Docker(), inMemory = false 
 }
 
 /**
- * @param params.inMemory Whether to run local DynamoDB in in-memory mode.
+ * @param {object} opts
+ * @param {boolean} opts.inMemory Whether to run local DynamoDB in in-memory mode.
  * 'false' persists data to disk.
  */
-async function getConnection ({ inMemory = false } = { inMemory: false }) {
+async function getConnection (opts) {
   if (process.env.DYNAMODB_ENDPOINT) {
     return buildConnectionAndConfig({ url: process.env.DYNAMODB_ENDPOINT });
   }
 
-  const { url, stopContainer } = await launchDynamoContainer({ inMemory });
+  const { url, stopContainer } = await launchDynamoContainer(opts);
 
   const environment = new Environment();
   environment.set('AWS_ACCESS_KEY_ID', 'bogus');
@@ -141,15 +144,15 @@ exports.tableSchema = (schema) => {
 
 /**
  * @param {boolean} useUniqueTables
- * @param {object} params
- * @param params.inMemory Determines whether to run the local DynamoDB instance
+ * @param {object} opts
+ * @param {boolean} opts.inMemory Determines whether to run the local DynamoDB instance
  * in in-memory mode, or to persist the data to disk
  */
-function dynamoDBTestHooks (useUniqueTables = false, { inMemory = false } = { inMemory: false }) {
+function dynamoDBTestHooks (useUniqueTables = false, opts) {
   let connection, config;
 
   async function beforeAll () {
-    const result = await getConnection({ inMemory });
+    const result = await getConnection(opts);
     connection = result.connection;
     config = result.config;
   }
@@ -200,8 +203,14 @@ exports.destroyTables = destroyTables;
 exports.dynamoDBTestHooks = dynamoDBTestHooks;
 exports.launchDynamoContainer = launchDynamoContainer;
 
-exports.useDynamoDB = (test, useUniqueTables) => {
-  const testHooks = dynamoDBTestHooks(useUniqueTables);
+/**
+ * @param {boolean} useUniqueTables
+ * @param {object} opts
+ * @param {boolean} opts.inMemory Determines whether to run the local DynamoDB instance
+ * in in-memory mode, or to persist the data to disk
+ */
+exports.useDynamoDB = (test, useUniqueTables, opts) => {
+  const testHooks = dynamoDBTestHooks(useUniqueTables, opts);
 
   test.before(testHooks.beforeAll);
 
