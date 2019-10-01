@@ -72,7 +72,7 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
  * @param {boolean} opts.inMemory Whether to run local DynamoDB in in-memory mode.
  * 'false' persists data to disk.
  */
-async function launchDynamoContainer ({ docker = new Docker(), inMemory = false } = { docker: new Docker(), inMemory: false }) {
+async function launchDynamoContainer ({ docker = new Docker(), inMemory = false } = {}) {
   await ensureImage(docker, DYNAMODB_IMAGE);
 
   const container = await docker.createContainer({
