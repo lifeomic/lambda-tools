@@ -1,9 +1,10 @@
 const test = require('ava');
 const AWS = require('aws-sdk');
+const Docker = require('dockerode');
 const sinon = require('sinon');
 const uuid = require('uuid/v4');
 
-const { tableSchema, getConnection, createTables, destroyTables } = require('../../src/dynamodb');
+const { tableSchema, getConnection, createTables, destroyTables, launchDynamoContainer } = require('../../src/dynamodb');
 
 function throwTestError () {
   throw new Error('test');
@@ -242,4 +243,54 @@ test.serial('destroyTables destroys created tables', async t => {
 
 test.serial('destroyTables destroys created tables when uniqueIdentifier is used', async t => {
   await destroyTableTest(t, true);
+});
+
+test('Setting inMemory to true runs the container in in-memory mode', async t => {
+  const docker = sinon.stub(new Docker());
+  docker.listImages.returns([{ RepoTags: ['cnadiminti/dynamodb-local:latest'] }]);
+  const container = sinon.stub({ start: () => null, inspect: () => null });
+  container.start.returns(Promise.resolve(null));
+  container.inspect.returns({
+    NetworkSettings: {
+      Ports: {
+        '8000/tcp': [
+          { HostPort: 1337 }
+        ]
+      }
+    }
+  });
+  docker.createContainer.returns(container);
+  await launchDynamoContainer({ docker, inMemory: true });
+  sinon.assert.calledWith(docker.createContainer, sinon.match({ Cmd: ['-inMemory', '-sharedDb'] }));
+});
+
+test('Setting inMemory to false runs the container in persistent mode', async t => {
+  const docker = sinon.stub(new Docker());
+  docker.listImages.returns([{ RepoTags: ['cnadiminti/dynamodb-local:latest'] }]);
+  const container = sinon.stub({ start: () => null, inspect: () => null });
+  container.start.returns(Promise.resolve(null));
+  container.inspect.returns({
+    NetworkSettings: {
+      Ports: {
+        '8000/tcp': [
+          { HostPort: 1337 }
+        ]
+      }
+    }
+  });
+  docker.createContainer.returns(container);
+  await launchDynamoContainer({ docker });
+  sinon.assert.neverCalledWith(docker.createContainer, sinon.match({ Cmd: ['-inMemory', '-sharedDb'] }));
+});
+
+test('launchDynamoContanier works with its default parameters', async t => {
+  const { url, stopContainer } = await launchDynamoContainer();
+  await stopContainer();
+  t.truthy(url.match(/http:\/\/.*:\d+/));
+});
+
+test('launchDynamoContanier works without docker stubbed', async t => {
+  const { url, stopContainer } = await launchDynamoContainer({ inMemory: true });
+  await stopContainer();
+  t.truthy(url.match(/http:\/\/.*:\d+/));
 });
