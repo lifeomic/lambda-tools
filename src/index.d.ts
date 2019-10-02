@@ -2,7 +2,7 @@ import * as aws from "aws-sdk";
 import { TestInterface } from "ava";
 import { ServiceConfigurationOptions } from "aws-sdk/lib/service";
 import { Client as ElasticSearchClient } from "@elastic/elasticsearch";
-import { AxiosInstance, AxiosPromise } from "axios";
+import { AxiosRequestConfig, AxiosInstance, AxiosPromise } from "axios";
 
 export interface HttpError {
   message: string;
@@ -67,7 +67,7 @@ declare namespace graphql {
   export function useGraphQL(test: TestInterface): void;
   export function setupGraphQL(setupGraphQL: Function): void;
   export function assertSuccess(response: Response): void;
-  export function assertError(response: Response, path: {}, messageTest: string)
+  export function assertError(response: Response, path: {}, messageTest: string): void;
 }
 
 declare namespace localStack {
@@ -184,7 +184,7 @@ declare namespace lambda {
 
   export interface AlphaClient extends AxiosInstance {
     raw<T = any>(event: {}, environment: Environment, handler: string): Promise<T>;
-    graphql<T = any>(path, query, variables, config): AxiosPromise<T>
+    graphql<T = any>(path: string, query: any, variables: any, config?: AxiosRequestConfig): AxiosPromise<T>
   }
 
   export interface TestHooks {
