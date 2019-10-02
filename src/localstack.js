@@ -140,7 +140,7 @@ const LOCALSTACK_SERVICES = {
     isReady: (client) => client.getSMSAttributes().promise()
   },
   'sqs': {
-    port: '4576',
+    port: '4561',
     getClient: ({ config }) => new AWS.SQS(config),
     isReady: (client) => client.listQueues().promise()
   },
