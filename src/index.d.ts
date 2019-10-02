@@ -60,7 +60,7 @@ declare namespace kinesis {
   export function streams(streams: ReadonlyArray<string>): void;
   export function kinesisTestHooks(useUniqueStreams?: boolean): Hooks;
   export function useKinesisDocker(test: TestInterface, useUniqueStreams?: boolean): void;
-  export function useKinesis(test: TestInterface, useUniqueStreams?: boolean): void;
+  export function useKinesis(test: TestInterface, streamName: string): void;
 }
 
 declare namespace graphql {
