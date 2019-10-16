@@ -1,4 +1,4 @@
-exports.mockInvocation = async function (mockServerClient, functionName, responseBody, requestBody) {
+exports.mockInvocation = async function (mockServerClient, functionName, responseBody, requestBody, times) {
   const options = {
     httpRequest: {
       method: 'POST',
@@ -7,11 +7,18 @@ exports.mockInvocation = async function (mockServerClient, functionName, respons
     httpResponse: {
       statusCode: 200,
       body: JSON.stringify(responseBody)
-    },
-    times: {
-      unlimited: true
     }
   };
+  if (times) {
+    options.times = {
+      remainingTimes: times,
+      unlimited: false
+    };
+  } else {
+    options.times = {
+      unlimited: true
+    };
+  }
 
   if (requestBody) {
     options.httpRequest.body = {
