@@ -1,5 +1,6 @@
-import {AxiosInstance, AxiosPromise} from "axios";
+import {AxiosRequestConfig, AxiosInstance, AxiosPromise} from "axios";
 import {TestInterface} from "ava";
+import Docker = require('dockerode');
 
 export interface Environment {
   [key:string]: string | null;
@@ -46,24 +47,36 @@ export interface CreateLambdaExecutionEnvironmentOptions {
   mountpointParent?: string;
   mountpoint?: string;
   service?: string;
-  container?: any;
+  container?: string;
 }
 
 export interface LambdaExecutionEnvironment {
-  network?: any;
-  container?: any;
+  network?: Docker.Network;
+  container?: Docker.Container;
   cleanupMountpoint?: () => Promise<void>;
 }
 
 export interface DestroyLambdaExecutionEnvironmentOptions {
   cleanupMountpoint?: boolean;
-  container?: boolean;
-  network?: boolean;
+  container?: Docker.Container;
+  network?: Docker.Network;
+}
+
+export interface AlphaClientConfig {
+  container: Docker.Container;
+  environment: {[key: string]: any};
+  handler: string;
 }
 
 export interface AlphaClient extends AxiosInstance {
-  raw<T = any>(event: {}, environment: Environment, handler: string): Promise<T>;
-  graphql<T = any>(path, query, variables, config): AxiosPromise<T>
+  constructor(config: AlphaClientConfig);
+  raw<T = any>(event: any, environment: Environment, handler: string): Promise<T>;
+  graphql<T = any>(
+    path: string,
+    query: any,
+    variables: any,
+    config?: AxiosRequestConfig
+  ): AxiosPromise<T>
 }
 
 export interface LambdaTestContext {

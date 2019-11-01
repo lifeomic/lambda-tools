@@ -28,7 +28,7 @@ export interface GraphQlOptions {
 
 export type SetupGraphQL = <T>(test: ExecutionContext<T>) => Koa;
 
-export function assertError(response: GraphQlResponse, path: string|undefined, messageTest?: string)
+export function assertError(response: GraphQlResponse, path: string|undefined, messageTest?: string): void;
 export function assertSuccess(response: GraphQlResponse): void;
 export function useGraphQL(test: TestInterface, options?: GraphQlOptions): void;
 export function setupGraphQL(setupGraphQL: SetupGraphQL): void;
