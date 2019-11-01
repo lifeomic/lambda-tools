@@ -46,6 +46,7 @@
   },
   "devDependencies": {
     "@lifeomic/eslint-plugin-node": "^2.0.1",
+    "@types/dockerode": "^2.5.20",
     "@types/koa": "^2.0.45",
     "@types/koa-router": "^7.0.28",
     "apollo-server-koa": "^2.0.0",
@@ -61,8 +62,8 @@
     "proxyquire": "^2.0.1",
     "serverless-http": "^2.0.0",
     "sinon": "^7.1.0",
-    "ts-loader": "^5.3.3",
-    "typescript": "^3.3.3333"
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.6.4"
   },
   "dependencies": {
     "@babel/core": "^7.0.0",

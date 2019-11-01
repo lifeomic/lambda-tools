@@ -3,12 +3,12 @@ const NestedError = require('nested-error-stacks');
 const promiseRetry = require('promise-retry');
 
 function buildConfigFromConnection (connection) {
-  return Object.assign({
+  return {
     credentials: new AWS.Credentials(connection.accessKey, connection.secretAccessKey),
     endpoint: new AWS.Endpoint(connection.url),
     region: connection.region,
     maxRetries: 10
-  });
+  };
 }
 
 function buildConnectionAndConfig ({
