@@ -204,6 +204,7 @@ exports.dynamoDBTestHooks = dynamoDBTestHooks;
 exports.launchDynamoContainer = launchDynamoContainer;
 
 /**
+ * @param {TestInterface} test ava object
  * @param {boolean} useUniqueTables
  * @param {object} opts
  * @param {boolean} opts.inMemory Determines whether to run the local DynamoDB instance

@@ -161,10 +161,9 @@ const LOCALSTACK_SERVICES = {
   }
 };
 
-function getExposedPorts (services) {
+function getExposedPorts () {
   const ports = {};
-  for (const service of services) {
-    const { port } = LOCALSTACK_SERVICES[service];
+  for (let port = 4556; port < 4597; ++port) {
     ports[`${port}/tcp`] = {};
   }
   return ports;
@@ -216,7 +215,7 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
       AutoRemove: true,
       PublishAllPorts: true
     },
-    ExposedPorts: getExposedPorts(services),
+    ExposedPorts: getExposedPorts(),
     Image: image,
     Env: [
       `SERVICES=${services.join(',')}`,
