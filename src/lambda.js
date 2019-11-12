@@ -26,7 +26,7 @@ const convertEvent = (event) => {
   return `${event}`;
 };
 
-class Client extends Alpha {
+class LambdaAlphaClient extends Alpha {
   constructor ({ container, environment, handler }) {
     const runner = new LambdaRunner(container, environment, handler);
 
@@ -46,6 +46,8 @@ class Client extends Alpha {
     return this.post(path, { query, variables }, config);
   }
 }
+
+module.exports.LambdaAlphaClient = LambdaAlphaClient;
 
 async function getEntrypoint (docker, imageName) {
   const image = await (await docker.getImage(imageName)).inspect();
@@ -83,7 +85,7 @@ class LambdaRunner {
       console.log('container error was:\n', stderr.toString('utf8').trim());
     }
 
-    return JSON.parse(result);
+    return JSON.parse(result || '{}');
   }
 
   async _buildCommand () {
@@ -251,7 +253,7 @@ function useLambdaHooks (localOptions) {
 
   async function beforeEach () {
     const { container, environment, handler } = getOptions();
-    return new Client({ container, environment, handler });
+    return new LambdaAlphaClient({ container, environment, handler });
   }
 
   return { beforeAll, beforeEach, afterAll };

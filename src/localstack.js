@@ -213,14 +213,17 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
   const container = await docker.createContainer({
     HostConfig: {
       AutoRemove: true,
-      PublishAllPorts: true
+      PublishAllPorts: true,
+      Privileged: true,
+      Binds: ['/var/run/docker.sock:/var/run/docker.sock']
     },
     ExposedPorts: getExposedPorts(),
     Image: image,
     Env: [
       `SERVICES=${services.join(',')}`,
       'DEBUG=1',
-      'LAMBDA_EXECUTOR=docker'
+      'LAMBDA_EXECUTOR=docker',
+      'LAMBDA_DOCKER_NETWORK=host'
     ]
   });
 
