@@ -1,5 +1,4 @@
-lambda-tools
-============
+# lambda-tools
 
 [![npm](https://img.shields.io/npm/v/@lifeomic/lambda-tools.svg)](https://www.npmjs.com/package/@lifeomic/lambda-tools)
 [![Build Status](https://travis-ci.org/lifeomic/lambda-tools.svg?branch=master)](https://travis-ci.org/lifeomic/lambda-tools)
@@ -15,7 +14,7 @@ examples can be found in the [examples](./examples) directory.
 npm install --save @lifeomic/lambda-tools
 ```
 
-# DynamoDB
+## DynamoDB
 
 Many services use [DynamoDB][dynamodb] as their primary storage solution.
 Testing service code against a DynamoDB storage layer requires either mocking
@@ -44,13 +43,13 @@ manipulations in the referenced DynamoDB instance. In this case AWS specific
 environment variables, like `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`,
 will also be used when constructing the test clients.
 
-## `dynamodb.tableSchema(schema)`
+### `dynamodb.tableSchema(schema)`
 
 Declares the table schema that should be used by all test cases using the
 `useDynamoDB()` helper. A `schema` a list of parameter objects accepted by
 [`AWS.DynamoDB.createTable()`][dynamodb-create-table].
 
-## `dynamodb.useDynamoDB(test, useUniqueTables)`
+### `dynamodb.useDynamoDB(test, useUniqueTables)`
 
 Prepares an [ava][ava] test suite for use with DynamoDB. The test context will
 include the following clients on the `dynamodb` attribute:
@@ -70,7 +69,7 @@ fetched from the `tableNames` map. Otherwise, the table name will be the default
 provided in the schema. This allows tests to be run in parallel.
 
 
-# Kinesis
+## Kinesis
 
 Many services use [Kinesis][kinesis] as a message processing system.
 Testing service code against a Kinesis service layer requires either mocking
@@ -98,12 +97,12 @@ manipulations in the referenced Kinesis instance. In this case AWS specific
 environment variables, like `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`,
 will also be used when constructing the test clients.
 
-## `kinesis.streams(streams)`
+### `kinesis.streams(streams)`
 
 Declares the list of stream names that should be used by all test cases using the
 `useKinesis()` helper.  Each stream will be created with one shard.
 
-## `kinesis.useKinesis(test, streamName)`
+### `kinesis.useKinesis(test, streamName)`
 
 Prepares an [ava][ava] test suite for use with a provided Kinesis instance. The test context will
 include a AWS.Kinesis client on the `kinesis` attribute.
@@ -111,7 +110,7 @@ include a AWS.Kinesis client on the `kinesis` attribute.
 The streamName is used to create a new kinesis stream before all tests, and delete the stream at the end.
 This method can be used to create multiple streams.
 
-## `kinesis.useKinesisDocker(test, useUniqueStreams)`
+### `kinesis.useKinesisDocker(test, useUniqueStreams)`
 
 Prepares an [ava][ava] test suite for use with Kinesis. The test context will
 include the following clients on the `kinesis` attribute:
@@ -128,7 +127,7 @@ the form of `<streamNameProvided>-<uuid>`. The unique stream name can be
 fetched from the `streamNames` map. Otherwise, the stream name will be the default
 provided in the streams array. This allows tests to be run in parallel.
 
-# GraphQL
+## GraphQL
 
 `lambda-tools` provides helpers for wrapping [`Koa`][koa] instances in a client
 that can easily make GraphQL requests. GraphQL reports application errors as
@@ -136,7 +135,7 @@ part of the response payload rather than through the use of HTTP status codes.
 The `graphql` helpers provides specialized assertions that can be used to
 check the status of a GraphQL response.
 
-## `graphql.assertError(response, path, messageTest)`
+### `graphql.assertError(response, path, messageTest)`
 
 Asserts that an error was returned on the response. `response` is the response
 object returned from the helper client. `path` is an object path used to select
@@ -146,29 +145,29 @@ When a string is used the error message must be equal to the string. When a
 function is used the function must return true if the message meets
 expectations.
 
-## `graphql.assertSuccess(response)`
+### `graphql.assertSuccess(response)`
 
 Asserts that no errors are included on the response. `response` is the response
 object returned from the helper client.
 
-## `graphql.setupGraphQL(fn)`
+### `graphql.setupGraphQL(fn)`
 
 Prepares a Koa app instance for use by the `useGraphQL()` helper. `fn` is
 invoked with the `test` instance and must return a Koa application.
 
-## `graphql.useGraphQL(test, options)`
+### `graphql.useGraphQL(test, options)`
 
 Prepares an [ava][ava] test suite for use with theh GraphQL helper client. The
 test context will be augmented with a `graphql(query, variables)` method that
 will use [supertest][supertest] to POST data to the `options.url` endpoint and
 return the response. The default endpoint is `/graphql`.
 
-# MockServer Lambda
+## MockServer Lambda
 
 A collection of helper methods to mock and verify Lambda invocations based on [MockServer](https://mock-server.com/)
 
 
-# Lambda
+## Lambda
 
 Replicating the Lambda runtime environment in a local test framework is a
 non-trivial thing to do. `lambda-tools` provides helper functions that can
@@ -177,7 +176,7 @@ that have been provisioned externally (using something like
 [docker-compose][docker-compose]). It is also possible to use a managed Lambda
 container with other existing infrastructure managed by docker-compose.
 
-## `lambda.useComposeContainer(options)`
+### `lambda.useComposeContainer(options)`
 
 Configures the `lambda` helper to use an existing container managed by
 docker-compose in all test suites leveraging the `useLambda()` helper. This
@@ -188,7 +187,7 @@ the test process. The following options must be provided:
    `<module>.<function name>`
  - **service** -- the name of the compose service providing the Lambda runtime
 
-## `lambda.useNewContainer(options)`
+### `lambda.useNewContainer(options)`
 
 Configures the `lambda` helper to provision a new Docker container managed by
 `lambda-tools` for use in test cases. The following options are supported:
@@ -206,7 +205,7 @@ Configures the `lambda` helper to provision a new Docker container managed by
    dedicated isolated network. If set to `true`, the `COMPOSE_PROJECT_NAME`
    environment variable must also be available in the test process.
 
-## `lambda.useLambda(test, options)`
+### `lambda.useLambda(test, options)`
 
 Prepares an [ava][ava] test suite for use with a Lambda runtime. `options` may
 be used to provide or override any options from `useComposeContainer()` or
@@ -220,7 +219,7 @@ additional `alpha` parameters (like request headers). The `raw(event, context)`
 method allows a raw Lambda event to be passed to the function and will return
 the raw response object.
 
-## Lambda Webpack Bundle CLI
+### Lambda Webpack Bundle CLI
 
 Building code bundles that are optimized for the Lambda runtime can be a
 tedious exercise. In order to share code and learning in this area across
