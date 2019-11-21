@@ -2,7 +2,7 @@ import {Kinesis} from 'aws-sdk';
 import {KinesisStreamRecord, KinesisStreamEvent} from 'aws-lambda';
 
 export interface BasicKinesisConfig {
-  kinesis: Kinesis;
+  kinesisClient: Kinesis;
   streamName: string;
 }
 

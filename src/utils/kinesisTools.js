@@ -1,4 +1,3 @@
-const promiseRetry = require('promise-retry');
 const assert = require('assert');
 
 class KinesisIterator {
@@ -8,35 +7,19 @@ class KinesisIterator {
     return iterator;
   }
 
-  constructor ({ kinesis, streamName }) {
-    assert.ok(kinesis, 'kinesis client needs to be provided');
-    assert.ok(kinesis.getRecords && kinesis.describeStream && kinesis.getShardIterator, 'kinesis client needs to be of type AWS.Kinesis');
+  constructor ({ kinesisClient, streamName }) {
+    assert.ok(kinesisClient, 'kinesisClient client needs to be provided');
+    assert.ok(kinesisClient.getRecords && kinesisClient.describeStream && kinesisClient.getShardIterator, 'kinesisClient client needs to be of type AWS.Kinesis');
     assert.ok(typeof streamName === 'string', 'streamName needs to be defined and a string');
 
-    this._kinesis = kinesis;
+    this._kinesis = kinesisClient;
     this._streamName = streamName;
   }
 
   async init () {
-    const describeStreamResult = await promiseRetry(async (retry) => {
-      let describeResult;
-      try {
-        describeResult = await this._kinesis.describeStream({
-          StreamName: this._streamName
-        }).promise();
-      } catch (e) {
-        retry(e);
-        throw e;
-      }
-
-      assert.strictEqual(describeResult.StreamDescription.Shards.length, 1);
-
-      return describeResult;
-    }, {
-      retries: 10,
-      factor: 1.1,
-      minTimeout: 100
-    });
+    const describeStreamResult = await this._kinesis.describeStream({
+      StreamName: this._streamName
+    }).promise();
 
     const getShardIteratorResult = await this._kinesis.getShardIterator({
       ShardId: describeStreamResult.StreamDescription.Shards[0].ShardId,
@@ -49,6 +32,9 @@ class KinesisIterator {
   }
 
   async next (Limit) {
+    if (!this._shardIterator) {
+      await this.init();
+    }
     this._getRecordsResponse = await this._kinesis.getRecords({
       ShardIterator: this._shardIterator,
       Limit

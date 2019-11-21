@@ -32,6 +32,8 @@ class TempWriteBuffer extends Writable {
         this._buffer = undefined;
         this.resolve();
       }
+    } else {
+      console.log(Buffer.from(chunk, 'utf8').toString());
     }
     callback();
   }

@@ -84,7 +84,7 @@ class LambdaRunner {
       console.log('container output was:\n', output);
       console.log('container error was:\n', stderr.toString('utf8').trim());
     }
-
+    // istanbul ignore next
     return JSON.parse(result || '{}');
   }
 
