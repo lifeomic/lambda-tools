@@ -24,8 +24,10 @@ class TempWriteBuffer extends Writable {
   }
 
   _write (chunk, encoding, callback) {
+    const asBuffer = Buffer.from(chunk, 'utf8');
+    const asString = asBuffer.toString('utf8');
     if (this._buffer) {
-      this._buffer.push(Buffer.from(chunk, 'utf8'));
+      this._buffer.push(asBuffer);
       const logs = this.toString('utf8').trim().split('\n');
       this._buffer = [];
       if (logs.includes('Ready.')) {
@@ -33,7 +35,8 @@ class TempWriteBuffer extends Writable {
         this.resolve();
       }
     } else {
-      console.log(Buffer.from(chunk, 'utf8').toString());
+      // The logs coming from the lambda instance were using \r, and weren't being printed by console.log
+      console.log(asString.replace(/\r/g, '\n'));
     }
     callback();
   }

@@ -83,7 +83,7 @@ test.serial('can iterate through stream to handler', async t => {
   const expected = [...Array(20)].map(() => ({ key: uuid() }));
 
   await kinesisClient.putRecords(formatRecords(streamNames[0], expected)).promise();
-  const secondIterator = await KinesisIterator.newIterator({ kinesis: kinesisClient, streamName: streamNames[1] });
+  const secondIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: streamNames[1] });
 
   let records = [];
   let attempts = 0;
