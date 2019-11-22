@@ -21,6 +21,7 @@
   "license": "MIT",
   "ava": {
     "failWithoutAssertions": false,
+    "concurrency": 1,
     "files": [
       "test/**/*.test.js"
     ]
