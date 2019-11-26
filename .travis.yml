@@ -10,7 +10,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
 before_script: greenkeeper-lockfile-update
-script: travis_wait 30 yarn test
+script: yarn test
 after_script: greenkeeper-lockfile-upload
 after_success: yarn coverage
 notifications:
