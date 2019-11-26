@@ -59,6 +59,19 @@ async function createTables (dynamoClient, uniqueIdentifier) {
   }
 }
 
+async function assertTableDoesNotExist (dynamoClient, tableName) {
+  try {
+    await dynamoClient.describeTable({ TableName: tableName }).promise();
+    throw new Error(`Table ${tableName} still exists`);
+  } catch (e) {
+    if (e.code !== 'ResourceNotFoundException') {
+      throw e;
+    }
+
+    // This is what we've been waiting for, the table is gone
+  }
+}
+
 async function destroyTables (dynamoClient, uniqueIdentifier) {
   const failedDeletions = [];
   const { TableNames } = await dynamoClient.listTables().promise();
@@ -83,18 +96,9 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
             await deleteRequest.promise();
           } catch (e) {
             if (e.code === 'TimeoutError') {
-              await waitForReady(`Deleted table ${TableName}`, async () => {
-                try {
-                  await dynamoClient.describeTable({ TableName }).promise();
-                  throw new Error(`Table ${TableName} still exists`);
-                } catch (e) {
-                  if (e.code !== 'ResourceNotFoundException') {
-                    throw e;
-                  }
-
-                  // This is what we've been waiting for, the table is gone
-                }
-              });
+              await waitForReady(`Deleted table ${TableName}`, () =>
+                assertTableDoesNotExist(dynamoClient, TableName)
+              );
             } else {
               throw e;
             }
