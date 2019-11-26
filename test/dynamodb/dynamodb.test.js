@@ -105,6 +105,20 @@ async function assertTablesPresent (t, client, expected, message) {
   );
 }
 
+function stubTableChangeFailure (t, client, functionName, errorCode) {
+  let retryHook;
+  sinon.stub(client, functionName).onFirstCall().returns({
+    on: (_, func) => { retryHook = func; },
+    promise: async () => {
+      const error = new Error();
+      error.code = errorCode;
+      retryHook({ error });
+      t.is(error.retryable, false);
+      throw error;
+    }
+  });
+}
+
 test.serial('createTables creates tables according to specified schemas', async (t) => {
   const { connection, config } = await getConnection();
 
@@ -127,11 +141,40 @@ test.serial('throws when createTables fails', async t => {
 
   try {
     const client = new AWS.DynamoDB(config);
-    sinon.stub(client, 'createTable').onFirstCall().callsFake(throwTestError);
+    stubTableChangeFailure(t, client, 'createTable', 'SomeUnknownError');
     const deleteTable = sinon.spy(client, 'deleteTable');
     const { message } = await t.throwsAsync(createTables(client));
     t.is(message, 'Failed to create tables: test-table');
     sinon.assert.notCalled(deleteTable);
+  } finally {
+    await connection.cleanup();
+  }
+});
+
+test.serial('waits for the table to exist when a timeout happens on create', async t => {
+  const { connection, config } = await getConnection();
+
+  try {
+    const client = new AWS.DynamoDB(config);
+
+    stubTableChangeFailure(t, client, 'createTable', 'TimeoutError');
+
+    const describeTable = sinon.stub(client, 'describeTable')
+      .onFirstCall().returns({
+        promise: async () => {
+          const timeoutError = new Error();
+          timeoutError.code = 'ResourceNotFoundException';
+          throw timeoutError;
+        }
+      })
+      .onSecondCall().returns({
+        promise: async () => {}
+      });
+
+    await createTables(client);
+
+    sinon.assert.calledTwice(describeTable);
+    sinon.assert.calledWith(describeTable, { TableName: TEST_TABLE_SCHEMA.TableName });
   } finally {
     await connection.cleanup();
   }
@@ -200,7 +243,8 @@ test.serial('throws when destroyTables fails', async t => {
         TableNames: ['test-table']
       })
     });
-    sinon.stub(client, 'deleteTable').onFirstCall().callsFake(throwTestError);
+
+    stubTableChangeFailure(t, client, 'deleteTable', 'SomeUnknownError');
     const { message } = await t.throwsAsync(destroyTables(client));
     t.is(message, 'Failed to destroy tables: test-table');
   } finally {
@@ -239,6 +283,42 @@ async function destroyTableTest (t, useUniqueTables) {
 
 test.serial('destroyTables destroys created tables', async t => {
   await destroyTableTest(t, false);
+});
+
+test.serial('destroyTables waits for the table to not exist when a timeout happens on delete', async t => {
+  const { connection, config } = await getConnection();
+
+  try {
+    const client = new AWS.DynamoDB(config);
+
+    // Make the delete code think that the table already exists
+    sinon.stub(client, 'listTables').onFirstCall().returns({
+      promise: () => Promise.resolve({
+        TableNames: [TEST_TABLE_SCHEMA.TableName]
+      })
+    });
+
+    stubTableChangeFailure(t, client, 'deleteTable', 'TimeoutError');
+
+    const describeTable = sinon.stub(client, 'describeTable')
+      .onFirstCall().returns({
+        promise: async () => {}
+      })
+      .onSecondCall().returns({
+        promise: async () => {
+          const error = new Error();
+          error.code = 'ResourceNotFoundException';
+          throw error;
+        }
+      });
+
+    await destroyTables(client);
+
+    sinon.assert.calledTwice(describeTable);
+    sinon.assert.calledWith(describeTable, { TableName: TEST_TABLE_SCHEMA.TableName });
+  } finally {
+    await connection.cleanup();
+  }
 });
 
 test.serial('destroyTables destroys created tables when uniqueIdentifier is used', async t => {
