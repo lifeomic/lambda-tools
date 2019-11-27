@@ -6,7 +6,8 @@ export function mockInvocation (
   mockServerClient: any,
   functionName: string,
   responseBody: MockJsonBody,
-  requestBody: MockJsonBody
+  requestBody: MockJsonBody,
+  times: number
 ): Promise<void>;
 
 export function verifyInvocation (
