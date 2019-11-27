@@ -3,7 +3,7 @@ import {TestInterface} from "ava";
 import Docker = require('dockerode');
 
 export interface Environment {
-  [key:string]: any;
+  [key:string]: string | number | boolean | null | undefined;
 }
 
 export interface LocalOptions {
