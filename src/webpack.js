@@ -16,7 +16,7 @@ const WEBPACK_DEFAULTS = new webpack.WebpackOptionsDefaulter().process({});
 const run = promisify(webpack);
 
 const CALLER_NODE_MODULES = 'node_modules';
-const DEFAULT_NODE_VERSION = '6.10';
+const DEFAULT_NODE_VERSION = '12.13.0';
 const LAMBDA_TOOLS_NODE_MODULES = path.resolve(__dirname, '..', 'node_modules');
 
 const getNormalizedFileName = (file) => path.basename(file).replace(/.ts$/, '.js');
@@ -154,7 +154,7 @@ async function expandEntrypoints (entrypoints) {
 }
 
 module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }) => {
-  options = defaults(options, { enableRuntimeSourceMaps: true });
+  options = defaults(options, { enableRuntimeSourceMaps: false });
 
   // If an entrypoint is a directory then we discover all of the entrypoints
   // within that directory.
@@ -218,8 +218,9 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
       plugins: [
         // X-Ray tracing cannot currently track execution across
         // async/await calls. The issue is tracked upstream at
-        // https://github.com/aws/aws-xray-sdk-node/issues/12 Using
-        // transform-async-to-generator will convert async/await into
+        // https://github.com/aws/aws-xray-sdk-node/issues/12
+        // https://github.com/aws/aws-xray-sdk-node/issues/60
+        // Using transform-async-to-generator will convert async/await into
         // generators which can be traced with X-Ray
         '@babel/plugin-transform-async-to-generator'
       ]
@@ -249,9 +250,9 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
       }
     };
 
-  const optimization = options.skipMinification
-    ? { minimize: false }
-    : { minimizer: [new TerserPlugin({ sourceMap: true })] };
+  const optimization = options.minify
+    ? { minimizer: [new TerserPlugin({ sourceMap: true })] }
+    : { minimize: false };
 
   const devtool = options.enableRuntimeSourceMaps
     ? 'source-map'
