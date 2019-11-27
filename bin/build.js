@@ -22,11 +22,11 @@ const argv = require('yargs')
   })
   .option('n', {
     alias: 'node-version',
-    describe: 'the version of node that the bundle should be optimized for (default 6.10)',
+    describe: 'the version of node that the bundle should be optimized for (default 12.13.0)',
     type: 'string'
   })
-  .option('disable-runtime-source-maps', {
-    describe: 'disable support for runtime source maps but still generate source maps',
+  .option('enable-runtime-source-maps', {
+    describe: 'enable support for runtime source maps',
     type: 'boolean',
     default: false
   })
@@ -40,8 +40,8 @@ const argv = require('yargs')
     describe: 'the name of the service the bundle is for',
     type: 'string'
   })
-  .option('skip-minification', {
-    describe: 'disable minification of bundled code',
+  .option('minify', {
+    describe: 'enable minification of bundled code',
     type: 'boolean',
     default: false
   })
@@ -69,11 +69,11 @@ const buildOptions = {
   entrypoint: argv._,
   nodeVersion: argv.n,
   outputPath: argv.o,
-  skipMinification: argv['skip-minification'],
+  minify: argv['minify'],
   serviceName: argv.s,
   zip: argv.z,
   tsconfig: argv.t,
-  enableRuntimeSourceMaps: !argv['disable-runtime-source-maps']
+  enableRuntimeSourceMaps: argv['enable-runtime-source-maps']
 };
 
 if (argv.t) {
