@@ -21,8 +21,27 @@ async function createTables (dynamoClient, uniqueIdentifier) {
       newTable.TableName = TableName;
 
       try {
-        await dynamoClient.createTable(newTable).promise();
-        await dynamoClient.waitFor('tableExists', { TableName }).promise();
+        const createRequest = dynamoClient.createTable(newTable);
+        createRequest.on('retry', response => {
+          // Do not retry table creation because it leads to
+          // ResourceInUseException when trying to create the table twice
+          response.error.retryable = false;
+        });
+
+        try {
+          await createRequest.promise();
+        } catch (e) {
+          if (e.code === 'TimeoutError') {
+            // Use a custom retry instead of the AWS provided
+            // `dynamoClient.waitFor('tableExists',` because the waitFor
+            // behavior is hardcoded to delay by 20 seconds and retry 25 times
+            await waitForReady(`Created table ${TableName}`, () =>
+              dynamoClient.describeTable({ TableName }).promise()
+            );
+          } else {
+            throw e;
+          }
+        }
       } catch (err) {
         failedProvisons.push(TableName);
         console.error(`Failed to create table "${TableName}"`, err);
@@ -40,6 +59,19 @@ async function createTables (dynamoClient, uniqueIdentifier) {
   }
 }
 
+async function assertTableDoesNotExist (dynamoClient, tableName) {
+  try {
+    await dynamoClient.describeTable({ TableName: tableName }).promise();
+    throw new Error(`Table ${tableName} still exists`);
+  } catch (e) {
+    if (e.code !== 'ResourceNotFoundException') {
+      throw e;
+    }
+
+    // This is what we've been waiting for, the table is gone
+  }
+}
+
 async function destroyTables (dynamoClient, uniqueIdentifier) {
   const failedDeletions = [];
   const { TableNames } = await dynamoClient.listTables().promise();
@@ -52,8 +84,25 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
     tablesToDestroy
       .map(async TableName => {
         try {
-          await dynamoClient.deleteTable({ TableName }).promise();
-          await dynamoClient.waitFor('tableNotExists', { TableName }).promise();
+          const deleteRequest = dynamoClient.deleteTable({ TableName });
+
+          deleteRequest.on('retry', response => {
+            // Do not retry table deletion because it leads to
+            // ResourceNotFoundException when trying to delete the table twice
+            response.error.retryable = false;
+          });
+
+          try {
+            await deleteRequest.promise();
+          } catch (e) {
+            if (e.code === 'TimeoutError') {
+              await waitForReady(`Deleted table ${TableName}`, () =>
+                assertTableDoesNotExist(dynamoClient, TableName)
+              );
+            } else {
+              throw e;
+            }
+          }
         } catch (err) {
           failedDeletions.push(TableName);
           console.error(`Failed to destroy table "${TableName}"`, err);
