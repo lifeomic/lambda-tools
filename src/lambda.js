@@ -74,7 +74,10 @@ class LambdaRunner {
     const command = await this._buildCommand();
     const container = await this._getContainer();
     const environment = this._environment;
-    const { stderr, stdout } = await executeContainerCommand({ container, command, environment, stdin: convertEvent(event) });
+
+    const { stderr, stdout } = event === undefined
+      ? { stdout: 'Skipping execution of an undefined event. In the past this would have been an Unexpected token error\n{}', stderr: '' }
+      : await executeContainerCommand({ container, command, environment, stdin: convertEvent(event) });
 
     const output = stdout.toString('utf8').trim();
     const split = output.lastIndexOf('\n');

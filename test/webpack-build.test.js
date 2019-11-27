@@ -9,7 +9,7 @@ const { createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment, Lam
 const { FIXTURES_DIRECTORY } = require('./helpers/lambda');
 const find = require('lodash/find');
 
-const SUPPORTED_NODE_VERSIONS = ['6.10', '8.10'];
+const SUPPORTED_NODE_VERSIONS = ['8.10', '10.16.3', '12.13.0'];
 
 test.beforeEach((test) => {
   test.context.buildDirectory = path.join(FIXTURES_DIRECTORY, 'build', uuid());
@@ -72,7 +72,7 @@ test('The webpack configuration can be transformed', async (test) => {
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   const webpackedContents = await fs.readFile(bundle, 'utf8');
   // Make sure that koa-router is really treated as external as the transformed config would require
-  test.truthy(/e\.exports=require\("koa-router"\)/.test(webpackedContents));
+  test.truthy(/module\.exports = require\("koa-router"\);/.test(webpackedContents));
 
   sinon.assert.calledOnce(transformer);
   sinon.assert.calledWith(transformer, sinon.match.object);
@@ -128,10 +128,10 @@ test('Typescript code has async/await removed for good X-Ray integration', async
 
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   const contents = await fs.readFile(path.join(test.context.buildDirectory, 'async_test.js'), 'utf8');
-  test.is(/await /.test(contents), false, 'await found');
+  test.is(/await handler/.test(contents), false, 'await found');
 });
 
-test('Node 6 bundles are produced by default', async (test) => {
+test('Node 12 bundles are produced by default', async (test) => {
   const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');
 
   const transformer = sinon.stub().returnsArg(0);
@@ -149,7 +149,7 @@ test('Node 6 bundles are produced by default', async (test) => {
 
   const config = transformer.firstCall.args[0];
   const babel = config.module.rules.find((rule) => rule.loader === 'babel-loader');
-  test.is(babel.options.presets[0][1].targets.node, '6.10');
+  test.is(babel.options.presets[0][1].targets.node, '12.13.0');
 });
 
 test('A custom Node version can be used', async (test) => {
@@ -361,12 +361,12 @@ async function assertSourceMapBehavior (test, options, expectMappingUrl, expectS
   }
 }
 
-test.serial('enables sourcemaps at runtime by default', async (test) => {
-  await assertSourceMapBehavior(test, {}, true, true);
+test.serial('allow enabling sourcemaps at runtime', async (test) => {
+  await assertSourceMapBehavior(test, { enableRuntimeSourceMaps: true }, true, true);
 });
 
-test.serial('allow disabling sourcemaps at runtime', async (test) => {
-  await assertSourceMapBehavior(test, { enableRuntimeSourceMaps: false }, false, false);
+test.serial('disables sourcemaps at runtime by default', async (test) => {
+  await assertSourceMapBehavior(test, {}, false, false);
 });
 
 test.serial('Should handle building entrypoint outside of current working directory', async (test) => {
@@ -413,8 +413,14 @@ for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
 
     // Try loading the newly loaded file to make sure it can
     // execute without an error
+    let image = `lambci/lambda:nodejs${nodeVersion}`;
+    if (nodeVersion.startsWith('10')) {
+      image = 'lambci/lambda:nodejs10.x';
+    } else if (nodeVersion.startsWith('12')) {
+      image = 'lambci/lambda:nodejs12.x';
+    }
     const executionEnvironment = await createLambdaExecutionEnvironment({
-      image: `lambci/lambda:nodejs${nodeVersion}`,
+      image,
       mountpoint: test.context.buildDirectory
     });
     try {
@@ -458,10 +464,10 @@ async function assertMinification (test, options, expectMinification) {
   test.is(/handler\(entry\)/.test(contents), !expectMinification);
 }
 
-test('Minification is enabled by default', async (test) => {
-  await assertMinification(test, { }, true);
+test('Minification can be enabled', async (test) => {
+  await assertMinification(test, { minify: true }, true);
 });
 
-test('Minification can be skipped', async (test) => {
-  await assertMinification(test, { skipMinification: true }, false);
+test('Minification is disabled by default', async (test) => {
+  await assertMinification(test, {}, false);
 });

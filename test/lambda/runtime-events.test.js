@@ -36,13 +36,12 @@ useLambda(test);
 
 test.after.always(async (test) => fs.remove(BUILD_DIRECTORY));
 
-test.serial(`The lambda function logs process events`, async (test) => {
+async function testEventExecution (test, event) {
   const write = process.stdout.write;
   const buffer = new WriteBuffer();
   process.stdout.write = buffer.write.bind(buffer);
 
   const context = {};
-  const event = {};
 
   try {
     process.env.ENABLE_LAMBDA_LOGGING = true;
@@ -54,6 +53,14 @@ test.serial(`The lambda function logs process events`, async (test) => {
 
   test.notRegex(buffer.toString(), /AssertionError/);
   test.regex(buffer.toString(), /'beforeExit'/);
+}
+
+test.serial(`The lambda function logs process events`, async (test) => {
+  await testEventExecution(test, {});
+});
+
+test.serial(`The lambda function logs process string events`, async (test) => {
+  await testEventExecution(test, '{}');
 });
 
 test.serial(`Returns results when event is undefined`, async (test) => {
