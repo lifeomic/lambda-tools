@@ -15,9 +15,9 @@ const LAMBDA_TOOLS_WORK_PREFIX = '.lambda-tools-work';
 
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs8.10';
 
-// null value means 'delete this variable'. Docker deletes variables that only have the key, without '=value'
+// null or undefined value means 'delete this variable'. Docker deletes variables that only have the key, without '=value'
 const createEnvironmentVariables = (environment) => Object.entries(environment)
-  .map(([ key, value ]) => value === null ? key : `${key}=${value}`);
+  .map(([ key, value ]) => value === null || value === undefined ? key : `${key}=${value}`);
 
 const convertEvent = (event) => {
   if (isObjectLike(event)) {

@@ -3,7 +3,7 @@ import {TestInterface} from "ava";
 import Docker = require('dockerode');
 
 export interface Environment {
-  [key:string]: string | null;
+  [key:string]: string | number | boolean | null | undefined;
 }
 
 export interface LocalOptions {
@@ -50,6 +50,10 @@ export interface CreateLambdaExecutionEnvironmentOptions {
   container?: string;
 }
 
+export interface UseLambdaHooksOptions extends CreateLambdaExecutionEnvironmentOptions {
+  handler?: string;
+}
+
 export interface LambdaExecutionEnvironment {
   network?: Docker.Network;
   container?: Docker.Container;
@@ -64,7 +68,7 @@ export interface DestroyLambdaExecutionEnvironmentOptions {
 
 export interface AlphaClientConfig {
   container: Docker.Container;
-  environment: {[key: string]: any};
+  environment?: Environment;
   handler: string;
 }
 
@@ -95,7 +99,7 @@ export class LambdaRunner {
 }
 
 export function useLambda<T extends LambdaTestContext>(test: TestInterface<T>, options?: LocalOptions): void;
-export function useLambdaHooks(options?: CreateLambdaExecutionEnvironmentOptions): TestHooks;
+export function useLambdaHooks(options?: UseLambdaHooksOptions): TestHooks;
 export function useNewContainer(options?: NewContainerOptions): void;
 export function useComposeContainer(options?: ComposeContainerOptions): void;
 export function build(options?: WebpackOptions): Promise<any>;
