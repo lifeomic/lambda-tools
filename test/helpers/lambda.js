@@ -14,31 +14,37 @@ function hasTag (tagName) {
   };
 }
 
+async function buildLambda (bundlePath, handlerName, options) {
+  const buildResults = await build({
+    entrypoint: path.join(FIXTURES_DIRECTORY, `${handlerName}`),
+    outputPath: bundlePath,
+    serviceName: `test-service-${handlerName}`,
+    ...options
+  });
+
+  if (buildResults.hasErrors()) {
+    console.error(buildResults.toJson().errors);
+    throw new Error('Lambda build failed!');
+  }
+  return buildResults;
+}
+
 function useLambdaContainer (test, imageName, options = {}) {
   const bundlePath = path.join(FIXTURES_DIRECTORY, 'build', uuid());
-  const { containerConfig = {} } = options;
+  const { containerConfig = {}, handlerName = 'lambda_service' } = options;
   let container;
 
   useLambda(test);
 
   test.before(async () => {
-    const buildResults = await build({
-      entrypoint: path.join(FIXTURES_DIRECTORY, 'lambda_service.js'),
-      outputPath: bundlePath,
-      serviceName: 'test-service'
-    });
-
-    if (buildResults.hasErrors()) {
-      console.error(buildResults.toJson().errors);
-      throw new Error('Lambda build failed!');
-    }
+    await buildLambda(bundlePath, `${handlerName}.js`);
 
     imageName = typeof imageName === 'string' ? imageName : await imageName();
 
     const containerName = 'container';
     const containerPrefix = process.env.COMPOSE_PROJECT_NAME = uuid();
     container = await createContainer(imageName, `${containerPrefix}_${containerName}_1`, bundlePath);
-    useComposeContainer({ ...containerConfig, service: containerName, handler: 'lambda_service.handler' });
+    useComposeContainer({ ...containerConfig, service: containerName, handler: `${handlerName}.handler` });
   });
 
   test.beforeEach(function (t) {
@@ -93,5 +99,6 @@ async function createContainer (image, name, mountpoint) {
 module.exports = {
   createContainer,
   useLambdaContainer,
-  FIXTURES_DIRECTORY
+  FIXTURES_DIRECTORY,
+  buildLambda
 };

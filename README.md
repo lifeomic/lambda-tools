@@ -127,6 +127,68 @@ the form of `<streamNameProvided>-<uuid>`. The unique stream name can be
 fetched from the `streamNames` map. Otherwise, the stream name will be the default
 provided in the streams array. This allows tests to be run in parallel.
 
+# Kinesis Tools
+
+`kinesis.tools` contains some simple kinesis tools to iterate a stream.
+
+## `KinesisIterator`
+
+The `KinesisIterator` class provides a simple method to get the records from a stream by creating the stream iterator,
+and reusing it to get records.  
+
+### Iterator `config`
+| Attribute     | Description/Type |
+|---------------|------------------|
+| kinesisClient | AWS.Kinesis |
+| streamName | the name of the kinesis stream |
+
+### `new KinesisIterator(config)`
+
+### `async init()`
+The init function creates the stream iterator so it can get records from the stream.
+
+### `async next(limit)`
+Fetches the next batch of records from the stream.  It auto updates it's position in the stream, and returns the KinesisIterator
+
+| Attribute     | Description/Type |
+|---------------|------------------|
+| limit | an optional limit to how many records to return.  Max is 10,000 |
+
+### `records`
+The records returned from the last `KinesisIterator.next()` call.  
+
+### `response`
+The complete response from the last `KinesisIterator.next()` call.
+ 
+### `static async newIterator(config)`
+The static `KinesisIterator.newIterator` function creates a new `KinesisIterator`, and calls the init function.
+
+## `async getStreamRecords(config)`
+A convenience method to get a single batch of records from a stream.
+
+
+## `createLambdaEvent(records)`
+Convert an array of kinesis records into a lambda trigger event.
+
+
+| Attribute      | Description/Type |
+|----------------|------------------|
+| SequenceNumber | number or string |
+| PartitionKey   | The partition key of the record |
+| SequenceNumber | number
+| Data           | The data buffer returned by `kinesis.getRecords(...)` |
+
+## `kinesisLambdaTrigger({lambdaHandler, kinesisIterator, limit})`
+Will iterate through a kinesis stream, and pass the events to the lambdaHandler.  
+
+
+| Attribute       | Description/Type |
+|-----------------|------------------|
+| lambdaHandler   | A function to call the lambda function.  It will be called with { Records } |
+| kinesisIterator | KinesisIterator that is already provisioned to iterate through all of the records |
+| limit           | number. optional to limit how big each batch should be |
+
+
 ## GraphQL
 
 `lambda-tools` provides helpers for wrapping [`Koa`][koa] instances in a client

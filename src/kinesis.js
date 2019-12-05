@@ -7,6 +7,7 @@ const fromPairs = require('lodash/fromPairs');
 const { getHostAddress, ensureImage } = require('./docker');
 const Environment = require('./Environment');
 const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
+const kinesisTools = require('./utils/kinesisTools');
 
 const KINESIS_IMAGE = 'localstack/localstack:latest';
 
@@ -222,5 +223,6 @@ module.exports = {
   streams,
   createStreams,
   destroyStreams,
-  getConnection
+  getConnection,
+  tools: kinesisTools
 };

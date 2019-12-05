@@ -24,14 +24,19 @@ class TempWriteBuffer extends Writable {
   }
 
   _write (chunk, encoding, callback) {
+    const asBuffer = Buffer.from(chunk, 'utf8');
+    const asString = asBuffer.toString('utf8');
     if (this._buffer) {
-      this._buffer.push(Buffer.from(chunk, 'utf8'));
+      this._buffer.push(asBuffer);
       const logs = this.toString('utf8').trim().split('\n');
       this._buffer = [];
       if (logs.includes('Ready.')) {
         this._buffer = undefined;
         this.resolve();
       }
+    } else {
+      // The logs coming from the lambda instance were using \r, and weren't being printed by console.log
+      console.log(asString.replace(/\r/g, '\n'));
     }
     callback();
   }
@@ -213,14 +218,16 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
   const container = await docker.createContainer({
     HostConfig: {
       AutoRemove: true,
-      PublishAllPorts: true
+      PublishAllPorts: true,
+      Binds: ['/var/run/docker.sock:/var/run/docker.sock']
     },
     ExposedPorts: getExposedPorts(),
     Image: image,
     Env: [
       `SERVICES=${services.join(',')}`,
       'DEBUG=1',
-      'LAMBDA_EXECUTOR=docker'
+      'LAMBDA_EXECUTOR=docker',
+      'LAMBDA_DOCKER_NETWORK=host'
     ]
   });
 
