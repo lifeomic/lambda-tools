@@ -66,7 +66,6 @@ test.afterEach(async t => {
 
 test.after.always(async t => {
   await fs.remove(BUILD_DIRECTORY);
-  await fs.remove(path.join(FIXTURES_DIRECTORY, `${handlerName}.js`));
 });
 
 function formatRecords (StreamName, records) {
