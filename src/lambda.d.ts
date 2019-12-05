@@ -1,5 +1,4 @@
-import {AxiosRequestConfig, AxiosPromise} from "axios";
-import Alpha = require('@lifeomic/alpha');
+import {AxiosRequestConfig, AxiosInstance, AxiosPromise} from "axios";
 import {TestInterface} from "ava";
 import Docker = require('dockerode');
 
@@ -69,8 +68,8 @@ export interface AlphaClientConfig {
   handler: string;
 }
 
-export class LambdaAlphaClient extends Alpha {
-  constructor(config: AlphaClientConfig);
+export interface AlphaClient extends AxiosInstance {
+  new (config: AlphaClientConfig);
   raw<T = any>(event: any, environment: Environment, handler: string): Promise<T>;
   graphql<T = any>(
     path: string,
@@ -81,13 +80,13 @@ export class LambdaAlphaClient extends Alpha {
 }
 
 export interface LambdaTestContext {
-  lambda: LambdaAlphaClient;
+  lambda: AlphaClient;
 }
 
 export interface TestHooks {
   beforeAll(): Promise<void>;
   afterAll(): Promise<void>;
-  beforeEach(): Promise<LambdaAlphaClient>;
+  beforeEach(): Promise<AlphaClient>;
 }
 
 export class LambdaRunner {

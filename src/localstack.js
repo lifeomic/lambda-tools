@@ -219,7 +219,6 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
     HostConfig: {
       AutoRemove: true,
       PublishAllPorts: true,
-      Privileged: true,
       Binds: ['/var/run/docker.sock:/var/run/docker.sock']
     },
     ExposedPorts: getExposedPorts(),

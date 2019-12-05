@@ -8,9 +8,8 @@ export async function handler (event: KinesisStreamEvent, context: {}) {
     Data: Buffer.from(Buffer.from(data, 'base64').toString()),
     PartitionKey: partitionKey
   }));
-  const result = await kinesis.putRecords({
+  await kinesis.putRecords({
     StreamName: process.env.NEXT_KINESIS_STREAM_NAME,
     Records: records
   }).promise();
-  console.log(JSON.stringify({result}, null, 2));
 }

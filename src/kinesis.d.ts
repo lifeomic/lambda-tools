@@ -2,9 +2,9 @@ import {Kinesis} from "aws-sdk";
 import {TestInterface} from "ava";
 import {ConnectionAndConfig, SimpleServiceConfigurationOptions} from "./utils/awsUtils";
 
-import * as kinesisTools from './utils/kinesisTools';
+import * as tools from './utils/kinesisTools';
 
-export { kinesisTools };
+export { tools };
 
 export interface KinesisContext {
   kinesisClient: Kinesis;
