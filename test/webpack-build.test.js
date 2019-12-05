@@ -112,7 +112,8 @@ test('Typescript bundles are supported by default', async (test) => {
 
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'ts_lambda_service.js')));
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'ts_lambda_service.js.map')));
-  await fs.remove(source);
+  await fs.remove(path.join(FIXTURES_DIRECTORY, 'ts_lambda_service.js'));
+  await fs.remove(path.join(FIXTURES_DIRECTORY, 'ts_lambda_service..js.map'));
 });
 
 test('Typescript code has async/await removed for good X-Ray integration', async (test) => {
