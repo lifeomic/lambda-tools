@@ -214,6 +214,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
   const removeAsyncAwaitLoader = {
     loader: 'babel-loader',
     options: {
+      cacheDirectory: options.cacheDirectory,
       presets: [ babelEnvConfig ],
       plugins: [
         // X-Ray tracing cannot currently track execution across
@@ -243,6 +244,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     } : {
       ...babelLoaderConfig,
       options: {
+        cacheDirectory: options.cacheDirectory,
         presets: [
           babelEnvConfig,
           require('@babel/preset-typescript')
