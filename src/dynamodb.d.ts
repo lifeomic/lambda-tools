@@ -18,8 +18,8 @@ export interface DynamoDbTestContext {
 }
 
 export interface LaunchDockerContainerOptions {
-  inMemory: boolean;
-  docker: Docker;
+  inMemory?: boolean;
+  docker?: Docker;
 }
 
 export interface LaunchDockerConatinerResults {
