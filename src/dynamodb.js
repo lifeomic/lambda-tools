@@ -12,6 +12,16 @@ const DYNAMODB_IMAGE = 'cnadiminti/dynamodb-local:latest';
 
 let tablesSchema = [];
 
+function setNotRetryable (response) {
+  if (response.error.code !== 'InternalFailure') {
+    // Do not retry table deletion because it leads to
+    // ResourceNotFoundException when trying to delete the table twice
+    // Do not retry table creation because it leads to
+    // ResourceInUseException when trying to create the table twice
+    response.error.retryable = false;
+  }
+}
+
 async function createTables (dynamoClient, uniqueIdentifier) {
   const failedProvisons = [];
   await Promise.all(
@@ -22,11 +32,7 @@ async function createTables (dynamoClient, uniqueIdentifier) {
 
       try {
         const createRequest = dynamoClient.createTable(newTable);
-        createRequest.on('retry', response => {
-          // Do not retry table creation because it leads to
-          // ResourceInUseException when trying to create the table twice
-          response.error.retryable = false;
-        });
+        createRequest.on('retry', setNotRetryable);
 
         try {
           await createRequest.promise();
@@ -44,7 +50,7 @@ async function createTables (dynamoClient, uniqueIdentifier) {
         }
       } catch (err) {
         failedProvisons.push(TableName);
-        console.error(`Failed to create table "${TableName}"`, err);
+        console.error(`Failed to create table "${TableName}"`, JSON.stringify({ err }, null, 2));
       }
     })
   );
@@ -86,11 +92,7 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
         try {
           const deleteRequest = dynamoClient.deleteTable({ TableName });
 
-          deleteRequest.on('retry', response => {
-            // Do not retry table deletion because it leads to
-            // ResourceNotFoundException when trying to delete the table twice
-            response.error.retryable = false;
-          });
+          deleteRequest.on('retry', setNotRetryable);
 
           try {
             await deleteRequest.promise();
@@ -105,7 +107,7 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
           }
         } catch (err) {
           failedDeletions.push(TableName);
-          console.error(`Failed to destroy table "${TableName}"`, err);
+          console.error(`Failed to destroy table "${TableName}"`, JSON.stringify({ err }, null, 2));
         }
       })
   );
