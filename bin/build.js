@@ -60,8 +60,7 @@ const argv = require('yargs')
     describe: 'relative path to a tsconfig.json file to compile typescript',
     type: 'string'
   })
-  .options('c', {
-    alias: 'enable-cache-directory',
+  .options('enable-cache-directory', {
     describe: 'enables babel-loader cache directory',
     type: 'boolean'
   })
@@ -79,7 +78,7 @@ const buildOptions = {
   zip: argv.z,
   tsconfig: argv.t,
   enableRuntimeSourceMaps: argv['enable-runtime-source-maps'],
-  cacheDirectory: argv.c
+  cacheDirectory: argv['enable-cache-directory']
 };
 
 if (argv.t) {
