@@ -471,3 +471,57 @@ test('Minification can be enabled', async (test) => {
 test('Minification is disabled by default', async (test) => {
   await assertMinification(test, {}, false);
 });
+
+test('can enable babel-loader cacheDirectory option', async (test) => {
+  const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');
+
+  const transformer = sinon.stub().returnsArg(0);
+
+  const result = await build({
+    configTransformer: transformer,
+    entrypoint: source,
+    outputPath: test.context.buildDirectory,
+    serviceName: 'test-service',
+    cacheDirectory: true
+  });
+
+  test.false(result.hasErrors());
+
+  sinon.assert.calledOnce(transformer);
+  sinon.assert.calledWithExactly(transformer, sinon.match.object);
+
+  const config = transformer.firstCall.args[0];
+  const babel = config.module.rules.find((rule) => rule.loader === 'babel-loader');
+  test.is(babel.options.cacheDirectory, true);
+});
+
+test('can enable babel-loader cacheDirectory option in combination with tsconfig option', async (test) => {
+  const sourceDir = path.join(FIXTURES_DIRECTORY, 'lambda-with-tsconfig');
+  const source = path.join(sourceDir, 'index.ts');
+  const tsconfig = path.join(sourceDir, 'tsconfig.json');
+
+  const transformer = sinon.stub().returnsArg(0);
+
+  const result = await build({
+    tsconfig,
+    cacheDirectory: true,
+    configTransformer: transformer,
+    entrypoint: source,
+    outputPath: test.context.buildDirectory,
+    serviceName: 'test-service'
+  });
+
+  test.false(result.hasErrors());
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'index.js')));
+  test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'index.js.map')));
+
+  const config = transformer.firstCall.args[0];
+  test.truthy(config.module.rules.find(rule => find(rule.use, { loader: 'ts-loader' })));
+
+  const cacheDirectoryRule = config.module.rules.find(rule => {
+    const found = find(rule.use, { loader: 'babel-loader' });
+    return found && found.options.cacheDirectory === true;
+  });
+
+  test.truthy(cacheDirectoryRule);
+});
