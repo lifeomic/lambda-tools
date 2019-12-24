@@ -50,7 +50,7 @@
     "@types/koa": "^2.0.45",
     "@types/koa-router": "^7.0.28",
     "apollo-server-koa": "^2.0.0",
-    "aws-sdk-mock": "^4.0.0",
+    "aws-sdk-mock": "^5.0.0",
     "coveralls": "^3.0.1",
     "eslint": "^6.0.0",
     "graphql": "^14.0.2",
