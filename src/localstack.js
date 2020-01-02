@@ -11,10 +11,12 @@ const { Writable } = require('stream');
 const debugLocalstack = process.env.DEBUG_LOCALSTACK === 'true';
 
 class TempWriteBuffer extends Writable {
-  constructor (resolve) {
+  constructor (id, resolve) {
     super();
     this.reset();
-    this.resolve = resolve;
+    this.resolve = () => resolve();
+    // The logs coming from the lambda instance were using \r, and weren't being printed by console.log
+    this._logOut = logString => console.log(`${id}: ${logString.replace(/\r/g, '\n')}`);
   }
 
   reset () {
@@ -29,8 +31,9 @@ class TempWriteBuffer extends Writable {
     const asBuffer = Buffer.from(chunk, 'utf8');
     const asString = asBuffer.toString('utf8');
     if (this._buffer) {
+      // istanbul ignore next
       if (debugLocalstack) {
-        console.log(asString.replace(/\r/g, '\n'));
+        this._logOut(asString);
       }
       this._buffer.push(asBuffer);
       const logs = this.toString('utf8').trim().split('\n');
@@ -40,8 +43,7 @@ class TempWriteBuffer extends Writable {
         this.resolve();
       }
     } else {
-      // The logs coming from the lambda instance were using \r, and weren't being printed by console.log
-      console.log(asString.replace(/\r/g, '\n'));
+      this._logOut(asString);
     }
     callback();
   }
@@ -239,7 +241,7 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
   await container.start();
   const stream = await container.attach({ stream: true, stdout: true, stderr: true });
   const promise = new Promise((resolve) => {
-    const logs = new TempWriteBuffer(resolve);
+    const logs = new TempWriteBuffer(container.id, () => resolve());
     container.modem.demuxStream(stream, logs, logs);
   });
   environment.set('AWS_ACCESS_KEY_ID', 'bogus');
@@ -250,12 +252,12 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
   const host = await getHostAddress();
   const mappedServices = mapServices(host, containerData.NetworkSettings.Ports, services);
 
+  await promise;
+
   for (const serviceName of services) {
     const service = mappedServices[serviceName];
     await waitForReady(serviceName, () => service.isReady(service.client), { minTimeout: 20, retries: 10 });
   }
-
-  await promise;
 
   return {
     mappedServices,
