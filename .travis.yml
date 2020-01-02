@@ -3,6 +3,8 @@ node_js:
 - '8.10.0'
 - '10'
 - '12'
+env:
+  - DEBUG_LOCALSTACK=true
 before_install:
   - yarn global add greenkeeper-lockfile@1
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -

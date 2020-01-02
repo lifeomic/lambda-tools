@@ -8,6 +8,8 @@ const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 
 const { Writable } = require('stream');
 
+const debugLocalstack = process.env.DEBUG_LOCALSTACK === 'true';
+
 class TempWriteBuffer extends Writable {
   constructor (resolve) {
     super();
@@ -27,6 +29,9 @@ class TempWriteBuffer extends Writable {
     const asBuffer = Buffer.from(chunk, 'utf8');
     const asString = asBuffer.toString('utf8');
     if (this._buffer) {
+      if (debugLocalstack) {
+        console.log(asString.replace(/\r/g, '\n'));
+      }
       this._buffer.push(asBuffer);
       const logs = this.toString('utf8').trim().split('\n');
       this._buffer = [];
@@ -247,7 +252,7 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
 
   for (const serviceName of services) {
     const service = mappedServices[serviceName];
-    await waitForReady(serviceName, () => service.isReady(service.client), { minTimeout: 20 });
+    await waitForReady(serviceName, () => service.isReady(service.client), { minTimeout: 20, retries: 10 });
   }
 
   await promise;
