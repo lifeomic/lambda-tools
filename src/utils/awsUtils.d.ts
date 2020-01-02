@@ -1,4 +1,5 @@
 import {Credentials, Endpoint} from "aws-sdk";
+import { OperationOptions } from "retry";
 
 export interface SimpleServiceConfigurationOptions {
   credentials: Credentials;
@@ -27,4 +28,4 @@ export interface ConnectionAndConfig {
 
 export function buildConfigFromConnection(connection: AwsUtilsConnection): SimpleServiceConfigurationOptions;
 export function buildConnectionAndConfig(options: BuildConnectionAndConfigOptions): ConnectionAndConfig;
-export function waitForReady(awsType: string, retryFunc: () => Promise<any>): Promise<void>;
+export function waitForReady(awsType: string, retryFunc: () => Promise<any>, options: OperationOptions): Promise<void>;

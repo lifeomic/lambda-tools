@@ -26,14 +26,14 @@ function buildConnectionAndConfig ({
   return { connection, config };
 }
 
-async function waitForReady (awsType, retryFunc) {
+async function waitForReady (awsType, retryFunc, options = {}) {
   await promiseRetry(async function (retry, retryNumber) {
     try {
       await retryFunc();
     } catch (error) {
       retry(new NestedError(`${awsType} is still not ready after ${retryNumber} connection attempts`, error));
     }
-  }, { minTimeout: 500, retries: 20 });
+  }, { minTimeout: 500, retries: 20, ...options });
 }
 
 module.exports = {

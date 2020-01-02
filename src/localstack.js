@@ -4,7 +4,7 @@ const { Client: ElasticSearchClient } = require('@elastic/elasticsearch');
 
 const Environment = require('./Environment');
 const { getHostAddress, ensureImage } = require('./docker');
-const { buildConnectionAndConfig } = require('./utils/awsUtils');
+const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 
 const { Writable } = require('stream');
 
@@ -244,6 +244,11 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
   const containerData = await container.inspect();
   const host = await getHostAddress();
   const mappedServices = mapServices(host, containerData.NetworkSettings.Ports, services);
+
+  for (const serviceName of services) {
+    const service = mappedServices[serviceName];
+    await waitForReady(serviceName, () => service.isReady(service.client), { minTimeout: 20 });
+  }
 
   await promise;
 
