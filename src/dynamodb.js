@@ -13,7 +13,7 @@ const DYNAMODB_IMAGE = 'cnadiminti/dynamodb-local:latest';
 let tablesSchema = [];
 
 function setNotRetryable (response) {
-  if (response.error.code !== 'InternalFailure') {
+  if (response.error.code !== 'InternalFailure' && response.error.code !== 'NetworkingError') {
     // Do not retry table deletion because it leads to
     // ResourceNotFoundException when trying to delete the table twice
     // Do not retry table creation because it leads to
@@ -24,36 +24,34 @@ function setNotRetryable (response) {
 
 async function createTables (dynamoClient, uniqueIdentifier) {
   const failedProvisons = [];
-  await Promise.all(
-    tablesSchema.map(async table => {
-      const newTable = cloneDeep(table);
-      const TableName = getTableName(newTable.TableName, uniqueIdentifier);
-      newTable.TableName = TableName;
+  for (const table of tablesSchema) {
+    const newTable = cloneDeep(table);
+    const TableName = getTableName(newTable.TableName, uniqueIdentifier);
+    newTable.TableName = TableName;
+
+    try {
+      const createRequest = dynamoClient.createTable(newTable);
+      createRequest.on('retry', setNotRetryable);
 
       try {
-        const createRequest = dynamoClient.createTable(newTable);
-        createRequest.on('retry', setNotRetryable);
-
-        try {
-          await createRequest.promise();
-        } catch (e) {
-          if (e.code === 'TimeoutError') {
-            // Use a custom retry instead of the AWS provided
-            // `dynamoClient.waitFor('tableExists',` because the waitFor
-            // behavior is hardcoded to delay by 20 seconds and retry 25 times
-            await waitForReady(`Created table ${TableName}`, () =>
-              dynamoClient.describeTable({ TableName }).promise()
-            );
-          } else {
-            throw e;
-          }
+        await createRequest.promise();
+      } catch (e) {
+        if (e.code === 'TimeoutError') {
+          // Use a custom retry instead of the AWS provided
+          // `dynamoClient.waitFor('tableExists',` because the waitFor
+          // behavior is hardcoded to delay by 20 seconds and retry 25 times
+          await waitForReady(`Created table ${TableName}`, () =>
+            dynamoClient.describeTable({ TableName }).promise()
+          );
+        } else {
+          throw e;
         }
-      } catch (err) {
-        failedProvisons.push(TableName);
-        console.error(`Failed to create table "${TableName}"`, JSON.stringify({ err }, null, 2));
       }
-    })
-  );
+    } catch (err) {
+      failedProvisons.push(TableName);
+      console.error(`Failed to create table "${TableName}"`, JSON.stringify({ err }, null, 2));
+    }
+  }
 
   if (failedProvisons.length) {
     try {
@@ -86,31 +84,28 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
   const tablesToDestroy = TableNames
     .filter(name => schemaTableNames.includes(name));
 
-  await Promise.all(
-    tablesToDestroy
-      .map(async TableName => {
-        try {
-          const deleteRequest = dynamoClient.deleteTable({ TableName });
+  for (const TableName of tablesToDestroy) {
+    try {
+      const deleteRequest = dynamoClient.deleteTable({ TableName });
 
-          deleteRequest.on('retry', setNotRetryable);
+      deleteRequest.on('retry', setNotRetryable);
 
-          try {
-            await deleteRequest.promise();
-          } catch (e) {
-            if (e.code === 'TimeoutError') {
-              await waitForReady(`Deleted table ${TableName}`, () =>
-                assertTableDoesNotExist(dynamoClient, TableName)
-              );
-            } else {
-              throw e;
-            }
-          }
-        } catch (err) {
-          failedDeletions.push(TableName);
-          console.error(`Failed to destroy table "${TableName}"`, JSON.stringify({ err }, null, 2));
+      try {
+        await deleteRequest.promise();
+      } catch (e) {
+        if (e.code === 'TimeoutError') {
+          await waitForReady(`Deleted table ${TableName}`, () =>
+            assertTableDoesNotExist(dynamoClient, TableName)
+          );
+        } else {
+          throw e;
         }
-      })
-  );
+      }
+    } catch (err) {
+      failedDeletions.push(TableName);
+      console.error(`Failed to destroy table "${TableName}"`, JSON.stringify({ err }, null, 2));
+    }
+  }
 
   if (failedDeletions.length) {
     throw new Error(`Failed to destroy tables: ${failedDeletions.join(', ')}`);

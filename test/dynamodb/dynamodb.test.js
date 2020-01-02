@@ -114,7 +114,7 @@ function stubTableChangeFailure (t, client, functionName, errorCode) {
       error.code = errorCode;
       error.retryable = true;
       retryHook({ error });
-      t.is(error.retryable, errorCode === 'InternalFailure');
+      t.is(error.retryable, errorCode === 'InternalFailure' || errorCode === 'NetworkingError');
       throw error;
     }
   });
@@ -158,6 +158,21 @@ test.serial('does not stub when InternalFailure', async t => {
   try {
     const client = new AWS.DynamoDB(config);
     stubTableChangeFailure(t, client, 'createTable', 'InternalFailure');
+    const deleteTable = sinon.spy(client, 'deleteTable');
+    const { message } = await t.throwsAsync(createTables(client));
+    t.is(message, 'Failed to create tables: test-table');
+    sinon.assert.notCalled(deleteTable);
+  } finally {
+    await connection.cleanup();
+  }
+});
+
+test.serial('does not stub when NetworkingError', async t => {
+  const { connection, config } = await getConnection();
+
+  try {
+    const client = new AWS.DynamoDB(config);
+    stubTableChangeFailure(t, client, 'createTable', 'NetworkingError');
     const deleteTable = sinon.spy(client, 'deleteTable');
     const { message } = await t.throwsAsync(createTables(client));
     t.is(message, 'Failed to create tables: test-table');
