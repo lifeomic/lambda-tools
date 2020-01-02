@@ -31,7 +31,9 @@ async function waitForReady (awsType, retryFunc, options = {}) {
     try {
       await retryFunc();
     } catch (error) {
-      retry(new NestedError(`${awsType} is still not ready after ${retryNumber} connection attempts`, error));
+      const errorMessage = `${awsType} is still not ready after ${retryNumber} connection attempts`;
+      console.log(errorMessage);
+      retry(new NestedError(errorMessage, error));
     }
   }, { minTimeout: 500, retries: 20, ...options });
 }
