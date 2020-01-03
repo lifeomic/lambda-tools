@@ -2,6 +2,7 @@ import {ServiceConfigurationOptions} from "aws-sdk/lib/service";
 import * as aws from "aws-sdk";
 import {Client as ElasticSearchClient} from "@elastic/elasticsearch";
 import {TestInterface} from "ava";
+import {Container} from "dockerode";
 
 export interface LocalStackService<T> {
   config: ServiceConfigurationOptions;
@@ -56,3 +57,4 @@ export interface Config {
 
 export function localStackHooks(config: Config): Hooks;
 export function useLocalStack<T extends LocalStackTestContext>(test: TestInterface<T>, config: Config): void;
+export function localstackReady(container: Container): Promise<void>;

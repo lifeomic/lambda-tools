@@ -8,6 +8,7 @@ const { getHostAddress, ensureImage } = require('./docker');
 const Environment = require('./Environment');
 const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 const kinesisTools = require('./utils/kinesisTools');
+const { localstackReady } = require('./localstack');
 
 const KINESIS_IMAGE = 'localstack/localstack:latest';
 
@@ -107,6 +108,7 @@ async function getConnection () {
   });
 
   await container.start();
+  const promise = localstackReady(container);
 
   const containerData = await container.inspect();
   const host = await getHostAddress();
@@ -126,6 +128,7 @@ async function getConnection () {
     url
   });
 
+  await promise;
   const kinesisClient = new AWS.Kinesis(config);
   await waitForReady('Kinesis', async () => kinesisClient.listStreams().promise());
 

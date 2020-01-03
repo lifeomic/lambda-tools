@@ -206,6 +206,14 @@ function checkServices (services = []) {
   }
 }
 
+async function localstackReady (container) {
+  const stream = await container.attach({ stream: true, stdout: true, stderr: true });
+  return new Promise((resolve) => {
+    const logs = new TempWriteBuffer(resolve);
+    container.modem.demuxStream(stream, logs, logs);
+  });
+}
+
 async function getConnection ({ versionTag = 'latest', services } = {}) {
   checkServices(services);
 
@@ -221,7 +229,6 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
       PublishAllPorts: true,
       Binds: ['/var/run/docker.sock:/var/run/docker.sock']
     },
-    User: 'localstack',
     ExposedPorts: getExposedPorts(),
     Image: image,
     Env: [
@@ -233,11 +240,7 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
   });
 
   await container.start();
-  const stream = await container.attach({ stream: true, stdout: true, stderr: true });
-  const promise = new Promise((resolve) => {
-    const logs = new TempWriteBuffer(resolve);
-    container.modem.demuxStream(stream, logs, logs);
-  });
+  const promise = localstackReady(container);
   environment.set('AWS_ACCESS_KEY_ID', 'bogus');
   environment.set('AWS_SECRET_ACCESS_KEY', 'bogus');
   environment.set('AWS_REGION', 'us-east-1');
@@ -291,6 +294,7 @@ function useLocalStack (test, { versionTag, services } = {}) {
 }
 
 module.exports = {
+  localstackReady,
   getConnection,
   localStackHooks,
   useLocalStack,
