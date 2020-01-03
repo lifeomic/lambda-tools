@@ -51,3 +51,7 @@ test('will use mountpointParent as the directory for unzipping if provided', asy
     await tempWork.cleanup();
   }
 });
+
+test('will not crash if no execution environment is provided', async test => {
+  await test.notThrowsAsync(destroyLambdaExecutionEnvironment());
+});

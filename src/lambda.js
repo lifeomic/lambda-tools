@@ -214,7 +214,7 @@ async function createLambdaExecutionEnvironment (options) {
   return executionEnvironment;
 }
 
-async function destroyLambdaExecutionEnvironment (environment) {
+async function destroyLambdaExecutionEnvironment (environment = {}) {
   const { container, network, cleanupMountpoint } = environment;
 
   if (cleanupMountpoint) {

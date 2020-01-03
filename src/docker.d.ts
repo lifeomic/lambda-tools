@@ -20,6 +20,6 @@ export function executeContainerCommand(
 
 export function getHostAddress(): string;
 
-export function ensureImage(): Promise<void>;
+export function ensureImage(docker: Docker, image: string): Promise<void>;
 
 export function pullImage(docker: Docker, image: string): Promise<void>;
