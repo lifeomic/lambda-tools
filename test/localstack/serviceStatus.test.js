@@ -1,7 +1,7 @@
 const test = require('ava');
 
 const { LOCALSTACK_SERVICES, getConnection } = require('../../src/localstack');
-const services = Object.keys(LOCALSTACK_SERVICES);
+const services = Object.keys(LOCALSTACK_SERVICES).filter(service => service !== 'elasticsearch');
 
 test.before(async t => {
   const { mappedServices, cleanup } = await getConnection({ services });
