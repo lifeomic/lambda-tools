@@ -177,16 +177,29 @@ async function createLambdaExecutionEnvironment (options) {
   assert(!(mountpoint && options.service), 'A mountpoint cannot be used with a compose service');
 
   if (mountpoint) {
+    const docker = new Docker();
     try {
-      const docker = new Docker();
       await ensureImage(docker, image);
+    } catch (error) {
+      console.error('Unable to get image', JSON.stringify({ error }, null, 2));
+      await destroyLambdaExecutionEnvironment(executionEnvironment);
+      throw error;
+    }
 
+    try {
       if (!networkId) {
         executionEnvironment.network = await docker.createNetwork({
           Internal: true,
           Name: uuid()
         });
       }
+    } catch (error) {
+      console.error('Unable to create network', JSON.stringify({ error }, null, 2));
+      await destroyLambdaExecutionEnvironment(executionEnvironment);
+      throw error;
+    }
+
+    try {
       executionEnvironment.container = await docker.createContainer({
         Entrypoint: 'sh',
         Env: createEnvironmentVariables(environment),
@@ -203,10 +216,16 @@ async function createLambdaExecutionEnvironment (options) {
           '/var/task': {}
         }
       });
+    } catch (error) {
+      console.error('Unable to create container', JSON.stringify({ error }, null, 2));
+      await destroyLambdaExecutionEnvironment(executionEnvironment);
+      throw error;
+    }
 
+    try {
       await executionEnvironment.container.start();
     } catch (error) {
-      console.error(JSON.stringify({ error, container: executionEnvironment.container.id }, null, 2));
+      console.error('Unable to start container', JSON.stringify({ error, container: executionEnvironment.container.id }, null, 2));
       await destroyLambdaExecutionEnvironment(executionEnvironment);
       throw error;
     }
