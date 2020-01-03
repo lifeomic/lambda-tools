@@ -221,6 +221,7 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
       PublishAllPorts: true,
       Binds: ['/var/run/docker.sock:/var/run/docker.sock']
     },
+    User: 'localstack',
     ExposedPorts: getExposedPorts(),
     Image: image,
     Env: [
