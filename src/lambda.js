@@ -206,6 +206,7 @@ async function createLambdaExecutionEnvironment (options) {
 
       await executionEnvironment.container.start();
     } catch (error) {
+      console.error(JSON.stringify({ error, container: executionEnvironment.container.id }, null, 2));
       await destroyLambdaExecutionEnvironment(executionEnvironment);
       throw error;
     }
@@ -214,7 +215,10 @@ async function createLambdaExecutionEnvironment (options) {
   return executionEnvironment;
 }
 
-async function destroyLambdaExecutionEnvironment (environment = {}) {
+async function destroyLambdaExecutionEnvironment (environment) {
+  if (!environment) {
+    return;
+  }
   const { container, network, cleanupMountpoint } = environment;
 
   if (cleanupMountpoint) {
@@ -236,7 +240,7 @@ exports.destroyLambdaExecutionEnvironment = destroyLambdaExecutionEnvironment;
 function useLambdaHooks (localOptions) {
   const impliedOptions = {};
 
-  let executionEnvironment = null;
+  let executionEnvironment = {};
 
   const getOptions = () => {
     const options = Object.assign({}, globalOptions, impliedOptions, localOptions);
