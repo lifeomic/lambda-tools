@@ -13,7 +13,7 @@ const { promisify } = require('util');
 
 const LAMBDA_TOOLS_WORK_PREFIX = '.lambda-tools-work';
 
-const LAMBDA_IMAGE = 'lambci/lambda:nodejs8.10';
+const LAMBDA_IMAGE = 'lambci/lambda:nodejs12.x';
 
 // null or undefined value means 'delete this variable'. Docker deletes variables that only have the key, without '=value'
 const createEnvironmentVariables = (environment) => Object.entries(environment)
@@ -107,6 +107,8 @@ class LambdaRunner {
 }
 
 const globalOptions = {};
+
+exports.getGlobalOptions = () => Object.assign({}, globalOptions);
 
 exports.build = webpack;
 exports.LambdaRunner = LambdaRunner;
