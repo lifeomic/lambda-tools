@@ -1,5 +1,3 @@
-import {waitForReady} from './utils/awsUtils';
-
 const AWS = require('aws-sdk');
 const Docker = require('dockerode');
 const { default: PQueue } = require('p-queue');
@@ -7,7 +5,7 @@ const { Client: ElasticSearchClient } = require('@elastic/elasticsearch');
 
 const Environment = require('./Environment');
 const { getHostAddress, ensureImage } = require('./docker');
-const { buildConnectionAndConfig } = require('./utils/awsUtils');
+const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 
 const { Writable } = require('stream');
 
