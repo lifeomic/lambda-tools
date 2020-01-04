@@ -1,5 +1,8 @@
+import {waitForReady} from './utils/awsUtils';
+
 const AWS = require('aws-sdk');
 const Docker = require('dockerode');
+const { default: PQueue } = require('p-queue');
 const { Client: ElasticSearchClient } = require('@elastic/elasticsearch');
 
 const Environment = require('./Environment');
@@ -250,6 +253,12 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
   const mappedServices = mapServices(host, containerData.NetworkSettings.Ports, services);
 
   await promise;
+  const pQueue = new PQueue({ concurrency: Number.POSITIVE_INFINITY });
+
+  await pQueue.addAll(services.map(serviceName => async () => {
+    const service = mappedServices[serviceName];
+    await waitForReady(service, () => service.isReady(service.client));
+  }));
 
   return {
     mappedServices,
