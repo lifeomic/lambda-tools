@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const test = require('ava');
 const uuid = require('uuid/v4');
 
-const { useNewContainer, useLambda } = require('../../src/lambda');
+const { createLambdaExecutionEnvironment, AlphaClient, destroyLambdaExecutionEnvironment } = require('../../src/lambda');
 const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 const prefix = process.env.COMPOSE_PROJECT_NAME = uuid();
@@ -23,21 +23,30 @@ test.before(async (test) => {
   });
 });
 
-useLambda(test);
-
-useNewContainer({
-  handler: 'bundled_service.handler',
-  mountpoint: FIXTURES_DIRECTORY,
-  useComposeNetwork: true
-});
-
-test.serial.after.always((test) => {
+test.serial.after.always(async test => {
+  if (test.context.executionEnvironment) {
+    await destroyLambdaExecutionEnvironment(test.context.executionEnvironment);
+  }
   createContainer.restore();
   network.remove();
 });
 
 test('Managed containers can use a compose network', async (test) => {
-  const response = await test.context.lambda.get('/');
+  const handler = 'bundled_service.handler';
+  const executionEnvironment = await createLambdaExecutionEnvironment({
+    handler,
+    mountpoint: FIXTURES_DIRECTORY,
+    network: networkName
+  });
+
+  test.context.executionEnvironment = executionEnvironment;
+
+  const lambda = new AlphaClient({
+    container: executionEnvironment.container,
+    handler
+  });
+
+  const response = await lambda.get('/');
   test.is(response.status, 200);
   test.is(response.data.service, 'lambda-test');
 
