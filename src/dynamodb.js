@@ -264,13 +264,13 @@ exports.launchDynamoContainer = launchDynamoContainer;
 exports.useDynamoDB = (test, useUniqueTables, opts) => {
   const testHooks = dynamoDBTestHooks(useUniqueTables, opts);
 
-  test.before(testHooks.beforeAll);
+  test.serial.before(testHooks.beforeAll);
 
-  test.beforeEach(async (test) => {
+  test.serial.beforeEach(async (test) => {
     test.context.dynamodb = await testHooks.beforeEach();
   });
 
-  test.afterEach.always(async test => {
+  test.serial.afterEach.always(async test => {
     await testHooks.afterEach(test.context.dynamodb);
   });
 
