@@ -1,6 +1,6 @@
 const test = require('ava');
 const { createDefaultContainer } = require('./helpers/createDefaultContainer');
-const { executeContainerCommand } = require('../src/docker');
+const { executeContainerCommand } = require('../../src/docker');
 
 test('response includes stdout, stderr, and inspectOutput with ExitCode 0', async (t) => {
   const container = await createDefaultContainer();
