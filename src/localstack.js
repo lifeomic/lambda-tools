@@ -9,11 +9,17 @@ const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 
 const { Writable } = require('stream');
 
+const debugLocalstack = process.env.DEBUG_LOCALSTACK === 'true';
+
 class TempWriteBuffer extends Writable {
-  constructor (resolve) {
+  constructor (resolve, container) {
     super();
     this.reset();
     this.resolve = resolve;
+    this._log = (log) => {
+      // The logs coming from the lambda instance were using \r, and weren't being printed by console.log
+      console.log(`${container}: ${log.replace(/\r/g, '\n')}`);
+    };
   }
 
   reset () {
@@ -28,6 +34,9 @@ class TempWriteBuffer extends Writable {
     const asBuffer = Buffer.from(chunk, 'utf8');
     const asString = asBuffer.toString('utf8');
     if (this._buffer) {
+      if (debugLocalstack) {
+        this._log(asString);
+      }
       this._buffer.push(asBuffer);
       const logs = this.toString('utf8').trim().split('\n');
       this._buffer = [];
@@ -36,8 +45,7 @@ class TempWriteBuffer extends Writable {
         this.resolve();
       }
     } else {
-      // The logs coming from the lambda instance were using \r, and weren't being printed by console.log
-      console.log(asString.replace(/\r/g, '\n'));
+      this._log(asString);
     }
     callback();
   }
@@ -210,7 +218,7 @@ function checkServices (services = []) {
 async function localstackReady (container) {
   const stream = await container.attach({ stream: true, stdout: true, stderr: true });
   return new Promise((resolve) => {
-    const logs = new TempWriteBuffer(resolve);
+    const logs = new TempWriteBuffer(resolve, container.id);
     container.modem.demuxStream(stream, logs, logs);
   });
 }
