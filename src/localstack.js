@@ -223,7 +223,7 @@ async function localstackReady (container) {
   });
 }
 
-async function getConnection ({ versionTag = 'latest', services } = {}) {
+async function getConnection ({ versionTag = '0.10.6', services } = {}) {
   checkServices(services);
 
   const image = `${LOCALSTACK_IMAGE}:${versionTag}`;
