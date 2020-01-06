@@ -2,7 +2,6 @@ const test = require('ava');
 const Docker = require('dockerode');
 const { ensureImage } = require('../src/docker');
 const sinon = require('sinon');
-const proxyquire = require('proxyquire');
 
 const TEST_IMAGE = 'alpine:3.6';
 
@@ -41,13 +40,4 @@ test('calls pullImage if listImages does not include the image', async function 
   const IMAGE_NEEDING_PULL = 'needs-pull:latest';
   await ensureImage(docker, IMAGE_NEEDING_PULL);
   sinon.assert.calledWithExactly(docker.pull, IMAGE_NEEDING_PULL);
-});
-
-test.serial('can log the progress of pulling an image', async (test) => {
-  const docker = new Docker();
-  const image = await docker.getImage(TEST_IMAGE);
-  await image.remove();
-  process.env.DEBUG_DOCKER = 'true';
-
-  const {  } = proxyquire.noPreserveCache()('../../src/localstack', {});
 });

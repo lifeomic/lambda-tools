@@ -69,5 +69,5 @@ test.serial('can log localstack startup logs', async t => {
   const { cleanup } = await getConnection({ services: [ 'lambda' ], versionTag: '0.10.6' });
   await cleanup();
   sinon.assert.called(logSpy);
-  sinon.assert.calledWith(logSpy, sinon.match(new RegExp(`[0-9a-f]+: Ready.`)));
+  sinon.assert.calledWith(logSpy, sinon.match(new RegExp('[0-9a-f]+: Ready.')));
 });

@@ -25,5 +25,6 @@ test.serial('can log the progress of pulling an image', async (test) => {
 
   await pullImage(docker, TEST_IMAGE);
   sinon.assert.called(logSpy);
+  // eslint-disable-next-line security/detect-non-literal-regexp
   sinon.assert.calledWith(logSpy, sinon.match(new RegExp(`${TEST_IMAGE}: Status: Downloaded newer image for ${TEST_IMAGE}`)));
 });
