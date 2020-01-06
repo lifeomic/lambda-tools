@@ -386,64 +386,58 @@ test.serial('Should handle building entrypoint outside of current working direct
   }
 });
 
+async function compileAndRunTest (test, fixture, nodeVersion, expectedResult) {
+  const source = path.join(FIXTURES_DIRECTORY, `${fixture}.js`);
+
+  const result = await build({
+    nodeVersion,
+    entrypoint: source,
+    outputPath: test.context.buildDirectory,
+    serviceName: 'test-service'
+  });
+  test.false(result.hasErrors());
+
+  if (expectedResult === undefined) {
+    return;
+  }
+  // If there is an expected result, try loading the newly loaded file to
+  // make sure it can execute without an error
+  let image = `lambci/lambda:nodejs${nodeVersion}`;
+  if (nodeVersion.startsWith('10')) {
+    image = 'lambci/lambda:nodejs10.x';
+  } else if (nodeVersion.startsWith('12')) {
+    image = 'lambci/lambda:nodejs12.x';
+  }
+  const executionEnvironment = await createLambdaExecutionEnvironment({
+    image,
+    mountpoint: test.context.buildDirectory
+  });
+  try {
+    const runner = new LambdaRunner(executionEnvironment.container.id, null, `${fixture}.handle`);
+    const result = await runner.invoke({});
+    test.deepEqual(result, expectedResult);
+  } finally {
+    await destroyLambdaExecutionEnvironment(executionEnvironment);
+  }
+}
+
 for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
   // Test that a common pattern can be packed without a regression
   test.serial(`Can webpack files that use await inside for...of statements targetting ${nodeVersion}`, async (test) => {
-    const source = path.join(FIXTURES_DIRECTORY, 'async_test.js');
-
-    const result = await build({
-      nodeVersion,
-      entrypoint: source,
-      outputPath: test.context.buildDirectory,
-      serviceName: 'test-service'
-    });
-    test.false(result.hasErrors());
+    await compileAndRunTest(test, 'async_test', nodeVersion);
   });
 
   test.serial(`Can webpack files that use arrow functions inside async functions when targetting ${nodeVersion}`, async (test) => {
-    const source = path.join(FIXTURES_DIRECTORY, 'async_with_arrow.js');
+    await compileAndRunTest(test, 'async_with_arrow', nodeVersion, {});
+  });
 
-    const result = await build({
-      nodeVersion,
-      entrypoint: source,
-      outputPath: test.context.buildDirectory,
-      serviceName: 'test-service'
-    });
-    test.false(result.hasErrors());
-
-    // Try loading the newly loaded file to make sure it can
-    // execute without an error
-    let image = `lambci/lambda:nodejs${nodeVersion}`;
-    if (nodeVersion.startsWith('10')) {
-      image = 'lambci/lambda:nodejs10.x';
-    } else if (nodeVersion.startsWith('12')) {
-      image = 'lambci/lambda:nodejs12.x';
-    }
-    const executionEnvironment = await createLambdaExecutionEnvironment({
-      image,
-      mountpoint: test.context.buildDirectory
-    });
-    try {
-      const runner = new LambdaRunner(executionEnvironment.container.id, null, 'async_with_arrow.handle');
-      const result = await runner.invoke({});
-      test.deepEqual(result, {});
-    } finally {
-      await destroyLambdaExecutionEnvironment(executionEnvironment);
-    }
+  test.serial(`Can webpack files that use async iterators inside when targetting ${nodeVersion}`, async (test) => {
+    await compileAndRunTest(test, 'async_iterators', nodeVersion, 5 + 4 + 3 + 2 + 1);
   });
 
   // Test that EJS modules can be packed because they are used by graphql
   test.serial(`Can webpack modules that use .mjs modules when targetting ${nodeVersion}`, async (test) => {
-    const source = path.join(FIXTURES_DIRECTORY, 'es_modules/index.js');
-
-    const result = await build({
-      nodeVersion,
-      entrypoint: source,
-      outputPath: test.context.buildDirectory,
-      serviceName: 'test-service'
-    });
-
-    test.false(result.hasErrors());
+    await compileAndRunTest(test, 'es_modules/index', nodeVersion);
   });
 }
 

@@ -217,6 +217,8 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
       cacheDirectory: options.cacheDirectory,
       presets: [ babelEnvConfig ],
       plugins: [
+        // This plugin will transform async iterators into generator functions
+        '@babel/plugin-proposal-async-generator-functions',
         // X-Ray tracing cannot currently track execution across
         // async/await calls. The issue is tracked upstream at
         // https://github.com/aws/aws-xray-sdk-node/issues/12
