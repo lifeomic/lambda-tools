@@ -43,6 +43,7 @@ test.serial.after.always(async (test) => {
 });
 
 test('Managed containers can use a compose network', async (test) => {
+  const { createContainer } = test;
   const response = await test.context.lambda.get('/');
   test.is(response.status, 200);
   test.is(response.data.service, 'lambda-test');
