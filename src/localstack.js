@@ -1,10 +1,11 @@
 const AWS = require('aws-sdk');
 const Docker = require('dockerode');
+const { default: PQueue } = require('p-queue');
 const { Client: ElasticSearchClient } = require('@elastic/elasticsearch');
 
 const Environment = require('./Environment');
 const { getHostAddress, ensureImage } = require('./docker');
-const { buildConnectionAndConfig } = require('./utils/awsUtils');
+const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 
 const { Writable } = require('stream');
 
@@ -206,6 +207,14 @@ function checkServices (services = []) {
   }
 }
 
+async function localstackReady (container) {
+  const stream = await container.attach({ stream: true, stdout: true, stderr: true });
+  return new Promise((resolve) => {
+    const logs = new TempWriteBuffer(resolve);
+    container.modem.demuxStream(stream, logs, logs);
+  });
+}
+
 async function getConnection ({ versionTag = 'latest', services } = {}) {
   checkServices(services);
 
@@ -232,11 +241,7 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
   });
 
   await container.start();
-  const stream = await container.attach({ stream: true, stdout: true, stderr: true });
-  const promise = new Promise((resolve) => {
-    const logs = new TempWriteBuffer(resolve);
-    container.modem.demuxStream(stream, logs, logs);
-  });
+  const promise = localstackReady(container);
   environment.set('AWS_ACCESS_KEY_ID', 'bogus');
   environment.set('AWS_SECRET_ACCESS_KEY', 'bogus');
   environment.set('AWS_REGION', 'us-east-1');
@@ -246,6 +251,12 @@ async function getConnection ({ versionTag = 'latest', services } = {}) {
   const mappedServices = mapServices(host, containerData.NetworkSettings.Ports, services);
 
   await promise;
+  const pQueue = new PQueue({ concurrency: Number.POSITIVE_INFINITY });
+
+  await pQueue.addAll(services.map(serviceName => async () => {
+    const service = mappedServices[serviceName];
+    await waitForReady(service, () => service.isReady(service.client));
+  }));
 
   return {
     mappedServices,
@@ -290,6 +301,7 @@ function useLocalStack (test, { versionTag, services } = {}) {
 }
 
 module.exports = {
+  localstackReady,
   getConnection,
   localStackHooks,
   useLocalStack,

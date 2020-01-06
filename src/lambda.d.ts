@@ -100,8 +100,8 @@ export class LambdaRunner {
 
 export function useLambda<T extends LambdaTestContext>(test: TestInterface<T>, options?: LocalOptions): void;
 export function useLambdaHooks(options?: UseLambdaHooksOptions): TestHooks;
-export function useNewContainer(options?: NewContainerOptions): void;
-export function useComposeContainer(options?: ComposeContainerOptions): void;
+export function useNewContainer(options: Partial<NewContainerOptions>): void;
+export function useComposeContainer(options: Partial<ComposeContainerOptions>): void;
 export function build(options?: WebpackOptions): Promise<any>;
 export function createLambdaExecutionEnvironment(options?: CreateLambdaExecutionEnvironmentOptions): Promise<LambdaExecutionEnvironment>;
 export function destroyLambdaExecutionEnvironment(options?: DestroyLambdaExecutionEnvironmentOptions): Promise<void>;

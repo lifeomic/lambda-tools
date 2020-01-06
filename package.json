@@ -84,6 +84,7 @@
     "jszip": "^3.1.5",
     "lodash": "^4.17.5",
     "nested-error-stacks": "^2.0.0",
+    "p-queue": "^6.2.1",
     "promise-retry": "^1.1.1",
     "source-map-support": "^0.5.3",
     "string-replace-loader": "^2.1.1",

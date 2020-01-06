@@ -20,16 +20,6 @@ test('The helper client can create a new container', async (test) => {
   test.is(response.data.service, 'lambda-test');
 });
 
-test('An error is thrown if both zipfile and mountpoint arguments are provided', async (test) => {
-  await test.throwsAsync(() =>
-    createLambdaExecutionEnvironment({
-      environment: { AWS_XRAY_CONTEXT_MISSING: null },
-      mountpoint: path.join(FIXTURES_DIRECTORY, 'build'),
-      zipfile: 'some.zip'
-    })
-  , 'Only one of mountpoint or zipfile can be provided');
-});
-
 test('will use mountpointParent as the directory for unzipping if provided', async (test) => {
   const tempWork = await tmp.dir({ dir: process.cwd(), prefix: '.mountpointParent-test-' });
   try {

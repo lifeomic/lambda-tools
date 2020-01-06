@@ -9,18 +9,13 @@ const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 const prefix = process.env.COMPOSE_PROJECT_NAME = uuid();
 const networkName = `${prefix}_default`;
 
-let createContainer = null;
-let network = null;
+const docker = new Docker();
 
-test.before(async (test) => {
-  const docker = new Docker();
+const createContainer = sinon.spy(Docker.prototype, 'createContainer');
 
-  createContainer = sinon.spy(Docker.prototype, 'createContainer');
-
-  network = await docker.createNetwork({
-    Internal: true,
-    Name: networkName
-  });
+const networkPromise = docker.createNetwork({
+  Internal: true,
+  Name: networkName
 });
 
 useLambda(test);
@@ -31,9 +26,10 @@ useNewContainer({
   useComposeNetwork: true
 });
 
-test.serial.after.always((test) => {
+test.serial.after.always(async (test) => {
+  const network = await networkPromise;
   createContainer.restore();
-  network.remove();
+  await network.remove();
 });
 
 test('Managed containers can use a compose network', async (test) => {

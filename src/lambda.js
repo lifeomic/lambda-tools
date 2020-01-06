@@ -13,7 +13,7 @@ const { promisify } = require('util');
 
 const LAMBDA_TOOLS_WORK_PREFIX = '.lambda-tools-work';
 
-const LAMBDA_IMAGE = 'lambci/lambda:nodejs8.10';
+const LAMBDA_IMAGE = 'lambci/lambda:nodejs12.x';
 
 // null or undefined value means 'delete this variable'. Docker deletes variables that only have the key, without '=value'
 const createEnvironmentVariables = (environment) => Object.entries(environment)
@@ -108,6 +108,8 @@ class LambdaRunner {
 
 const globalOptions = {};
 
+exports.getGlobalOptions = () => Object.assign({}, globalOptions);
+
 exports.build = webpack;
 exports.LambdaRunner = LambdaRunner;
 
@@ -177,16 +179,29 @@ async function createLambdaExecutionEnvironment (options) {
   assert(!(mountpoint && options.service), 'A mountpoint cannot be used with a compose service');
 
   if (mountpoint) {
+    const docker = new Docker();
     try {
-      const docker = new Docker();
       await ensureImage(docker, image);
+    } catch (error) {
+      console.error('Unable to get image', JSON.stringify({ error }, null, 2));
+      await destroyLambdaExecutionEnvironment(executionEnvironment);
+      throw error;
+    }
 
+    try {
       if (!networkId) {
         executionEnvironment.network = await docker.createNetwork({
           Internal: true,
           Name: uuid()
         });
       }
+    } catch (error) {
+      console.error('Unable to create network', JSON.stringify({ error }, null, 2));
+      await destroyLambdaExecutionEnvironment(executionEnvironment);
+      throw error;
+    }
+
+    try {
       executionEnvironment.container = await docker.createContainer({
         Entrypoint: 'sh',
         Env: createEnvironmentVariables(environment),
@@ -203,9 +218,16 @@ async function createLambdaExecutionEnvironment (options) {
           '/var/task': {}
         }
       });
+    } catch (error) {
+      console.error('Unable to create container', JSON.stringify({ error }, null, 2));
+      await destroyLambdaExecutionEnvironment(executionEnvironment);
+      throw error;
+    }
 
+    try {
       await executionEnvironment.container.start();
     } catch (error) {
+      console.error('Unable to start container', JSON.stringify({ error, container: executionEnvironment.container.id }, null, 2));
       await destroyLambdaExecutionEnvironment(executionEnvironment);
       throw error;
     }
@@ -215,6 +237,9 @@ async function createLambdaExecutionEnvironment (options) {
 }
 
 async function destroyLambdaExecutionEnvironment (environment) {
+  if (!environment) {
+    return;
+  }
   const { container, network, cleanupMountpoint } = environment;
 
   if (cleanupMountpoint) {
@@ -236,7 +261,7 @@ exports.destroyLambdaExecutionEnvironment = destroyLambdaExecutionEnvironment;
 function useLambdaHooks (localOptions) {
   const impliedOptions = {};
 
-  let executionEnvironment = null;
+  let executionEnvironment = {};
 
   const getOptions = () => {
     const options = Object.assign({}, globalOptions, impliedOptions, localOptions);
