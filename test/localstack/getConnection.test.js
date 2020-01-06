@@ -27,7 +27,7 @@ test('getConnection defaults to the latest localstack version', async t => {
 
   await t.throwsAsync(getConnection({ services: [serviceName] }), { instanceOf: Error, message: error.message });
   sinon.assert.calledOnce(ensureStub);
-  sinon.assert.calledWithExactly(ensureStub, sinon.match.any, 'localstack/localstack:latest');
+  sinon.assert.calledWithExactly(ensureStub, sinon.match.any, 'localstack/localstack:0.10.6');
 });
 
 test('getConnection allows specifying the localstack version', async t => {
