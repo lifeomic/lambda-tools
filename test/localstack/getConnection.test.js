@@ -4,6 +4,12 @@ const uuid = require('uuid/v4');
 const random = require('lodash/random');
 const proxyquire = require('proxyquire');
 
+test.afterEach(t => {
+  if (console.log.restore) {
+    console.log.restore();
+  }
+});
+
 test('getConnection defaults to the latest localstack version', async t => {
 // Stub the docker module to throw errors when fetching images.
 // This needs to happen before the localstack helper module is imported
@@ -21,7 +27,7 @@ test('getConnection defaults to the latest localstack version', async t => {
 
   await t.throwsAsync(getConnection({ services: [serviceName] }), { instanceOf: Error, message: error.message });
   sinon.assert.calledOnce(ensureStub);
-  sinon.assert.calledWithExactly(ensureStub, sinon.match.any, 'localstack/localstack:latest');
+  sinon.assert.calledWithExactly(ensureStub, sinon.match.any, 'localstack/localstack:0.10.6');
 });
 
 test('getConnection allows specifying the localstack version', async t => {
@@ -54,4 +60,14 @@ test('getConnection throws when invalid services are requested', async t => {
   const serviceName = uuid();
   const { getConnection } = require('../../src/localstack');
   await t.throwsAsync(getConnection({ services: [serviceName] }), `The following services are provided, (${serviceName}`);
+});
+
+test.serial('can log localstack startup logs', async t => {
+  const logSpy = sinon.spy(console, 'log');
+  process.env.DEBUG_LOCALSTACK = 'true';
+  const { getConnection } = proxyquire.noPreserveCache()('../../src/localstack', {});
+  const { cleanup } = await getConnection({ services: [ 'lambda' ], versionTag: '0.10.6' });
+  await cleanup();
+  sinon.assert.called(logSpy);
+  sinon.assert.calledWith(logSpy, sinon.match(new RegExp('[0-9a-f]+: Ready.')));
 });

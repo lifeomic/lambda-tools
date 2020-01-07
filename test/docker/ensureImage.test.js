@@ -1,6 +1,6 @@
 const test = require('ava');
 const Docker = require('dockerode');
-const { ensureImage } = require('../src/docker');
+const { ensureImage } = require('../../src/docker');
 const sinon = require('sinon');
 
 const TEST_IMAGE = 'alpine:3.6';

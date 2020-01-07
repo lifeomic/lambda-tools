@@ -358,3 +358,8 @@ You will also find the following intermediate files:
 
  The `WEBPACK_MODE=development` environment variable will prevent
  minification in the final output bundle.
+
+## Debugging
+
+To debug some docker logs, set `DEBUG_DOCKER=true`.
+To debug the localstack docker container startup, set `DEBUG_LOCALSTACK=true`.

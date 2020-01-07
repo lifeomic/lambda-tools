@@ -13,7 +13,7 @@ test.afterEach.always((test) => {
 });
 
 test.serial('If DOCKER_HOST_ADDR is set it is returned', async (test) => {
-  const { getHostAddress } = require('../src/docker');
+  const { getHostAddress } = require('../../src/docker');
   const expected = process.env.DOCKER_HOST_ADDR = uuid();
 
   try {
@@ -28,7 +28,7 @@ test.serial('If DOCKER_HOST_ADDR is set it is returned', async (test) => {
 
 test.serial('On Mac 127.0.0.1 is always returned', async (test) => {
   const { getHostAddress } = proxyquire(
-    '../src/docker',
+    '../../src/docker',
     {
       os: {
         type: () => 'Darwin'
@@ -43,7 +43,7 @@ test.serial('On Mac 127.0.0.1 is always returned', async (test) => {
 
 test.serial('On other platforms a "real" address is returned', async (test) => {
   const { getHostAddress } = proxyquire(
-    '../src/docker',
+    '../../src/docker',
     {
       os: {
         type: () => 'Linux'
