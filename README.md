@@ -345,11 +345,12 @@ You will also find the following intermediate files:
 ## Debugging
 
 To enable debug level logging we are using the [debug][debug] library to create the log lines.  
-There is also an environment variable `ENABLE_LAMBDA_LOGGING` available to
-print the results of a lambda run, both `stdout` and `stderr`
+
 Available flags are 
 - `lambda-tools:lambda`
 - `lambda-tools:docker`
+- `lambda-tools:localstack`
+- `lambda-tools:webpack`
 
 
 

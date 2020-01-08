@@ -28,7 +28,6 @@ test.serial('The helper can log Lambda execution output', async (test) => {
   try {
     await test.context.lambda.get('/');
   } finally {
-    delete process.env.ENABLE_LAMBDA_LOGGING;
     process.stdout.write = write;
   }
 

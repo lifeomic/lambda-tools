@@ -47,7 +47,6 @@ test.serial(`The lambda function logs multiple callback invocations`, async (tes
   try {
     await test.context.lambda.raw(event, context);
   } finally {
-    delete process.env.ENABLE_LAMBDA_LOGGING;
     process.stdout.write = write;
   }
 

@@ -48,7 +48,6 @@ async function testEventExecution (test, event) {
   try {
     await test.context.lambda.raw(event, context);
   } finally {
-    delete process.env.ENABLE_LAMBDA_LOGGING;
     process.stdout.write = write;
   }
 
@@ -75,7 +74,6 @@ test.serial(`Returns results when event is undefined`, async (test) => {
   try {
     await test.context.lambda.raw(undefined, context);
   } finally {
-    delete process.env.ENABLE_LAMBDA_LOGGING;
     process.stdout.write = write;
   }
 
@@ -97,7 +95,6 @@ test.serial(`The lambda function can be invoked with a large event`, async test 
   try {
     await test.context.lambda.raw(event, context);
   } finally {
-    delete process.env.ENABLE_LAMBDA_LOGGING;
     process.stdout.write = write;
   }
 

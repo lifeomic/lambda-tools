@@ -12,7 +12,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=bogus
       - COMPOSE_PROJECT_NAME
       - DYNAMODB_ENDPOINT=http://dynamodb:8000
-      - ENABLE_LAMBDA_LOGGING
+      - DEBUG=lambda-tools:*
       - MOUNTPOINT=${PWD}/build/
     image: node:8.9.4-alpine
     volumes:
