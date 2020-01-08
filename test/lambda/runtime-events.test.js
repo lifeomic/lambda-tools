@@ -3,6 +3,7 @@ const path = require('path');
 const test = require('ava');
 const uuid = require('uuid/v4');
 const crypto = require('crypto');
+const debug = require('debug');
 
 const WriteBuffer = require('../../src/WriteBuffer');
 
@@ -40,11 +41,11 @@ async function testEventExecution (test, event) {
   const write = process.stdout.write;
   const buffer = new WriteBuffer();
   process.stdout.write = buffer.write.bind(buffer);
+  debug.enable('lambda-tools:*');
 
   const context = {};
 
   try {
-    process.env.ENABLE_LAMBDA_LOGGING = true;
     await test.context.lambda.raw(event, context);
   } finally {
     delete process.env.ENABLE_LAMBDA_LOGGING;
@@ -69,9 +70,9 @@ test.serial(`Returns results when event is undefined`, async (test) => {
   process.stdout.write = buffer.write.bind(buffer);
 
   const context = {};
+  debug.enable('lambda-tools:*');
 
   try {
-    process.env.ENABLE_LAMBDA_LOGGING = true;
     await test.context.lambda.raw(undefined, context);
   } finally {
     delete process.env.ENABLE_LAMBDA_LOGGING;
@@ -91,9 +92,9 @@ test.serial(`The lambda function can be invoked with a large event`, async test 
   const event = {
     someLargeValue: crypto.randomBytes(12584038).toString('base64') // 12584038 * 1.333 = 16777216 which is the max size. trying to send message larger than max (16780812 vs. 16777216)
   };
+  debug.enable('lambda-tools:*');
 
   try {
-    process.env.ENABLE_LAMBDA_LOGGING = true;
     await test.context.lambda.raw(event, context);
   } finally {
     delete process.env.ENABLE_LAMBDA_LOGGING;

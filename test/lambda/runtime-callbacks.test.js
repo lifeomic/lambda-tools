@@ -2,6 +2,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const test = require('ava');
 const uuid = require('uuid/v4');
+const debug = require('debug');
 const WriteBuffer = require('../../src/WriteBuffer');
 
 const { build, useNewContainer, useLambda } = require('../../src/lambda');
@@ -41,9 +42,9 @@ test.serial(`The lambda function logs multiple callback invocations`, async (tes
 
   const context = {};
   const event = {};
+  debug.enable('lambda-tools:*');
 
   try {
-    process.env.ENABLE_LAMBDA_LOGGING = true;
     await test.context.lambda.raw(event, context);
   } finally {
     delete process.env.ENABLE_LAMBDA_LOGGING;

@@ -11,6 +11,8 @@ const handleWebpackResult = require('./handleWebpackResult');
 const defaults = require('lodash/defaults');
 
 const { loadPatch } = require('./patches');
+const { getLogger } = require('./utils/logging');
+const logger = getLogger('webpack');
 
 const WEBPACK_DEFAULTS = new webpack.WebpackOptionsDefaulter().process({});
 const run = promisify(webpack);
@@ -44,7 +46,7 @@ function makeFilePathRelativeToCwd (file) {
  * @param {String[]} entryNames the entrypoint names from which output was produced
  */
 async function zipOutputFiles (outputDir, entryNames) {
-  console.log('\nCreating zip file for each entrypoint...\n');
+  logger.info('\nCreating zip file for each entrypoint...\n');
 
   for (const entryName of entryNames) {
     const dirname = path.dirname(entryName);
@@ -64,12 +66,12 @@ async function zipOutputFiles (outputDir, entryNames) {
     });
 
     // Now, write a zip file for each entry
-    console.log(`Creating zip for entrypoint ${chalk.bold(entryName)}...`);
-    console.log(entriesForZipFile.map((entry) => {
+    logger.info(`Creating zip for entrypoint ${chalk.bold(entryName)}...`);
+    logger.info(entriesForZipFile.map((entry) => {
       return `- ${chalk.bold(entry.name)}\n`;
     }).join(''));
     await zip(outputZipFile, entriesForZipFile);
-    console.log(chalk.green(`Zip file for ${chalk.bold(entryName)} written to ` +
+    logger.info(chalk.green(`Zip file for ${chalk.bold(entryName)} written to ` +
       `${chalk.bold(makeFilePathRelativeToCwd(outputZipFile))}\n`));
   }
 }
@@ -87,14 +89,14 @@ async function findIndexFile (dir) {
       }
     } catch (err) {
       if (err.code !== 'ENOENT') {
-        console.warn(chalk.yellow(`Unable to read possible index file ` +
+        logger.warn(chalk.yellow(`Unable to read possible index file ` +
           `${chalk.bold(candidateFile)}. ` +
           `Skipping! ${chalk.red(err.toString())}`));
       }
     }
   }
 
-  console.warn(chalk.yellow(`No index file for entrypoint in ` +
+  logger.warn(chalk.yellow(`No index file for entrypoint in ` +
     `${chalk.bold(makeFilePathRelativeToCwd(dir))} directory. ` +
     `Searched for: ${INDEX_FILES.join(', ')}`));
 

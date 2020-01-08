@@ -12,7 +12,7 @@ const { FIXTURES_DIRECTORY, buildLambda } = require('../helpers/lambda');
 const streamNames = ['first-stream', 'second-stream'];
 streams(streamNames);
 
-useLocalStack(test, { services: ['lambda', 'kinesis'], versionNumberTag: '0.10.3' });
+useLocalStack(test, { services: ['lambda', 'kinesis'], versionNumberTag: '0.10.6' });
 const handlerName = 'ts_lambda_kinesisHandler';
 
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());

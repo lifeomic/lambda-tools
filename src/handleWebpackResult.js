@@ -1,7 +1,9 @@
 const supportsColor = require('supports-color');
+const { getLogger } = require('./utils/logging');
+const logger = getLogger('webpack');
 
 module.exports = (webpackResult) => {
-  console.log('Webpacking compilation result:\n', webpackResult.toString({
+  logger.info('Webpacking compilation result:\n', webpackResult.toString({
     colors: !!supportsColor.stdout,
     // hide excessive chunking output
     chunks: false,

@@ -10,6 +10,8 @@ const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 
 const DYNAMODB_IMAGE = 'cnadiminti/dynamodb-local:latest';
 
+const logger = require('./utils/logging').getLogger('dynamodb');
+
 let tablesSchema = [];
 
 function setNotRetryable (response) {
@@ -50,7 +52,7 @@ async function createTables (dynamoClient, uniqueIdentifier) {
         }
       } catch (err) {
         failedProvisons.push(TableName);
-        console.error(`Failed to create table "${TableName}"`, JSON.stringify({ err }, null, 2));
+        logger.error(`Failed to create table "${TableName}"`, JSON.stringify({ err }, null, 2));
       }
     })
   );
@@ -59,7 +61,7 @@ async function createTables (dynamoClient, uniqueIdentifier) {
     try {
       await destroyTables(dynamoClient, uniqueIdentifier);
     } catch (err) {
-      console.error(`Failed to destroy tables after error`, err);
+      logger.error(`Failed to destroy tables after error`, err);
     }
     throw new Error(`Failed to create tables: ${failedProvisons.join(', ')}`);
   }
@@ -107,7 +109,7 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
           }
         } catch (err) {
           failedDeletions.push(TableName);
-          console.error(`Failed to destroy table "${TableName}"`, JSON.stringify({ err }, null, 2));
+          logger.error(`Failed to destroy table "${TableName}"`, JSON.stringify({ err }, null, 2));
         }
       })
   );

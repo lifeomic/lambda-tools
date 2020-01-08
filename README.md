@@ -292,23 +292,6 @@ and relevant polyfills. When building a single bundle the output may also be
 zipped so that it is ready for upload to the Lambda environment. The CLI
 documentation may be accessed using the `lambda-tool-build --help` command.
 
-[alpha]: https://bitbucket.org/lifeomic/alpha/src/master/ "alpha"
-[ava]: https://github.com/avajs/ava "Ava"
-[aws-sdk-mock]: https://github.com/dwyl/aws-sdk-mock "aws-sdk-mock"
-[docker-compose]: https://docs.docker.com/compose/ "Docker Compose"
-[dockerode]: https://github.com/apocas/dockerode "Docker + Node = Dockerode"
-[dynamodb]: https://aws.amazon.com/documentation/dynamodb/ "DynamoDB"
-[dynamodb-client]: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html "DynamoDB Client"
-[dynamodb-create-table]: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#createTable-property "DynamoDB Client: Create Table"
-[dynamodb-image]: https://hub.docker.com/r/cnadiminti/dynamodb-local/ "DynamoDB Docker Image"
-[dynamodb-local]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html "DynamoDB Local"
-[koa]: http://koajs.com/ "koa"
-[supertest]: https://github.com/visionmedia/supertest "supertest"
-[kinesis]: https://aws.amazon.com/documentation/kinesis/ "Kinesis"
-[kinesis-client]: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Kinesis.html "Kinesis Client"
-[localStack]: https://github.com/localstack/localstack "LocalStack"
-[localStack-docker]: https://hub.docker.com/r/localstack/localstack/ "LocalStack Docker"
-
 **Build all lambda functions within a directory:**
 
 ```bash
@@ -361,5 +344,29 @@ You will also find the following intermediate files:
 
 ## Debugging
 
-To debug some docker logs, set `DEBUG_DOCKER=true`.
-To debug the localstack docker container startup, set `DEBUG_LOCALSTACK=true`.
+To enable debug level logging we are using the [debug][debug] library to create the log lines.  
+There is also an environment variable `ENABLE_LAMBDA_LOGGING` available to
+print the results of a lambda run, both `stdout` and `stderr`
+Available flags are 
+- `lambda-tools:lambda`
+- `lambda-tools:docker`
+
+
+
+[alpha]: https://bitbucket.org/lifeomic/alpha/src/master/ "alpha"
+[ava]: https://github.com/avajs/ava "Ava"
+[aws-sdk-mock]: https://github.com/dwyl/aws-sdk-mock "aws-sdk-mock"
+[debug]: https://github.com/visionmedia/debug "debug"
+[docker-compose]: https://docs.docker.com/compose/ "Docker Compose"
+[dockerode]: https://github.com/apocas/dockerode "Docker + Node = Dockerode"
+[dynamodb]: https://aws.amazon.com/documentation/dynamodb/ "DynamoDB"
+[dynamodb-client]: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html "DynamoDB Client"
+[dynamodb-create-table]: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#createTable-property "DynamoDB Client: Create Table"
+[dynamodb-image]: https://hub.docker.com/r/cnadiminti/dynamodb-local/ "DynamoDB Docker Image"
+[dynamodb-local]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html "DynamoDB Local"
+[koa]: http://koajs.com/ "koa"
+[supertest]: https://github.com/visionmedia/supertest "supertest"
+[kinesis]: https://aws.amazon.com/documentation/kinesis/ "Kinesis"
+[kinesis-client]: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Kinesis.html "Kinesis Client"
+[localStack]: https://github.com/localstack/localstack "LocalStack"
+[localStack-docker]: https://hub.docker.com/r/localstack/localstack/ "LocalStack Docker"

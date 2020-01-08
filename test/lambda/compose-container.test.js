@@ -1,4 +1,5 @@
 const test = require('ava');
+const debug = require('debug');
 const WriteBuffer = require('../../src/WriteBuffer');
 
 const { useLambdaContainer } = require('../helpers/lambda');
@@ -22,9 +23,9 @@ test.serial('The helper can log Lambda execution output', async (test) => {
   const write = process.stdout.write;
   const buffer = new WriteBuffer();
   process.stdout.write = buffer.write.bind(buffer);
+  debug.enable('lambda-tools:*');
 
   try {
-    process.env.ENABLE_LAMBDA_LOGGING = true;
     await test.context.lambda.get('/');
   } finally {
     delete process.env.ENABLE_LAMBDA_LOGGING;

@@ -7,9 +7,12 @@ const tmp = require('tmp-promise');
 const fs = require('fs-extra');
 const unzip = require('unzipper');
 const isObjectLike = require('lodash/isObjectLike');
+const { promisify } = require('util');
 
 const { executeContainerCommand, ensureImage } = require('./docker');
-const { promisify } = require('util');
+const { getLogger } = require('./utils/logging');
+
+const logger = getLogger('lambda');
 
 const LAMBDA_TOOLS_WORK_PREFIX = '.lambda-tools-work';
 
@@ -83,10 +86,8 @@ class LambdaRunner {
     const split = output.lastIndexOf('\n');
     const result = output.substring(split + 1);
 
-    if (process.env.ENABLE_LAMBDA_LOGGING) {
-      console.log('container output was:\n', output);
-      console.log('container error was:\n', stderr.toString('utf8').trim());
-    }
+    logger.debug('container output was:\n', output);
+    logger.debug('container error was:\n', stderr.toString('utf8').trim());
     // istanbul ignore next
     return JSON.parse(result || '{}');
   }
@@ -183,7 +184,7 @@ async function createLambdaExecutionEnvironment (options) {
     try {
       await ensureImage(docker, image);
     } catch (error) {
-      console.error('Unable to get image', JSON.stringify({ error }, null, 2));
+      logger.error('Unable to get image', JSON.stringify({ error }, null, 2));
       await destroyLambdaExecutionEnvironment(executionEnvironment);
       throw error;
     }
@@ -196,7 +197,7 @@ async function createLambdaExecutionEnvironment (options) {
         });
       }
     } catch (error) {
-      console.error('Unable to create network', JSON.stringify({ error }, null, 2));
+      logger.error('Unable to create network', JSON.stringify({ error }, null, 2));
       await destroyLambdaExecutionEnvironment(executionEnvironment);
       throw error;
     }
@@ -219,7 +220,7 @@ async function createLambdaExecutionEnvironment (options) {
         }
       });
     } catch (error) {
-      console.error('Unable to create container', JSON.stringify({ error }, null, 2));
+      logger.error('Unable to create container', JSON.stringify({ error }, null, 2));
       await destroyLambdaExecutionEnvironment(executionEnvironment);
       throw error;
     }
@@ -227,7 +228,7 @@ async function createLambdaExecutionEnvironment (options) {
     try {
       await executionEnvironment.container.start();
     } catch (error) {
-      console.error('Unable to start container', JSON.stringify({ error, container: executionEnvironment.container.id }, null, 2));
+      logger.error('Unable to start container', JSON.stringify({ error, container: executionEnvironment.container.id }, null, 2));
       await destroyLambdaExecutionEnvironment(executionEnvironment);
       throw error;
     }
