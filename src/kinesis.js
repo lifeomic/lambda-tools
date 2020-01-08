@@ -181,19 +181,19 @@ function kinesisTestHooks (useUniqueStreams) {
 function useKinesisDocker (test, useUniqueStreams) {
   const testHooks = kinesisTestHooks(useUniqueStreams);
 
-  test.before(testHooks.beforeAll);
+  test.serial.before(testHooks.beforeAll);
 
-  test.beforeEach(async (test) => {
+  test.serial.beforeEach(async (test) => {
     const context = await testHooks.beforeEach();
     test.context.kinesis = context;
   });
 
-  test.afterEach.always(async test => {
+  test.serial.afterEach.always(async test => {
     const context = test.context.kinesis;
     await testHooks.afterEach(context);
   });
 
-  test.after.always(testHooks.afterAll);
+  test.serial.after.always(testHooks.afterAll);
 }
 
 function useKinesis (test, streamName) {
@@ -201,18 +201,18 @@ function useKinesis (test, streamName) {
     endpoint: process.env.KINESIS_ENDPOINT
   });
 
-  test.before(async () => {
+  test.serial.before(async () => {
     await kinesis.createStream({
       ShardCount: 1,
       StreamName: streamName
     }).promise();
   });
 
-  test.beforeEach(function (test) {
+  test.serial.beforeEach(function (test) {
     test.context.kinesis = kinesis;
   });
 
-  test.after(async () => {
+  test.serial.after(async () => {
     await kinesis.deleteStream({
       StreamName: streamName
     });
