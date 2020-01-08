@@ -13,7 +13,9 @@ test.beforeEach((test) => {
   const { useGraphQL } = require('../src/graphql');
 
   test.context.mock = {
-    beforeEach: sinon.stub()
+    serial: {
+      beforeEach: sinon.stub()
+    }
   };
 
   test.context.useGraphQL = useGraphQL;
@@ -24,9 +26,9 @@ test.afterEach.always(resetGraphqlHelper);
 test('When a test endpoint has not been configured an error is thrown', async (test) => {
   test.context.useGraphQL(test.context.mock);
 
-  sinon.assert.calledOnce(test.context.mock.beforeEach);
+  sinon.assert.calledOnce(test.context.mock.serial.beforeEach);
   test.throws(
-    test.context.mock.beforeEach.firstCall.args[0],
+    test.context.mock.serial.beforeEach.firstCall.args[0],
     'A test GraphQL endpoint has not been configured!'
   );
 });

@@ -293,15 +293,15 @@ exports.useLambdaHooks = useLambdaHooks;
 exports.useLambda = (test, localOptions = {}) => {
   const hooks = useLambdaHooks(localOptions);
 
-  test.before(async () => {
+  test.serial.before(async () => {
     await hooks.beforeAll();
   });
 
-  test.after.always(async () => {
+  test.serial.after.always(async () => {
     await hooks.afterAll();
   });
 
-  test.beforeEach(async (test) => {
+  test.serial.beforeEach(async (test) => {
     test.context.lambda = await hooks.beforeEach();
   });
 };

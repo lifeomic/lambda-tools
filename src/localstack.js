@@ -295,11 +295,11 @@ function localStackHooks ({ versionTag, services } = {}) {
 function useLocalStack (test, { versionTag, services } = {}) {
   const testHooks = localStackHooks({ versionTag, services });
 
-  test.before(async t => {
+  test.serial.before(async t => {
     t.context.localStack = await testHooks.beforeAll();
   });
 
-  test.after.always(testHooks.afterAll);
+  test.serial.after.always(testHooks.afterAll);
 }
 
 module.exports = {
