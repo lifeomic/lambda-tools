@@ -21,6 +21,7 @@
   "license": "MIT",
   "ava": {
     "failWithoutAssertions": false,
+    "timeout": "10m",
     "files": [
       "test/**/*.test.js"
     ]

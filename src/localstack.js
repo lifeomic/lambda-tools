@@ -10,11 +10,12 @@ const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 const { Writable } = require('stream');
 const logger = require('./utils/logging').getLogger('localstack');
 
-class TempWriteBuffer extends Writable {
+class LocalstackWriteBuffer extends Writable {
   constructor (resolve, container) {
     super();
-    this.reset();
+    this._buffer = [];
     this.resolve = resolve;
+    this._isSetUp = false;
     this.logger = logger.child(container);
   }
 
@@ -23,19 +24,18 @@ class TempWriteBuffer extends Writable {
   }
 
   toString (encoding) {
-    return this._buffer.map((chunk) => chunk.toString(encoding)).join('');
+    return this._buffer.join('\n');
   }
 
   _write (chunk, encoding, callback) {
     const asBuffer = Buffer.from(chunk, 'utf8');
-    const asString = asBuffer.toString('utf8');
-    if (this._buffer) {
+    const asString = asBuffer.toString('utf8').replace(/\r/, '').trim();
+    const logs = asString.split('\n');
+    this._buffer.push(...logs);
+    if (!this._isSetUp) {
       this.logger.debug(asString);
-      this._buffer.push(asBuffer);
-      const logs = this.toString('utf8').trim().split('\n');
-      this._buffer = [];
       if (logs.includes('Ready.')) {
-        this._buffer = undefined;
+        this._isSetUp = true;
         this.resolve();
       }
     } else {
@@ -212,7 +212,7 @@ function checkServices (services = []) {
 async function localstackReady (container) {
   const stream = await container.attach({ stream: true, stdout: true, stderr: true });
   return new Promise((resolve) => {
-    const logs = new TempWriteBuffer(resolve, container.id);
+    const logs = new LocalstackWriteBuffer(resolve, container.id);
     container.modem.demuxStream(stream, logs, logs);
   });
 }

@@ -86,5 +86,5 @@ test.serial('will create a child log and debug the localstack setup', async t =>
   await cleanup();
   sinon.assert.called(logSpy);
   sinon.assert.called(debugSpy);
-  sinon.assert.calledWith(debugSpy, sinon.match(/Ready\.\n/));
+  sinon.assert.calledWith(debugSpy, sinon.match(/Ready\./));
 });
