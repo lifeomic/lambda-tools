@@ -10,6 +10,7 @@ const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 const kinesisTools = require('./utils/kinesisTools');
 const { localstackReady } = require('./localstack');
 const logger = require('./utils/logging').getLogger('kinesis');
+const { pQueue } = require('./utils/config');
 
 const KINESIS_IMAGE = 'localstack/localstack:latest';
 
@@ -28,8 +29,8 @@ function getStreamName (streamName, uniqueIdentifier) {
 
 async function createStreams (kinesisClient, uniqueIdentifier) {
   const failedProvisons = [];
-  await Promise.all(
-    kinesisStreams.map(async stream => {
+  await pQueue(
+    kinesisStreams.map(stream => async () => {
       const newStream = cloneDeep(stream);
       const StreamName = getStreamName(newStream.StreamName, uniqueIdentifier);
       newStream.StreamName = StreamName;
@@ -62,9 +63,9 @@ async function destroyStreams (kinesisClient, uniqueIdentifier) {
   const streamsToDestroy = StreamNames
     .filter(name => streamNames.includes(name));
 
-  await Promise.all(
+  await pQueue.addAll(
     streamsToDestroy
-      .map(async StreamName => {
+      .map(StreamName => async () => {
         try {
           await kinesisClient.deleteStream({ StreamName }).promise();
           await kinesisClient.waitFor('streamNotExists', { StreamName }).promise();

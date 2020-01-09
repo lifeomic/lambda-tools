@@ -1,11 +1,11 @@
 const AWS = require('aws-sdk');
 const Docker = require('dockerode');
-const { default: PQueue } = require('p-queue');
 const { Client: ElasticSearchClient } = require('@elastic/elasticsearch');
 
 const Environment = require('./Environment');
 const { getHostAddress, ensureImage } = require('./docker');
 const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
+const { pQueue } = require('./utils/config');
 
 const { Writable } = require('stream');
 const logger = require('./utils/logging').getLogger('localstack');
@@ -253,7 +253,6 @@ async function getConnection ({ versionTag = '0.10.6', services } = {}) {
   const mappedServices = mapServices(host, containerData.NetworkSettings.Ports, services);
 
   const output = await promise;
-  const pQueue = new PQueue({ concurrency: Number.POSITIVE_INFINITY });
 
   await pQueue.addAll(services.map(serviceName => async () => {
     const service = mappedServices[serviceName];
