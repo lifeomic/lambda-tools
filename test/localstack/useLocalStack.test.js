@@ -1,11 +1,9 @@
 const test = require('ava');
-const random = require('lodash/random');
 
 const { useLocalStack, LOCALSTACK_SERVICES } = require('../../src/localstack');
 
 const services = Object.keys(LOCALSTACK_SERVICES);
-const idx = random(0, services.length - 1);
-const serviceName = services[idx];
+const serviceName = 'lambda';
 
 useLocalStack(test, { services: [serviceName] });
 
@@ -30,4 +28,16 @@ services.forEach(nextServiceName => {
 test('will error when missing services', t => {
   t.throws(() => useLocalStack(test, {}));
   t.throws(() => useLocalStack(test));
+});
+
+test.serial('will return the output from localstack', t => {
+  const { localStack: { getOutput } } = t.context;
+  t.true(getOutput().includes('\nReady.'));
+});
+
+test.serial('can reset the logs', async t => {
+  const { localStack: { getOutput, clearOutput } } = t.context;
+  t.not(getOutput().length, 0);
+  clearOutput();
+  t.is(getOutput().length, 0);
 });

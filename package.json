@@ -21,6 +21,7 @@
   "license": "MIT",
   "ava": {
     "failWithoutAssertions": false,
+    "timeout": "10m",
     "files": [
       "test/**/*.test.js"
     ]
@@ -79,6 +80,7 @@
     "aws-sdk": "^2.290.0",
     "babel-loader": "^8.0.2",
     "chalk": "^3.0.0",
+    "debug": "^4.1.1",
     "dockerode": "^2.5.3",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.2",

@@ -4,9 +4,19 @@ const uuid = require('uuid/v4');
 const random = require('lodash/random');
 const proxyquire = require('proxyquire');
 
+const { getLogger } = require('../../src/utils/logging');
+const { getConnection } = require('../../src/localstack');
+
+test.beforeEach(t => {
+  const logger = getLogger('localstack');
+
+  Object.assign(t.context, { logger });
+});
+
 test.afterEach(t => {
-  if (console.log.restore) {
-    console.log.restore();
+  const { logger } = t.context;
+  if (logger.debug.restore) {
+    logger.debug.restore();
   }
 });
 
@@ -62,12 +72,19 @@ test('getConnection throws when invalid services are requested', async t => {
   await t.throwsAsync(getConnection({ services: [serviceName] }), `The following services are provided, (${serviceName}`);
 });
 
-test.serial('can log localstack startup logs', async t => {
-  const logSpy = sinon.spy(console, 'log');
-  process.env.DEBUG_LOCALSTACK = 'true';
-  const { getConnection } = proxyquire.noPreserveCache()('../../src/localstack', {});
+test.serial('will create a child log and debug the localstack setup', async t => {
+  const { logger } = t.context;
+  const logSpy = sinon.stub(logger, 'child');
+  let debugSpy;
+  logSpy.callsFake(function ({ container } = {}) {
+    t.not(container, null);
+    const child = logSpy.wrappedMethod.apply(this, arguments);
+    debugSpy = sinon.spy(child, 'debug');
+    return child;
+  });
   const { cleanup } = await getConnection({ services: [ 'lambda' ], versionTag: '0.10.6' });
   await cleanup();
   sinon.assert.called(logSpy);
-  sinon.assert.calledWith(logSpy, sinon.match(new RegExp('[0-9a-f]+: Ready.')));
+  sinon.assert.called(debugSpy);
+  sinon.assert.calledWith(debugSpy, sinon.match(/Ready\./));
 });

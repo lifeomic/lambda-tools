@@ -9,6 +9,7 @@ const Environment = require('./Environment');
 const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 const kinesisTools = require('./utils/kinesisTools');
 const { localstackReady } = require('./localstack');
+const logger = require('./utils/logging').getLogger('kinesis');
 
 const KINESIS_IMAGE = 'localstack/localstack:latest';
 
@@ -38,7 +39,7 @@ async function createStreams (kinesisClient, uniqueIdentifier) {
         await kinesisClient.waitFor('streamExists', { StreamName }).promise();
       } catch (err) {
         failedProvisons.push(StreamName);
-        console.error(`Failed to create stream "${StreamName}"`, err);
+        logger.error(`Failed to create stream "${StreamName}"`, err);
       }
     })
   );
@@ -47,7 +48,7 @@ async function createStreams (kinesisClient, uniqueIdentifier) {
     try {
       await destroyStreams(kinesisClient, uniqueIdentifier);
     } catch (err) {
-      console.error('Failed to destroy streams after create failed', err);
+      logger.error('Failed to destroy streams after create failed', err);
     }
     throw new Error(`Failed to create streams: ${failedProvisons.join(', ')}`);
   }
@@ -69,7 +70,7 @@ async function destroyStreams (kinesisClient, uniqueIdentifier) {
           await kinesisClient.waitFor('streamNotExists', { StreamName }).promise();
         } catch (err) {
           failedDeletions.push(StreamName);
-          console.error(`Failed to destroy stream "${StreamName}"`, err);
+          logger.error(`Failed to destroy stream "${StreamName}"`, err);
         }
       })
   );

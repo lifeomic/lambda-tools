@@ -8,18 +8,15 @@ const { getHostAddress, ensureImage } = require('./docker');
 const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 
 const { Writable } = require('stream');
+const logger = require('./utils/logging').getLogger('localstack');
 
-const debugLocalstack = process.env.DEBUG_LOCALSTACK === 'true';
-
-class TempWriteBuffer extends Writable {
+class LocalstackWriteBuffer extends Writable {
   constructor (resolve, container) {
     super();
-    this.reset();
+    this._buffer = [];
     this.resolve = resolve;
-    this._log = (log) => {
-      // The logs coming from the lambda instance were using \r, and weren't being printed by console.log
-      console.log(`${container}: ${log.replace(/\r/g, '\n')}`);
-    };
+    this._isSetUp = false;
+    this.logger = logger.child(container);
   }
 
   reset () {
@@ -27,25 +24,22 @@ class TempWriteBuffer extends Writable {
   }
 
   toString (encoding) {
-    return this._buffer.map((chunk) => chunk.toString(encoding)).join('');
+    return this._buffer.join('\n');
   }
 
   _write (chunk, encoding, callback) {
     const asBuffer = Buffer.from(chunk, 'utf8');
-    const asString = asBuffer.toString('utf8');
-    if (this._buffer) {
-      if (debugLocalstack) {
-        this._log(asString);
-      }
-      this._buffer.push(asBuffer);
-      const logs = this.toString('utf8').trim().split('\n');
-      this._buffer = [];
+    const asString = asBuffer.toString('utf8').replace(/\r/, '').trim();
+    const logs = asString.split('\n');
+    this._buffer.push(...logs);
+    if (!this._isSetUp) {
+      this.logger.debug(asString);
       if (logs.includes('Ready.')) {
-        this._buffer = undefined;
-        this.resolve();
+        this._isSetUp = true;
+        this.resolve(this);
       }
     } else {
-      this._log(asString);
+      this.logger.info(asString);
     }
     callback();
   }
@@ -218,7 +212,7 @@ function checkServices (services = []) {
 async function localstackReady (container) {
   const stream = await container.attach({ stream: true, stdout: true, stderr: true });
   return new Promise((resolve) => {
-    const logs = new TempWriteBuffer(resolve, container.id);
+    const logs = new LocalstackWriteBuffer(resolve, container.id);
     container.modem.demuxStream(stream, logs, logs);
   });
 }
@@ -258,7 +252,7 @@ async function getConnection ({ versionTag = '0.10.6', services } = {}) {
   const host = await getHostAddress();
   const mappedServices = mapServices(host, containerData.NetworkSettings.Ports, services);
 
-  await promise;
+  const output = await promise;
   const pQueue = new PQueue({ concurrency: Number.POSITIVE_INFINITY });
 
   await pQueue.addAll(services.map(serviceName => async () => {
@@ -268,6 +262,8 @@ async function getConnection ({ versionTag = '0.10.6', services } = {}) {
 
   return {
     mappedServices,
+    getOutput: () => output.toString(),
+    clearOutput: () => output.reset(),
     cleanup: () => {
       environment.restore();
       return container.stop();
@@ -282,7 +278,7 @@ function localStackHooks ({ versionTag, services } = {}) {
   async function beforeAll () {
     const result = await getConnection({ versionTag, services });
     cleanup = result.cleanup;
-    return { services: result.mappedServices };
+    return { services: result.mappedServices, getOutput: result.getOutput, clearOutput: result.clearOutput };
   }
 
   async function afterAll () {

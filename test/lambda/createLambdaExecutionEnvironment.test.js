@@ -4,13 +4,16 @@ const uuid = require('uuid/v4');
 const docker = require('dockerode');
 
 const { createLambdaExecutionEnvironment } = require('../../src/lambda');
+const { getLogger } = require('../../src/utils/logging');
 
 test.beforeEach(t => {
-  const errorSpy = sinon.spy(console, 'error');
-  Object.assign(t.context, { stubbedMethods: [errorSpy], errorSpy });
+  const logger = getLogger('lambda');
+  const errorSpy = sinon.spy(logger, 'error');
+
+  Object.assign(t.context, { logger, stubbedMethods: [errorSpy], errorSpy });
 });
 
-test.afterEach(t => {
+test.afterEach.always(t => {
   t.context.stubbedMethods.forEach(method => method.restore());
 });
 

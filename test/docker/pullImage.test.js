@@ -1,21 +1,27 @@
 const test = require('ava');
 const Docker = require('dockerode');
 const sinon = require('sinon');
-const proxyquire = require('proxyquire');
+const { getLogger } = require('../../src/utils/logging');
 
+const { pullImage, imageExists } = require('../../src/docker');
 const TEST_IMAGE = 'alpine:3.5';
 
+test.beforeEach(t => {
+  const logger = getLogger('docker');
+
+  Object.assign(t.context, { logger });
+});
+
 test.afterEach(t => {
-  if (console.log.restore) {
-    console.log.restore();
+  const { logger } = t.context;
+  if (logger.debug.restore) {
+    logger.debug.restore();
   }
 });
 
-test.serial('can log the progress of pulling an image', async (test) => {
-  const logSpy = sinon.spy(console, 'log');
-
-  process.env.DEBUG_DOCKER = 'true';
-  const { pullImage, imageExists } = proxyquire.noPreserveCache()('../../src/docker', {});
+test.serial('will debug the progress of pulling an image', async (test) => {
+  const { logger } = test.context;
+  const logSpy = sinon.spy(logger, 'debug');
 
   const docker = new Docker();
   if (await imageExists(docker, TEST_IMAGE)) {
@@ -25,6 +31,5 @@ test.serial('can log the progress of pulling an image', async (test) => {
 
   await pullImage(docker, TEST_IMAGE);
   sinon.assert.called(logSpy);
-  // eslint-disable-next-line security/detect-non-literal-regexp
-  sinon.assert.calledWith(logSpy, sinon.match(new RegExp(`${TEST_IMAGE}: Status: Downloaded newer image for ${TEST_IMAGE}`)));
+  sinon.assert.calledWithExactly(logSpy, `${TEST_IMAGE}: Status: Downloaded newer image for ${TEST_IMAGE} `);
 });

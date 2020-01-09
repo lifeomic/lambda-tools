@@ -9,7 +9,8 @@ const DEFAULT_IMAGE = 'alpine:3.6';
 const DEFAULT_ROUTE_PATTERN = /^default\b.*$/m;
 const INTERFACE_ADDRESS_PATTERN = /\binet addr:\d{1,3}\.\d{1,3}.\d{1,3}\.\d{1,3}\b/m;
 
-const debugDocker = process.env.DEBUG_DOCKER === 'true';
+const { getLogger } = require('./utils/logging');
+const logger = getLogger('docker');
 
 const executeContainerCommand = async ({ container, command, environment, stdin }) => {
   const options = {
@@ -65,9 +66,7 @@ const pullImage = async (docker, image) => {
   const stream = await docker.pull(image);
   await new Promise(async (resolve, reject) => {
     docker.modem.followProgress(stream, resolve, (progress) => {
-      if (debugDocker) {
-        console.log(`${image}: ${progress.status} ${progress.progress ? progress.progress : ''}`);
-      }
+      logger.debug(`${image}: ${progress.status} ${progress.progress ? progress.progress : ''}`);
     });
   });
 };
