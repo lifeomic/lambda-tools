@@ -36,7 +36,7 @@ class LocalstackWriteBuffer extends Writable {
       this.logger.debug(asString);
       if (logs.includes('Ready.')) {
         this._isSetUp = true;
-        this.resolve();
+        this.resolve(this);
       }
     } else {
       this.logger.info(asString);
@@ -252,7 +252,7 @@ async function getConnection ({ versionTag = '0.10.6', services } = {}) {
   const host = await getHostAddress();
   const mappedServices = mapServices(host, containerData.NetworkSettings.Ports, services);
 
-  await promise;
+  const output = await promise;
   const pQueue = new PQueue({ concurrency: Number.POSITIVE_INFINITY });
 
   await pQueue.addAll(services.map(serviceName => async () => {
@@ -262,6 +262,8 @@ async function getConnection ({ versionTag = '0.10.6', services } = {}) {
 
   return {
     mappedServices,
+    getOutput: () => output.toString(),
+    clearOutput: () => output.reset(),
     cleanup: () => {
       environment.restore();
       return container.stop();
@@ -276,7 +278,7 @@ function localStackHooks ({ versionTag, services } = {}) {
   async function beforeAll () {
     const result = await getConnection({ versionTag, services });
     cleanup = result.cleanup;
-    return { services: result.mappedServices };
+    return { services: result.mappedServices, getOutput: result.getOutput, clearOutput: result.clearOutput };
   }
 
   async function afterAll () {
