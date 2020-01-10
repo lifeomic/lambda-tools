@@ -29,7 +29,7 @@ function getStreamName (streamName, uniqueIdentifier) {
 
 async function createStreams (kinesisClient, uniqueIdentifier) {
   const failedProvisons = [];
-  await pQueue(
+  await pQueue.addAll(
     kinesisStreams.map(stream => async () => {
       const newStream = cloneDeep(stream);
       const StreamName = getStreamName(newStream.StreamName, uniqueIdentifier);

@@ -89,7 +89,7 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
   const tablesToDestroy = TableNames
     .filter(name => schemaTableNames.includes(name));
 
-  await pQueue(
+  await pQueue.addAll(
     tablesToDestroy
       .map(TableName => async () => {
         try {
