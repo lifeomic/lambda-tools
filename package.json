@@ -1,6 +1,6 @@
 {
   "name": "@lifeomic/lambda-tools",
-  "version": "10.0.0",
+  "version": "10.1.0",
   "description": "Common utilities for Lambda testing and development",
   "main": "src/index.js",
   "types": "src/index.d.ts",
