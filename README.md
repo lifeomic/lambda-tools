@@ -352,6 +352,11 @@ Available flags are
 - `lambda-tools:localstack`
 - `lambda-tools:webpack`
 
+## Concurrency
+
+If you are experiencing Docker networking errors, it might be because of the high level of concurrency
+in the kinesis, docker, or localstack setup processes.  To specify how many connections to make at once
+set the `LAMBDA_TOOLS_CONCURRENCY` environment variable to some integer value.
 
 
 [alpha]: https://bitbucket.org/lifeomic/alpha/src/master/ "alpha"

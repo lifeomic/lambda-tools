@@ -4,6 +4,7 @@ const fromPairs = require('lodash/fromPairs');
 const Docker = require('dockerode');
 const Environment = require('./Environment');
 const uuid = require('uuid/v4');
+const { pQueue } = require('./utils/config');
 
 const { getHostAddress, ensureImage } = require('./docker');
 const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
@@ -26,8 +27,8 @@ function setNotRetryable (response) {
 
 async function createTables (dynamoClient, uniqueIdentifier) {
   const failedProvisons = [];
-  await Promise.all(
-    tablesSchema.map(async table => {
+  await pQueue.addAll(
+    tablesSchema.map(table => async () => {
       const newTable = cloneDeep(table);
       const TableName = getTableName(newTable.TableName, uniqueIdentifier);
       newTable.TableName = TableName;
@@ -88,9 +89,9 @@ async function destroyTables (dynamoClient, uniqueIdentifier) {
   const tablesToDestroy = TableNames
     .filter(name => schemaTableNames.includes(name));
 
-  await Promise.all(
+  await pQueue.addAll(
     tablesToDestroy
-      .map(async TableName => {
+      .map(TableName => async () => {
         try {
           const deleteRequest = dynamoClient.deleteTable({ TableName });
 
