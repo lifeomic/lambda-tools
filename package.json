@@ -57,7 +57,7 @@
     "graphql": "^14.0.2",
     "graphql-tools": "^4.0.0",
     "koa": "^2.5.0",
-    "koa-router": "^7.4.0",
+    "koa-router": "^8.0.6",
     "mockserver-client": "^5.6.1",
     "nyc": "^14.0.0",
     "proxyquire": "^2.0.1",
