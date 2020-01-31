@@ -1,3 +1,4 @@
+const assert = require('assert');
 const AWS = require('aws-sdk');
 const cloneDeep = require('lodash/cloneDeep');
 const fromPairs = require('lodash/fromPairs');
@@ -212,6 +213,7 @@ function dynamoDBTestHooks (useUniqueTables = false, opts) {
   }
 
   async function beforeEach () {
+    assert(config, 'Invalid DynamoDB test configuration.');
     const uniqueIdentifier = useUniqueTables ? uuid() : '';
     const service = new AWS.DynamoDB(config);
     const streamsClient = new AWS.DynamoDBStreams(config);
@@ -226,7 +228,6 @@ function dynamoDBTestHooks (useUniqueTables = false, opts) {
     };
 
     await createTables(service, uniqueIdentifier);
-
     return context;
   }
 
