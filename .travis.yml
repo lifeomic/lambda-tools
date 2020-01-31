@@ -21,6 +21,8 @@ notifications:
     on_failure: always
 deploy:
   provider: npm
+  # ref: https://travis-ci.community/t/missing-api-key-when-deploying-to-github-releases/5761/14
+  edge: true
   email: $NPM_EMAIL
   api_key: $NPM_KEY
   on:
