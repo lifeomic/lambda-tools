@@ -31,11 +31,16 @@ export interface ComposeContainerOptions {
 }
 
 export interface WebpackOptions {
+  cacheDirectory?: boolean;
+  enableDnsRetry?: boolean;
+  enableRuntimeSourceMaps?: boolean;
   entrypoint: string;
-  serviceName?: string;
-  zip?: boolean;
+  minify?: boolean;
   nodeVersion?: string;
   outputPath?: string;
+  serviceName?: string;
+  tsconfig?: string;
+  zip?: boolean;
   configTransformer?: (config: any) => Promise<any>;
 }
 
