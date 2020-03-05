@@ -74,7 +74,13 @@ exports.useGraphQL = (test, options) => {
     assert(app, 'GraphQL setup must return a Koa application');
     const request = supertest(app.callback());
 
-    test.context.graphql = (query, variables) => request.post(options.url)
-      .send({ query, variables });
+    test.context.graphql = (query, variables) => {
+      if (Array.isArray(query)) {
+        return request.post(options.url)
+          .send(query);
+      }
+      return request.post(options.url)
+        .send({ query, variables });
+    };
   });
 };
