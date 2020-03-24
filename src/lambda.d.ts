@@ -78,7 +78,7 @@ export interface AlphaClientConfig {
 }
 
 export interface AlphaClient extends AxiosInstance {
-  new (config: AlphaClientConfig);
+  new (config: AlphaClientConfig): AxiosInstance;
   raw<T = any>(event: any): Promise<T>;
   graphql<T = any>(
     path: string,
