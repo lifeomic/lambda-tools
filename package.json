@@ -54,7 +54,7 @@
     "aws-sdk-mock": "^4.0.0",
     "coveralls": "^3.0.1",
     "eslint": "^6.0.0",
-    "graphql": "^14.0.2",
+    "graphql": "^15.0.0",
     "graphql-tools": "^4.0.0",
     "koa": "^2.5.0",
     "koa-router": "^7.4.0",
