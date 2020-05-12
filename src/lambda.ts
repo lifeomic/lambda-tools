@@ -154,7 +154,7 @@ async function buildMountpointFromZipfile (zipfile: string, mountpointParent?: s
   // to extract the zip files, but Docker on Mac is often not configured with
   // access to the Mac's /var temp directory location
   const baseDir = mountpointParent || process.cwd();
-  const tempDir = await tmp.dir({ dir: baseDir, mode: '0755', prefix: LAMBDA_TOOLS_WORK_PREFIX });
+  const tempDir = await tmp.dir({ dir: baseDir, mode: 0o755, prefix: LAMBDA_TOOLS_WORK_PREFIX });
   const tempDirName = tempDir.path;
   const cleanup = async () => {
     // Delete unzipped files
@@ -221,7 +221,7 @@ interface ExecutionEnvironment {
   container?: Docker.Container
 }
 
-async function createLambdaExecutionEnvironment (options: FinalConfig): Promise<ExecutionEnvironment> {
+export async function createLambdaExecutionEnvironment (options: FinalConfig): Promise<ExecutionEnvironment> {
   const { environment = {}, image = LAMBDA_IMAGE, zipfile, network: networkId, mountpointParent } = options;
   let { mountpoint } = options;
 
@@ -296,7 +296,7 @@ async function createLambdaExecutionEnvironment (options: FinalConfig): Promise<
   return executionEnvironment;
 }
 
-async function destroyLambdaExecutionEnvironment (environment: ExecutionEnvironment) {
+export async function destroyLambdaExecutionEnvironment (environment: ExecutionEnvironment) {
   if (!environment) {
     return;
   }
@@ -314,9 +314,6 @@ async function destroyLambdaExecutionEnvironment (environment: ExecutionEnvironm
     await network.remove();
   }
 }
-
-exports.createLambdaExecutionEnvironment = createLambdaExecutionEnvironment;
-exports.destroyLambdaExecutionEnvironment = destroyLambdaExecutionEnvironment;
 
 function useLambdaHooks (localOptions: LambdaConfigOptions) {
   const impliedOptions: Partial<FinalConfig> = {};

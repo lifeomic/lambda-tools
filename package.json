@@ -9,8 +9,10 @@
     "lambda-tools-host-addr": "./bin/get-host-addr.js"
   },
   "scripts": {
+    "prepublishOnly": "yarn tsc",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "pretest": "eslint .",
+    "lint": "esling . --ext .js,.ts -f codeframe",
+    "pretest": "eslint .; tsc --noEmit",
     "test": "nyc ava -v"
   },
   "repository": {
@@ -24,6 +26,10 @@
     "timeout": "10m",
     "files": [
       "test/**/*.test.js"
+    ],
+    "require": [
+      "ts-node/register",
+      "source-map-support/register"
     ]
   },
   "eslintConfig": {
@@ -39,11 +45,22 @@
     "lines": 100,
     "statements": 100,
     "functions": 100,
-    "branches": 100
+    "branches": 100,
+    "include": [
+      "./src/**"
+    ],
+    "extension": [
+      ".ts",
+      ".js"
+    ],
+    "require": [
+      "ts-node/register",
+      "source-map-support/register"
+    ]
   },
   "optionalDependencies": {
     "ts-loader": "*",
-    "typescript": "*"
+    "typescript": "^3.8.3"
   },
   "devDependencies": {
     "@lifeomic/eslint-plugin-node": "^2.0.1",
@@ -61,7 +78,8 @@
     "serverless-http": "^2.0.0",
     "sinon": "^7.1.0",
     "ts-loader": "^6.2.1",
-    "typescript": "^3.6.4"
+    "ts-node": "^8.10.1",
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "@babel/core": "^7.0.0",
@@ -78,6 +96,7 @@
     "@types/koa": "^2.0.45",
     "@types/koa-router": "^7.0.28",
     "@types/lodash": "^4.14.150",
+    "@types/tmp": "^0.2.0",
     "@types/unzipper": "^0.10.3",
     "@types/uuid": "^7.0.3",
     "archiver": "^3.0.0",
@@ -92,9 +111,9 @@
     "jszip": "^3.1.5",
     "lodash": "^4.17.5",
     "nested-error-stacks": "^2.0.0",
-    "p-queue": "^6.2.1",
+    "p-queue": "^6.4.0",
     "promise-retry": "^1.1.1",
-    "source-map-support": "^0.5.3",
+    "source-map-support": "^0.5.19",
     "string-replace-loader": "^2.1.1",
     "supertest": "^4.0.1",
     "supports-color": "^7.0.0",
