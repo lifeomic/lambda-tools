@@ -8,9 +8,9 @@ export interface DynamoDBContext {
   dynamoClient: DynamoDB;
   streamsClient: DynamoDBStreams;
 
-  tableNames: {[key: string]: string},
-  uniqueIdentifier: string,
-  config: SimpleServiceConfigurationOptions
+  tableNames: {[key: string]: string};
+  uniqueIdentifier: string;
+  config: SimpleServiceConfigurationOptions;
 }
 
 export interface DynamoDbTestContext {

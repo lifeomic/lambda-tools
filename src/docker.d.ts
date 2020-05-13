@@ -11,7 +11,7 @@ export interface ExecuteCommandConfig {
 export interface ExecuteCommandResults {
   stderr: WriteBuffer;
   stdout: WriteBuffer;
-  inspectInfo(): Promise<any>
+  inspectInfo(): Promise<any>;
 }
 
 export function executeContainerCommand(

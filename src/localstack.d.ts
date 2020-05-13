@@ -37,16 +37,16 @@ export interface LocalStackServices {
   sts: LocalStackService<aws.STS>;
 }
 
-export interface Context {
+export interface LocalStackContext {
   services: LocalStackServices;
 }
 
 export interface LocalStackTestContext {
-
+  localStack: LocalStackContext;
 }
 
 export interface Hooks {
-  beforeAll(): Promise<Context>;
+  beforeAll(): Promise<LocalStackContext>;
   afterAll(): Promise<void>;
 }
 

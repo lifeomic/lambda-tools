@@ -23,7 +23,7 @@ const LAMBDA_TOOLS_WORK_PREFIX = '.lambda-tools-work';
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs12.x';
 
 export interface Environment {
-  [key:string]: string | number | boolean | null | undefined;
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 interface FinalConfig {
@@ -34,7 +34,7 @@ interface FinalConfig {
   mountpoint?: string;
   zipfile?: string;
   mountpointParent?: string;
-  network?: string
+  network?: string;
   service?: string;
 }
 
@@ -51,40 +51,24 @@ const convertEvent = (event?: any) => {
   return `${event}`;
 };
 
-export interface AlphaClientConfig {
-  container: string;
-  environment?: Environment;
-  handler: string;
-}
+export async function destroyLambdaExecutionEnvironment (environment: ExecutionEnvironment) {
+  if (!environment) {
+    return;
+  }
+  const { container, network, cleanupMountpoint } = environment;
 
-class AlphaClient extends Alpha {
-  public raw: Handler;
-  constructor ({ container, environment, handler }: AlphaClientConfig) {
-    const runner = new LambdaRunner(container, environment, handler);
-
-    const fn: Handler = async function handler (event, context, callback) {
-      try {
-        callback(null, await runner.invoke(event));
-      } catch (error) {
-        callback(error);
-      }
-    };
-
-    super(fn as any);
-    this.raw = promisify(fn);
+  if (cleanupMountpoint) {
+    await cleanupMountpoint();
   }
 
-  graphql<T = any> (
-    path: string,
-    query: any,
-    variables: any,
-    config?: AxiosRequestConfig
-  ) {
-    return this.post<T>(path, { query, variables }, config);
+  if (container) {
+    await container.stop();
+  }
+
+  if (network) {
+    await network.remove();
   }
 }
-
-module.exports.AlphaClient = AlphaClient;
 
 async function getEntrypoint (docker: Docker, imageName: string): Promise<string | string[]> {
   const image = await (await docker.getImage(imageName)).inspect();
@@ -98,7 +82,7 @@ async function getEntrypoint (docker: Docker, imageName: string): Promise<string
   }
 }
 
-class LambdaRunner {
+export class LambdaRunner {
   private environment: string[];
   private docker: Docker;
 
@@ -142,12 +126,45 @@ class LambdaRunner {
   }
 }
 
+
+export interface AlphaClientConfig {
+  container: string;
+  environment?: Environment;
+  handler: string;
+}
+
+export class AlphaClient extends Alpha {
+  public raw: Handler;
+  constructor ({ container, environment, handler }: AlphaClientConfig) {
+    const runner = new LambdaRunner(container, environment, handler);
+
+    const fn: Handler = async function handler (event, context, callback) {
+      try {
+        callback(null, await runner.invoke(event));
+      } catch (error) {
+        callback(error);
+      }
+    };
+
+    super(fn as any);
+    this.raw = promisify(fn);
+  }
+
+  graphql<T = any> (
+    path: string,
+    query: any,
+    variables: any,
+    config?: AxiosRequestConfig
+  ) {
+    return this.post<T>(path, { query, variables }, config);
+  }
+}
+
 const globalOptions: LambdaConfigOptions = {};
 
 exports.getGlobalOptions = () => Object.assign({}, globalOptions);
 
 exports.build = webpack;
-exports.LambdaRunner = LambdaRunner;
 
 async function buildMountpointFromZipfile (zipfile: string, mountpointParent?: string) {
   // It would be simpler if the standard TMPDIR directory could be used
@@ -218,7 +235,7 @@ exports.useComposeContainer = ({ environment, service, handler }: Pick<LambdaCon
 interface ExecutionEnvironment {
   cleanupMountpoint?: () => Promise<any>;
   network?: Docker.Network;
-  container?: Docker.Container
+  container?: Docker.Container;
 }
 
 export async function createLambdaExecutionEnvironment (options: FinalConfig): Promise<ExecutionEnvironment> {
@@ -228,7 +245,7 @@ export async function createLambdaExecutionEnvironment (options: FinalConfig): P
   if (mountpoint && zipfile) {
     throw new Error('Only one of mountpoint or zipfile can be provided');
   }
-  let executionEnvironment: ExecutionEnvironment = {};
+  const executionEnvironment: ExecutionEnvironment = {};
 
   if (zipfile) {
     const zipMount = await buildMountpointFromZipfile(zipfile, mountpointParent);
@@ -294,25 +311,6 @@ export async function createLambdaExecutionEnvironment (options: FinalConfig): P
   }
 
   return executionEnvironment;
-}
-
-export async function destroyLambdaExecutionEnvironment (environment: ExecutionEnvironment) {
-  if (!environment) {
-    return;
-  }
-  const { container, network, cleanupMountpoint } = environment;
-
-  if (cleanupMountpoint) {
-    await cleanupMountpoint();
-  }
-
-  if (container) {
-    await container.stop();
-  }
-
-  if (network) {
-    await network.remove();
-  }
 }
 
 function useLambdaHooks (localOptions: LambdaConfigOptions) {
