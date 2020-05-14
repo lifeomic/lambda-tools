@@ -22,6 +22,7 @@
   "author": "LifeOmic <development@lifeomic.com>",
   "license": "MIT",
   "ava": {
+    "compileEnhancements": false,
     "failWithoutAssertions": false,
     "timeout": "10m",
     "files": [
@@ -45,19 +46,11 @@
     "branches": 100,
     "include": [
       "./src/**"
-    ],
-    "extension": [
-      ".ts",
-      ".js"
-    ],
-    "require": [
-      "ts-node/register",
-      "source-map-support/register"
     ]
   },
   "optionalDependencies": {
     "ts-loader": "*",
-    "typescript": "^3.8.3"
+    "typescript": "*"
   },
   "devDependencies": {
     "@lifeomic/eslint-plugin-node": "^2.0.1",
