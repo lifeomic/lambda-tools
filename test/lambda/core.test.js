@@ -1,5 +1,5 @@
 const test = require('ava');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 const { destroyLambdaExecutionEnvironment, useNewContainer, getGlobalOptions } = require('../../src/lambda');
 
 test('will not crash if no execution environment is provided', async test => {

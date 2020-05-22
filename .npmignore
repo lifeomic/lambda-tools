@@ -1,4 +1,7 @@
-/.editorconfig
-/.travis*
-/examples/
-/test/
+.nyc_output/
+.editorconfig
+.travis*
+examples/
+test/
+coverage/
+.idea/

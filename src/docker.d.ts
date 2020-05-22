@@ -3,7 +3,7 @@ import {default as WriteBuffer} from './WriteBuffer';
 
 export interface ExecuteCommandConfig {
   container: Docker.Container;
-  command: string;
+  command: string | string[];
   environment: string[];
   stdin: string;
 }
@@ -11,7 +11,7 @@ export interface ExecuteCommandConfig {
 export interface ExecuteCommandResults {
   stderr: WriteBuffer;
   stdout: WriteBuffer;
-  inspectInfo(): Promise<any>
+  inspectInfo(): Promise<any>;
 }
 
 export function executeContainerCommand(

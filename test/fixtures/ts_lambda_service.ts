@@ -1,6 +1,6 @@
 import Koa from 'koa';
 import Router from 'koa-router';
-import serverless from 'serverless-http'
+import serverless from 'serverless-http';
 
 const app = new Koa();
 const router = new Router();

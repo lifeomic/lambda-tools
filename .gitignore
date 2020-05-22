@@ -5,3 +5,4 @@ node_modules/
 /test/fixtures/build/
 yarn-error.log
 coverage/
+src/lambda.js

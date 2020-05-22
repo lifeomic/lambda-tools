@@ -1,5 +1,5 @@
 export interface MockJsonBody {
-  [key: string]: any
+  [key: string]: any;
 }
 
 export function mockInvocation (

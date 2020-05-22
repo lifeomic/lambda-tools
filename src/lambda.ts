@@ -1,16 +1,20 @@
-const Alpha = require('@lifeomic/alpha');
-const assert = require('assert');
-const Docker = require('dockerode');
-const uuid = require('uuid/v4');
-const webpack = require('./webpack');
-const tmp = require('tmp-promise');
-const fs = require('fs-extra');
-const unzip = require('unzipper');
-const isObjectLike = require('lodash/isObjectLike');
-const { promisify } = require('util');
+import Alpha from '@lifeomic/alpha';
+import assert from 'assert';
+import Docker from 'dockerode';
+import { v4 as uuid } from 'uuid';
+import tmp from 'tmp-promise';
+import fs from 'fs-extra';
+import unzip from 'unzipper';
+import isObjectLike from 'lodash/isObjectLike';
+import { promisify } from 'util';
+import { Handler} from "aws-lambda";
+import { AxiosRequestConfig } from "axios";
+import { TestInterface } from "ava";
 
-const { executeContainerCommand, ensureImage } = require('./docker');
-const { getLogger } = require('./utils/logging');
+import { executeContainerCommand, ensureImage } from './docker';
+import { getLogger } from './utils/logging';
+
+const webpack = require('./webpack');
 
 const logger = getLogger('lambda');
 
@@ -18,41 +22,55 @@ const LAMBDA_TOOLS_WORK_PREFIX = '.lambda-tools-work';
 
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs12.x';
 
+export interface Environment {
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+interface FinalConfig {
+  container: string;
+  environment?: Environment;
+  handler: string;
+  image?: string;
+  mountpoint?: string;
+  zipfile?: string;
+  mountpointParent?: string;
+  network?: string;
+  service?: string;
+}
+
+export type LambdaConfigOptions = Partial<FinalConfig>;
+
 // null or undefined value means 'delete this variable'. Docker deletes variables that only have the key, without '=value'
-const createEnvironmentVariables = (environment) => Object.entries(environment)
+const createEnvironmentVariables = (environment: Environment) => Object.entries(environment)
   .map(([ key, value ]) => value === null || value === undefined ? key : `${key}=${value}`);
 
-const convertEvent = (event) => {
+const convertEvent = (event?: any) => {
   if (isObjectLike(event)) {
     return JSON.stringify(event);
   }
   return `${event}`;
 };
 
-class AlphaClient extends Alpha {
-  constructor ({ container, environment, handler }) {
-    const runner = new LambdaRunner(container, environment, handler);
+export async function destroyLambdaExecutionEnvironment (environment: ExecutionEnvironment) {
+  if (!environment) {
+    return;
+  }
+  const { container, network, cleanupMountpoint } = environment;
 
-    const fn = async function handler (event, context, callback) {
-      try {
-        callback(null, await runner.invoke(event));
-      } catch (error) {
-        callback(error);
-      }
-    };
-
-    super(fn);
-    this.raw = promisify(fn);
+  if (cleanupMountpoint) {
+    await cleanupMountpoint();
   }
 
-  graphql (path, query, variables, config) {
-    return this.post(path, { query, variables }, config);
+  if (container) {
+    await container.stop();
+  }
+
+  if (network) {
+    await network.remove();
   }
 }
 
-module.exports.AlphaClient = AlphaClient;
-
-async function getEntrypoint (docker, imageName) {
+async function getEntrypoint (docker: Docker, imageName: string): Promise<string | string[]> {
   const image = await (await docker.getImage(imageName)).inspect();
 
   if (image.ContainerConfig.Entrypoint) {
@@ -64,19 +82,20 @@ async function getEntrypoint (docker, imageName) {
   }
 }
 
-class LambdaRunner {
-  constructor (container, environment, handler) {
-    this._container = container;
-    this._docker = new Docker();
-    this._environment = environment ? createEnvironmentVariables(environment) : [];
-    this._handler = handler;
-    this._environment.push('DOCKER_LAMBDA_USE_STDIN=1');
+export class LambdaRunner {
+  private environment: string[];
+  private docker: Docker;
+
+  constructor (private container: string, environment: Environment | undefined, private handler: string) {
+    this.docker = new Docker();
+    this.environment = environment ? createEnvironmentVariables(environment) : [];
+    this.environment.push('DOCKER_LAMBDA_USE_STDIN=1');
   }
 
-  async invoke (event) {
-    const command = await this._buildCommand();
-    const container = await this._getContainer();
-    const environment = this._environment;
+  async invoke (event?: any) {
+    const command = await this.buildCommand();
+    const container = await this.getContainer();
+    const environment = this.environment;
 
     const { stderr, stdout } = event === undefined
       ? { stdout: 'Skipping execution of an undefined event. In the past this would have been an Unexpected token error\n{}', stderr: '' }
@@ -92,34 +111,67 @@ class LambdaRunner {
     return JSON.parse(result || '{}');
   }
 
-  async _buildCommand () {
-    const container = await this._getContainer();
+  private async buildCommand (): Promise<string | string[]> {
+    const container = await this.getContainer();
     const description = await container.inspect();
-    const entrypoint = await getEntrypoint(this._docker, description.Image);
+    const entrypoint = await getEntrypoint(this.docker, description.Image);
 
     return entrypoint.slice().concat(
-      this._handler
+      this.handler
     );
   }
 
-  async _getContainer () {
-    return this._docker.getContainer(this._container);
+  private async getContainer () {
+    return this.docker.getContainer(this.container);
   }
 }
 
-const globalOptions = {};
+
+export interface AlphaClientConfig {
+  container: string;
+  environment?: Environment;
+  handler: string;
+}
+
+export class AlphaClient extends Alpha {
+  public raw: Handler;
+  constructor ({ container, environment, handler }: AlphaClientConfig) {
+    const runner = new LambdaRunner(container, environment, handler);
+
+    const fn: Handler = async function handler (event, context, callback) {
+      try {
+        callback(null, await runner.invoke(event));
+      } catch (error) {
+        callback(error);
+      }
+    };
+
+    super(fn as any);
+    this.raw = promisify(fn);
+  }
+
+  graphql<T = any> (
+    path: string,
+    query: any,
+    variables: any,
+    config?: AxiosRequestConfig
+  ) {
+    return this.post<T>(path, { query, variables }, config);
+  }
+}
+
+const globalOptions: LambdaConfigOptions = {};
 
 exports.getGlobalOptions = () => Object.assign({}, globalOptions);
 
 exports.build = webpack;
-exports.LambdaRunner = LambdaRunner;
 
-async function buildMountpointFromZipfile (zipfile, mountpointParent) {
+async function buildMountpointFromZipfile (zipfile: string, mountpointParent?: string) {
   // It would be simpler if the standard TMPDIR directory could be used
   // to extract the zip files, but Docker on Mac is often not configured with
   // access to the Mac's /var temp directory location
   const baseDir = mountpointParent || process.cwd();
-  const tempDir = await tmp.dir({ dir: baseDir, mode: '0755', prefix: LAMBDA_TOOLS_WORK_PREFIX });
+  const tempDir = await tmp.dir({ dir: baseDir, mode: 0o755, prefix: LAMBDA_TOOLS_WORK_PREFIX });
   const tempDirName = tempDir.path;
   const cleanup = async () => {
     // Delete unzipped files
@@ -135,7 +187,7 @@ async function buildMountpointFromZipfile (zipfile, mountpointParent) {
     }));
 
     await new Promise((resolve, reject) => {
-      const endOnError = (error) => reject(error);
+      const endOnError = (error: Error) => reject(error);
       unzipper.on('close', () => resolve());
       fsStream.on('error', endOnError);
       unzipper.on('error', endOnError);
@@ -151,25 +203,49 @@ async function buildMountpointFromZipfile (zipfile, mountpointParent) {
   }
 }
 
-exports.useNewContainer = ({ environment, mountpoint, zipfile, mountpointParent, handler, image, useComposeNetwork }) => {
+exports.useNewContainer = (
+  {
+    environment,
+    mountpoint,
+    zipfile,
+    mountpointParent,
+    handler,
+    image,
+    useComposeNetwork
+  }:
+    Pick<LambdaConfigOptions,
+      'environment' |
+      'mountpoint' |
+      'zipfile' |
+      'mountpointParent' |
+      'handler' |
+      'image'
+      >
+    & { useComposeNetwork?: boolean}
+) => {
   const network = useComposeNetwork ? `${process.env.COMPOSE_PROJECT_NAME}_default` : undefined;
   Object.assign(globalOptions, { environment, handler, image, mountpoint, zipfile, mountpointParent, network });
 };
 
-exports.useComposeContainer = ({ environment, service, handler }) => {
+exports.useComposeContainer = ({ environment, service, handler }: Pick<LambdaConfigOptions, 'environment' | 'handler'> & {service: string}) => {
   const container = `${process.env.COMPOSE_PROJECT_NAME}_${service}_1`;
   Object.assign(globalOptions, { container, environment, handler });
 };
 
-async function createLambdaExecutionEnvironment (options) {
+interface ExecutionEnvironment {
+  cleanupMountpoint?: () => Promise<any>;
+  network?: Docker.Network;
+  container?: Docker.Container;
+}
+
+export async function createLambdaExecutionEnvironment (options: FinalConfig): Promise<ExecutionEnvironment> {
   const { environment = {}, image = LAMBDA_IMAGE, zipfile, network: networkId, mountpointParent } = options;
   let { mountpoint } = options;
 
   if (mountpoint && zipfile) {
     throw new Error('Only one of mountpoint or zipfile can be provided');
   }
-
-  const executionEnvironment = {};
+  const executionEnvironment: ExecutionEnvironment = {};
 
   if (zipfile) {
     const zipMount = await buildMountpointFromZipfile(zipfile, mountpointParent);
@@ -211,7 +287,7 @@ async function createLambdaExecutionEnvironment (options) {
           Binds: [
             `${mountpoint}:/var/task`
           ],
-          NetworkMode: networkId || executionEnvironment.network.id
+          NetworkMode: networkId || executionEnvironment.network!.id
         },
         Image: image,
         OpenStdin: true,
@@ -237,37 +313,12 @@ async function createLambdaExecutionEnvironment (options) {
   return executionEnvironment;
 }
 
-async function destroyLambdaExecutionEnvironment (environment) {
-  if (!environment) {
-    return;
-  }
-  const { container, network, cleanupMountpoint } = environment;
+function useLambdaHooks (localOptions: LambdaConfigOptions) {
+  const impliedOptions: Partial<FinalConfig> = {};
 
-  if (cleanupMountpoint) {
-    await cleanupMountpoint();
-  }
+  let executionEnvironment: ExecutionEnvironment = {};
 
-  if (container) {
-    await container.stop();
-  }
-
-  if (network) {
-    await network.remove();
-  }
-}
-
-exports.createLambdaExecutionEnvironment = createLambdaExecutionEnvironment;
-exports.destroyLambdaExecutionEnvironment = destroyLambdaExecutionEnvironment;
-
-function useLambdaHooks (localOptions) {
-  const impliedOptions = {};
-
-  let executionEnvironment = {};
-
-  const getOptions = () => {
-    const options = Object.assign({}, globalOptions, impliedOptions, localOptions);
-    return options;
-  };
+  const getOptions = (): FinalConfig => Object.assign<{}, LambdaConfigOptions, LambdaConfigOptions, LambdaConfigOptions>({}, globalOptions, impliedOptions, localOptions) as FinalConfig;
 
   async function beforeAll () {
     executionEnvironment = await createLambdaExecutionEnvironment(getOptions());
@@ -290,7 +341,11 @@ function useLambdaHooks (localOptions) {
 
 exports.useLambdaHooks = useLambdaHooks;
 
-exports.useLambda = (test, localOptions = {}) => {
+export interface LambdaTestContext {
+  lambda: AlphaClient;
+}
+
+exports.useLambda = <T extends LambdaTestContext>(test: TestInterface<T>, localOptions: LambdaConfigOptions = {}) => {
   const hooks = useLambdaHooks(localOptions);
 
   test.serial.before(async () => {
