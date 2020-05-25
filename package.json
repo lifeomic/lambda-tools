@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@lifeomic/eslint-plugin-node": "^2.0.1",
-    "@typescript-eslint/eslint-plugin": "^2.33.0",
+    "@typescript-eslint/eslint-plugin": "^3.0.1",
     "@typescript-eslint/parser": "^2.33.0",
     "apollo-server-koa": "^2.0.0",
     "aws-sdk-mock": "^4.0.0",
