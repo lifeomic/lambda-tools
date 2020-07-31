@@ -57,6 +57,7 @@
     "typescript": "*"
   },
   "devDependencies": {
+    "@lifeomic/alpha": "^1.2.1",
     "@lifeomic/eslint-plugin-node": "^2.0.1",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
     "@typescript-eslint/parser": "^2.33.0",
@@ -85,7 +86,6 @@
     "@babel/preset-env": "^7.0.0",
     "@babel/preset-typescript": "^7.0.0",
     "@elastic/elasticsearch": "^7.3.0",
-    "@lifeomic/alpha": "^0.14.0",
     "@types/aws-lambda": "^8.10.51",
     "@types/dockerode": "^2.5.20",
     "@types/fs-extra": "^8.1.0",
@@ -125,5 +125,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "peerDependencies": {
+    "@lifeomic/alpha": "^0.14.0 || ^1.0.0"
   }
 }
