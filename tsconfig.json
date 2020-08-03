@@ -16,7 +16,8 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "resolveJsonModule": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*"
