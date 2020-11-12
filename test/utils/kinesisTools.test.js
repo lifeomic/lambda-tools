@@ -40,7 +40,9 @@ test.serial.beforeEach(async t => {
     Environment: {
       Variables: {
         NEXT_KINESIS_STREAM_NAME: secondStream,
-        KINESIS_ENDPOINT: process.env.KINESIS_ENDPOINT
+        KINESIS_ENDPOINT: process.env.KINESIS_ENDPOINT,
+        AWS_SECRET_ACCESS_KEY: uuid(),
+        AWS_ACCESS_KEY_ID: uuid()
       }
     }
   }).promise();

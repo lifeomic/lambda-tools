@@ -42,7 +42,9 @@ test.serial.beforeEach(async t => {
     Environment: {
       Variables: {
         NEXT_KINESIS_STREAM_NAME: streamNames[1],
-        KINESIS_ENDPOINT: kinesis.connection.url
+        KINESIS_ENDPOINT: kinesis.connection.url,
+        AWS_SECRET_ACCESS_KEY: uuid(),
+        AWS_ACCESS_KEY_ID: uuid()
       }
     }
   }).promise();
@@ -78,7 +80,7 @@ function formatRecords (StreamName, records) {
   };
 }
 
-test.serial('can iterate through stream to handler', async t => {
+test.serial.only('can iterate through stream to handler', async t => {
   const { localStack: { services: { kinesis: { client: kinesisClient } } } } = t.context;
   const expected = [...Array(20)].map(() => ({ key: uuid() }));
 
