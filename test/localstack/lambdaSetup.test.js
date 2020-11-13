@@ -80,7 +80,7 @@ function formatRecords (StreamName, records) {
   };
 }
 
-test.serial.only('can iterate through stream to handler', async t => {
+test.serial('can iterate through stream to handler', async t => {
   const { localStack: { services: { kinesis: { client: kinesisClient } } } } = t.context;
   const expected = [...Array(20)].map(() => ({ key: uuid() }));
 
