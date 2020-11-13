@@ -12,7 +12,7 @@ const { localstackReady } = require('./localstack');
 const logger = require('./utils/logging').getLogger('kinesis');
 const { pQueue } = require('./utils/config');
 
-const KINESIS_IMAGE = 'localstack/localstack:latest';
+const KINESIS_IMAGE = 'localstack/localstack:0.10.6';
 
 let kinesisStreams = [];
 
