@@ -1,6 +1,6 @@
 const test = require('ava');
 const sinon = require('sinon');
-const {v4: uuid} = require('uuid');
+const { v4: uuid } = require('uuid');
 const random = require('lodash/random');
 const proxyquire = require('proxyquire');
 
