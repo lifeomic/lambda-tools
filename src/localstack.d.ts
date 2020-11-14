@@ -45,6 +45,11 @@ export interface LocalStackTestContext {
   localStack: LocalStackContext;
 }
 
+export interface Config {
+  versionNumberTag: string;
+  services: Array<keyof LocalStackServices>;
+}
+
 export interface Hooks {
   beforeAll(): Promise<LocalStackContext>;
   afterAll(): Promise<void>;
