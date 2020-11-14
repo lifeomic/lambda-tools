@@ -352,6 +352,9 @@ export async function getConnection <Service extends keyof LocalStackServices>({
   if (versionTag === 'latest') {
     throw new Error('We refuse to try to work with the latest tag');
   }
+  if (services.length === 0) {
+    throw new Error('No services provided');
+  }
   const [majorStr, minorStr] =  versionTag.split(/\./g);
   const [major, minor] = [Number.parseInt(majorStr, 10), Number.parseInt(minorStr, 10)];
   const ExposedPorts: ContainerCreateOptions['ExposedPorts'] = {}
