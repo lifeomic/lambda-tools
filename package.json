@@ -27,7 +27,7 @@
     "failWithoutAssertions": false,
     "timeout": "10m",
     "files": [
-      "test/localstack/*.test.ts"
+      "test/**/*.test.js"
     ],
     "require": [
       "ts-node/register",
