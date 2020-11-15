@@ -66,6 +66,11 @@ test('getConnection throws when missing services', async t => {
   await t.throwsAsync(getConnection({ services: [] }), 'No services provided');
 });
 
+test('getConnection throws when specifying the latest tag', async t => {
+  const { getConnection } = require('../../src/localstack');
+  await t.throwsAsync(getConnection({ versionTag: 'latest', services: ['sqs'] }), 'We refuse to try to work with the latest tag');
+});
+
 test('getConnection throws when invalid services are requested', async t => {
   const serviceName = uuid();
   const { getConnection } = require('../../src/localstack');
