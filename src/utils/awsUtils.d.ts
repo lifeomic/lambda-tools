@@ -17,7 +17,7 @@ export interface AwsUtilsConnection {
 
 export interface BuildConnectionAndConfigOptions {
   url: string;
-  cleanup: () => any;
+  cleanup?: () => any;
 }
 
 export interface ConnectionAndConfig {

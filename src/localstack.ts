@@ -329,7 +329,7 @@ function mapServices <Service extends keyof LocalStackServices>(
     const serviceDetails = getService(service);
     const port = ports[`${localstackPort || serviceDetails.port}/tcp`][0].HostPort;
     const url = `http://${host}:${port}`;
-    const { config, connection } = buildConnectionAndConfig({ url, cleanup: () => undefined });
+    const { config, connection } = buildConnectionAndConfig({ url });
     mappedServices[service] = {
       config,
       connection,
