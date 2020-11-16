@@ -1,8 +1,8 @@
-import {Credentials, Endpoint, ConfigurationOptions} from "aws-sdk";
+import {Credentials} from "aws-sdk";
 
 export interface SimpleServiceConfigurationOptions {
   credentials: Credentials;
-  endpoint: Endpoint | string;
+  endpoint: string;
   region: string;
   maxRetries: number;
 }
@@ -22,7 +22,7 @@ export interface BuildConnectionAndConfigOptions {
 
 export interface ConnectionAndConfig {
   connection: AwsUtilsConnection;
-  config: ConfigurationOptions;
+  config: SimpleServiceConfigurationOptions;
 }
 
 export function buildConfigFromConnection(connection: AwsUtilsConnection): SimpleServiceConfigurationOptions;
