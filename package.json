@@ -13,7 +13,7 @@
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "lint": "eslint . --ext .js,.ts -f codeframe",
     "pretest": "yarn lint && tsc --noEmit",
-    "test": "nyc ava -v"
+    "test": "nyc ava"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
   "author": "LifeOmic <development@lifeomic.com>",
   "license": "MIT",
   "ava": {
+    "verbose": true,
     "compileEnhancements": false,
     "failWithoutAssertions": false,
     "timeout": "10m",
@@ -59,6 +60,7 @@
   "devDependencies": {
     "@lifeomic/alpha": "^1.2.1",
     "@lifeomic/eslint-plugin-node": "^2.0.1",
+    "@types/sinon": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
     "@typescript-eslint/parser": "^2.33.0",
     "apollo-server-koa": "^2.0.0",
@@ -73,7 +75,7 @@
     "nyc": "^15.0.1",
     "proxyquire": "^2.0.1",
     "serverless-http": "^2.0.0",
-    "sinon": "^7.1.0",
+    "sinon": "^9.2.1",
     "ts-loader": "^6.2.1",
     "ts-node": "^8.10.1",
     "typescript": "^3.9.7"
