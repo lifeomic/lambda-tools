@@ -23,15 +23,19 @@
   "license": "MIT",
   "ava": {
     "verbose": true,
-    "compileEnhancements": false,
     "failWithoutAssertions": false,
     "timeout": "10m",
     "files": [
-      "test/**/*.test.js"
+      "test/**/*.test.js",
+      "test/**/*.test.ts"
     ],
     "require": [
       "ts-node/register",
       "source-map-support/register"
+    ],
+    "extensions": [
+      "ts",
+      "js"
     ]
   },
   "eslintIgnore": [
@@ -98,7 +102,7 @@
     "@types/unzipper": "^0.10.3",
     "@types/uuid": "^7.0.3",
     "archiver": "^3.0.0",
-    "ava": "^2.4.0",
+    "ava": "^3.13.0",
     "aws-sdk": "^2.290.0",
     "babel-loader": "^8.0.2",
     "chalk": "^3.0.0",

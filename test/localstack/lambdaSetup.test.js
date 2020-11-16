@@ -1,6 +1,6 @@
 const test = require('ava');
 const path = require('path');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 const fs = require('fs-extra');
 const sinon = require('sinon');
 

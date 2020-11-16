@@ -29,7 +29,7 @@ test.serial('Cleanups up the network and container on failure after start', asyn
     mountpoint: path.join(FIXTURES_DIRECTORY, 'build')
   });
 
-  await test.throwsAsync(() => create, error.message);
+  await test.throwsAsync(() => create, { message: error.message });
 
   sinon.assert.calledOnce(containerStopSpy);
   sinon.assert.calledOnce(networkRemoveSpy);

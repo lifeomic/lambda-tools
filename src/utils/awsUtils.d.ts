@@ -1,4 +1,4 @@
-import {Credentials, Endpoint, ConfigurationOptions} from "aws-sdk";
+import {Credentials, ConfigurationOptions} from "aws-sdk";
 
 export interface SimpleServiceConfigurationOptions {
   credentials: Credentials;

@@ -63,18 +63,18 @@ test('getConnection allows specifying the localstack version', async t => {
 test('getConnection throws when missing services', async t => {
   const { getConnection } = require('../../src/localstack');
   await t.throwsAsync(getConnection());
-  await t.throwsAsync(getConnection({ services: [] }), 'No services provided');
+  await t.throwsAsync(getConnection({ services: [] }), { message: 'No services provided' });
 });
 
 test('getConnection throws when specifying the latest tag', async t => {
   const { getConnection } = require('../../src/localstack');
-  await t.throwsAsync(getConnection({ versionTag: 'latest', services: ['sqs'] }), 'We refuse to try to work with the latest tag');
+  await t.throwsAsync(getConnection({ versionTag: 'latest', services: ['sqs'] }), { message: 'We refuse to try to work with the latest tag' });
 });
 
 test('getConnection throws when invalid services are requested', async t => {
   const serviceName = uuid();
   const { getConnection } = require('../../src/localstack');
-  await t.throwsAsync(getConnection({ services: [serviceName] }), `Unknown service ${serviceName}`);
+  await t.throwsAsync(getConnection({ services: [serviceName] }), { message: `Unknown service ${serviceName}` });
 });
 
 test.serial('will create a child log and debug the localstack setup', async t => {

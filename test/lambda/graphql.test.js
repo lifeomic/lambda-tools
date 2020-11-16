@@ -1,6 +1,6 @@
 const path = require('path');
 const test = require('ava');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const { build, useComposeContainer, useLambda } = require('../../src/lambda');
 const { createContainer, FIXTURES_DIRECTORY } = require('../helpers/lambda');

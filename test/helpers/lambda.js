@@ -1,7 +1,7 @@
 const Docker = require('dockerode');
 const fs = require('fs-extra');
 const path = require('path');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const { build, useComposeContainer, useLambda } = require('../../src/lambda');
 const { promisify } = require('util');
