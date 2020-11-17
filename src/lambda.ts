@@ -62,21 +62,12 @@ export async function destroyLambdaExecutionEnvironment (environment: ExecutionE
   }
 
   if (container) {
-    try {
-      logger.info(`Stopping container ${container.id}`);
-    } catch(e) {
-      logger.error(e);
-    }
     await container.stop();
+    logger.info(`Stopped container ${container.id}`);
   }
 
   if (network) {
-    try {
-      const info = await network.inspect();
-      logger.info(`Stopping network ${info.Name}`);
-    } catch(e) {
-      logger.error(e);
-    }
+    logger.info(`Stopping network ${network.id}`);
     await network.remove();
   }
 }
@@ -282,8 +273,7 @@ export async function createLambdaExecutionEnvironment (options: FinalConfig): P
           Internal: true,
           Name: uuid()
         });
-        const info = await executionEnvironment.network.inspect();
-        logger.info(`Created network ${info.Name}`)
+        logger.info(`Created network ${executionEnvironment.network.id}`)
       }
     } catch (error) {
       logger.error('Unable to create network', JSON.stringify({ error }, null, 2));
