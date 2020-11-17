@@ -34,7 +34,7 @@ test.after.always(async () => {
   try {
     if (container) {
       await container.stop();
-      console.log(`Stopped container ${container.id}`)
+      console.log(`Stopped container ${container.id}`);
     }
   } catch (error) {
     console.error(error);
