@@ -93,6 +93,7 @@ async function createContainer (image, name, mountpoint) {
   });
 
   await container.start();
+  console.log(`Created container ${container.id}`);
   return container;
 }
 

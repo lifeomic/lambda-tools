@@ -32,9 +32,12 @@ test.before(async () => {
 test.after.always(async () => {
   delete process.env.COMPOSE_PROJECT_NAME;
   try {
-    container.stop();
+    if (container) {
+      await container.stop();
+      console.log(`Stopped container ${container.id}`)
+    }
   } catch (error) {
-    // swallow errors...
+    console.error(error);
   }
 });
 

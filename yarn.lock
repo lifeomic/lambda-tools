@@ -1405,10 +1405,10 @@
   dependencies:
     "@types/express" "*"
 
-"@types/dockerode@^2.5.20":
-  version "2.5.20"
-  resolved "https://registry.yarnpkg.com/@types/dockerode/-/dockerode-2.5.20.tgz#d37a3c6cd0651d9cc49e51b3769124e956d075b4"
-  integrity sha512-g2eM9q+pur7iZc897K/OSq8sCL7VdVcCPzNkdeTukUokfvgl3TaP+nT7G8BMpnSSojrJFKl7VdTciP7hbVgfKA==
+"@types/dockerode@^3.2.1":
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/@types/dockerode/-/dockerode-3.2.1.tgz#f713a8f6f1017c227845ab33239383da721207b9"
+  integrity sha512-AeZpdQMNqM8dtrEaaP81CbjdRVKNmFIMzgz5IlKIeS5uWEmjlEmENP444AGTEEF71r5TFuY9E4SkzZAO8lOF1A==
   dependencies:
     "@types/node" "*"
 

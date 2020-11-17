@@ -134,7 +134,7 @@ export interface LocalStackBaseService<Client extends LocalStackServiceClients> 
   isReady(client: Client): Promise<any>;
 }
 
-function getService<Service extends keyof LocalStackServices>(service: Service): LocalStackBaseService<LocalStackServices[Service]['client']> {
+export function getService<Service extends keyof LocalStackServices>(service: Service): LocalStackBaseService<LocalStackServices[Service]['client']> {
   switch (service) {
     case 'apigateway':
       return {
@@ -311,6 +311,8 @@ export const LOCALSTACK_SERVICES = {
   sts: getService('sts'),
 }
 
+const validServices = Object.keys(LOCALSTACK_SERVICES);
+
 function getExposedPorts (): ContainerCreateOptions['ExposedPorts'] {
   const ports: ContainerCreateOptions['ExposedPorts'] = {};
   for (let port = 4556; port < 4597; ++port) {
@@ -355,6 +357,13 @@ export async function getConnection <Service extends keyof LocalStackServices>({
   if (services.length === 0) {
     throw new Error('No services provided');
   }
+
+  services.forEach(service => {
+    if (!validServices.includes(service)) {
+      throw new Error(`Unknown service ${service}`)
+    }
+  })
+
   const [majorStr, minorStr] =  versionTag.split(/\./g);
   const [major, minor] = [Number.parseInt(majorStr, 10), Number.parseInt(minorStr, 10)];
   const ExposedPorts: ContainerCreateOptions['ExposedPorts'] = {}
@@ -411,9 +420,9 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     mappedServices,
     getOutput: () => output.toString(),
     clearOutput: () => output.reset(),
-    cleanup: () => {
+    cleanup: async () => {
       environment.restore();
-      return container.stop();
+      return await container.stop();
     }
   };
 }

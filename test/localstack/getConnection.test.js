@@ -5,7 +5,7 @@ const random = require('lodash/random');
 const proxyquire = require('proxyquire');
 
 const { getLogger } = require('../../src/utils/logging');
-const { getConnection } = require('../../src/localstack');
+const { getConnection, getService } = require('../../src/localstack');
 
 test.beforeEach(t => {
   const logger = getLogger('localstack');
@@ -92,4 +92,9 @@ test.serial('will create a child log and debug the localstack setup', async t =>
   sinon.assert.called(logSpy);
   sinon.assert.called(debugSpy);
   sinon.assert.calledWith(debugSpy, sinon.match(/Ready\./));
+});
+
+test('will throw an exception when extracting a service that is unknown', t => {
+  const serviceName = uuid();
+  t.throws(() => getService(serviceName), { message: `Unknown service ${serviceName}` });
 });

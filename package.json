@@ -26,8 +26,7 @@
     "failWithoutAssertions": false,
     "timeout": "10m",
     "files": [
-      "test/**/*.test.js",
-      "test/**/*.test.ts"
+      "test/**/*.test.*"
     ],
     "require": [
       "ts-node/register",
@@ -93,7 +92,7 @@
     "@babel/preset-typescript": "^7.12.1",
     "@elastic/elasticsearch": "^7.3.0",
     "@types/aws-lambda": "^8.10.51",
-    "@types/dockerode": "^2.5.20",
+    "@types/dockerode": "^3.2.1",
     "@types/fs-extra": "^8.1.0",
     "@types/koa": "^2.0.45",
     "@types/koa-router": "^7.0.28",
