@@ -396,6 +396,8 @@ export async function getConnection <Service extends keyof LocalStackServices>({
       'LAMBDA_EXECUTOR=docker',
       'LAMBDA_DOCKER_NETWORK=host',
       `LAMBDA_TOOLS_LOCALSTACK_PORT=${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT}`,
+      `HOST_TMP_FOLDER=${process.env.HOST_TMP_FOLDER}`,
+      `HOSTNAME_EXTERNAL=${process.env.HOSTNAME_EXTERNAL}`
     ]
   });
 
