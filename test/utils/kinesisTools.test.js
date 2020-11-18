@@ -5,7 +5,7 @@ const fs = require('fs-extra');
 const sinon = require('sinon');
 const StreamZip = require('node-stream-zip');
 
-const { kinesisLambdaTrigger, KinesisIterator, getStreamRecords } = require('../../src/utils/kinesisTools');
+const { kinesisLambdaTrigger, KinesisIterator } = require('../../src/utils/kinesisTools');
 const { useKinesisDocker, streams } = require('../../src/kinesis');
 const { useLocalStack } = require('../../src/localstack');
 const { FIXTURES_DIRECTORY, buildLambda } = require('../helpers/lambda');
