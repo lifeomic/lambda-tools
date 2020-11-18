@@ -71,11 +71,13 @@ test.serial('can access the response from getRecords', async t => {
 test.serial('can iterate through stream to handler', async t => {
   const { kinesis: { kinesisClient }, firstStream, secondStream, localStack: { services: { lambda: { client } } } } = t.context;
   const expected = [...Array(20)].map(() => ({ key: uuid() }));
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  const zipFile = fs.readFileSync(path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`));
+  console.log(JSON.stringify({ zipFile: zipFile.toString('utf8') }));
 
   await client.createFunction({
     Code: {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
-      ZipFile: fs.readFileSync(path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`))
+      ZipFile: zipFile
     },
     FunctionName: handlerName,
     Runtime: 'nodejs10.x',
