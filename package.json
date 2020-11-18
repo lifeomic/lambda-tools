@@ -26,7 +26,7 @@
     "failWithoutAssertions": false,
     "timeout": "10m",
     "files": [
-      "test/utils/kinesisTools.test.*"
+      "test/**/*.test.*"
     ],
     "require": [
       "ts-node/register",
