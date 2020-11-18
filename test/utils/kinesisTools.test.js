@@ -3,7 +3,6 @@ const path = require('path');
 const { v4: uuid } = require('uuid');
 const fs = require('fs-extra');
 const sinon = require('sinon');
-const StreamZip = require('node-stream-zip');
 
 const { kinesisLambdaTrigger, KinesisIterator } = require('../../src/utils/kinesisTools');
 const { useKinesisDocker, streams } = require('../../src/kinesis');
@@ -73,20 +72,6 @@ test.serial('can iterate through stream to handler', async t => {
   const { kinesis: { kinesisClient }, firstStream, secondStream, localStack: { services: { lambda: { client } } } } = t.context;
   const expected = [...Array(20)].map(() => ({ key: uuid() }));
   const fileDir = path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`);
-  const zip = new StreamZip({
-    file: fileDir,
-    storeEntries: true
-  });
-
-  zip.on('ready', () => {
-    console.log('Entries read: ' + zip.entriesCount);
-    for (const entry of Object.values(zip.entries())) {
-      const desc = entry.isDirectory ? 'directory' : `${entry.size} bytes`;
-      console.log(`Entry ${entry.name}: ${desc}`);
-    }
-    // Do not forget to close the file once you're done
-    zip.close();
-  });
 
   await client.createFunction({
     Code: {
@@ -108,6 +93,10 @@ test.serial('can iterate through stream to handler', async t => {
       }
     }
   }).promise();
+
+  fs.readdirSync('/tmp/localstack').forEach(file => {
+    console.log(file);
+  });
 
   await kinesisClient.putRecords(formatRecords(firstStream, expected)).promise();
   const firstIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: firstStream });
