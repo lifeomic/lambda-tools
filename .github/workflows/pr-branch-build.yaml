@@ -22,7 +22,6 @@ jobs:
       - name: Test
         env:
           DEBUG: lambda-tools:*
-          HOST_TMP_FOLDER: "./"
         run: yarn test
       - name: Coverage
         run: yarn coverage

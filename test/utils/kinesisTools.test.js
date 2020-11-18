@@ -15,6 +15,7 @@ useLocalStack(test, { services: ['lambda'], versionTag: '0.10.6' });
 
 const handlerName = 'lambda_kinesis_handler';
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());
+process.env.HOST_TMP_FOLDER = BUILD_DIRECTORY;
 
 // Ava's `serial` hook decorator needs to be used so that `useNewContainer` is
 // executed before the useLambda hooks are executed
