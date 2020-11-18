@@ -22,6 +22,7 @@ jobs:
       - name: Test
         env:
           DEBUG: lambda-tools:*
+          LAMBDA_EXECUTOR: docker-reuse
         run: yarn test
       - name: Coverage
         run: yarn coverage

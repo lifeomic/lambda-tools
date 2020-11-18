@@ -393,7 +393,7 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     Env: [
       `SERVICES=${services.join(',')}`,
       'DEBUG=1',
-      'LAMBDA_EXECUTOR=docker',
+      `LAMBDA_EXECUTOR=${process.env.LAMBDA_EXECUTOR || 'docker'}`,
       'LAMBDA_DOCKER_NETWORK=host',
       `LAMBDA_TOOLS_LOCALSTACK_PORT=${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT}`,
       `HOST_TMP_FOLDER=${process.env.HOST_TMP_FOLDER}`
