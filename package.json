@@ -10,7 +10,7 @@
   },
   "scripts": {
     "prepublishOnly": "yarn tsc",
-    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "coverage": "nyc report --reporter=text-lcov > ./.nyc_output/lcov.info",
     "lint": "eslint . --ext .js,.ts -f codeframe",
     "pretest": "yarn lint && tsc --noEmit",
     "test": "nyc ava"
@@ -23,15 +23,18 @@
   "license": "MIT",
   "ava": {
     "verbose": true,
-    "compileEnhancements": false,
     "failWithoutAssertions": false,
     "timeout": "10m",
     "files": [
-      "test/**/*.test.js"
+      "test/**/*.test.*"
     ],
     "require": [
       "ts-node/register",
       "source-map-support/register"
+    ],
+    "extensions": [
+      "ts",
+      "js"
     ]
   },
   "eslintIgnore": [
