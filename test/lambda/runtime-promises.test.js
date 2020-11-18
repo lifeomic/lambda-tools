@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const test = require('ava');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const { build, useNewContainer, useLambda } = require('../../src/lambda');
 const { FIXTURES_DIRECTORY } = require('../helpers/lambda');

@@ -1,7 +1,7 @@
 const test = require('ava');
 const AWS = require('aws-sdk');
 const sinon = require('sinon');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const { streams, getConnection, createStreams, destroyStreams } = require('../../src/kinesis');
 

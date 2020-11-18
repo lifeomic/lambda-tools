@@ -29,6 +29,6 @@ test('When a test endpoint has not been configured an error is thrown', async (t
   sinon.assert.calledOnce(test.context.mock.serial.beforeEach);
   test.throws(
     test.context.mock.serial.beforeEach.firstCall.args[0],
-    'A test GraphQL endpoint has not been configured!'
+    { message: 'A test GraphQL endpoint has not been configured!' }
   );
 });

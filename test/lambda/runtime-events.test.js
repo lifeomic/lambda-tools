@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const test = require('ava');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 const crypto = require('crypto');
 const debug = require('debug');
 

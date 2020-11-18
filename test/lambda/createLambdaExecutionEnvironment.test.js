@@ -1,6 +1,6 @@
 const test = require('ava');
 const sinon = require('sinon');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 const docker = require('dockerode');
 
 const { createLambdaExecutionEnvironment } = require('../../src/lambda');
@@ -24,7 +24,7 @@ test.serial('An error is thrown if both zipfile and mountpoint arguments are pro
       mountpoint: 'someMountPoint/',
       zipfile: 'some.zip'
     })
-  , 'Only one of mountpoint or zipfile can be provided');
+  , { message: 'Only one of mountpoint or zipfile can be provided' });
 });
 
 test.serial('Will throw an error if the image can\'t be fetched', async test => {
@@ -32,7 +32,7 @@ test.serial('Will throw an error if the image can\'t be fetched', async test => 
   const error = await test.throwsAsync(createLambdaExecutionEnvironment({
     mountpoint: 'someMountPoint/',
     image: `junkity-junky/junk:${uuid()}`
-  }), '(HTTP code 404) unexpected - pull access denied for junkity-junky/junk, repository does not exist or may require \'docker login\': denied: requested access to the resource is denied ');
+  }), { message: '(HTTP code 404) unexpected - pull access denied for junkity-junky/junk, repository does not exist or may require \'docker login\': denied: requested access to the resource is denied ' });
   sinon.assert.calledOnce(errorSpy);
   sinon.assert.calledWithExactly(errorSpy, 'Unable to get image', JSON.stringify({ error }, null, 2));
 });
