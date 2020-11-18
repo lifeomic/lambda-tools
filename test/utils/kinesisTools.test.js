@@ -96,14 +96,7 @@ test.serial('can iterate through stream to handler', async t => {
   }).promise();
 
   try {
-    fs.readdirSync('/tmp/localstack').forEach(file => {
-      console.log(file);
-    });
-  } catch (e) {
-    console.error(e);
-  }
-  try {
-    fs.readdirSync('/temp/localstack').forEach(file => {
+    fs.readdirSync(BUILD_DIRECTORY).forEach(file => {
       console.log(file);
     });
   } catch (e) {
