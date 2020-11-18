@@ -13,13 +13,13 @@ streams(['first-stream', 'second-stream']);
 useKinesisDocker(test);
 useLocalStack(test, { services: ['lambda'], versionTag: '0.12.2' });
 
-const handlerName = 'ts_lambda_kinesis_handler';
+const handlerName = 'lambda_kinesis_handler';
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());
 
 // Ava's `serial` hook decorator needs to be used so that `useNewContainer` is
 // executed before the useLambda hooks are executed
 test.serial.before(async () => {
-  await buildLambda(BUILD_DIRECTORY, `${handlerName}.ts`, { zip: true });
+  await buildLambda(BUILD_DIRECTORY, `${handlerName}.js`, { zip: true });
 });
 
 test.serial.beforeEach(async t => {
