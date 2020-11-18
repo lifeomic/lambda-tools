@@ -114,6 +114,7 @@ exports.getHostAddress = async () => {
     const { stdout: ifconfig } = await executeContainerCommand({ container, command: ['ifconfig', defaultInterface] });
     return getInterfaceAddress(ifconfig.toString('utf8'));
   } finally {
+    await container.stop();
     logger.debug(`Stopped container ${container.id}`);
   }
 };

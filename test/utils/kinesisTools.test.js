@@ -11,7 +11,7 @@ const { FIXTURES_DIRECTORY, buildLambda } = require('../helpers/lambda');
 
 streams(['first-stream', 'second-stream']);
 useKinesisDocker(test);
-useLocalStack(test, { services: ['lambda'], versionTag: '0.12.2' });
+useLocalStack(test, { services: ['lambda'], versionTag: '0.10.6' });
 
 const handlerName = 'lambda_kinesis_handler';
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());
@@ -32,7 +32,7 @@ test.serial.beforeEach(async t => {
       ZipFile: fs.readFileSync(path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`))
     },
     FunctionName: handlerName,
-    Runtime: 'nodejs12.x',
+    Runtime: 'nodejs10.x',
     Handler: `${handlerName}.handler`,
     MemorySize: 1024,
     Role: 'arn:aws:iam::123456789012:role/service-role/role-name',
@@ -58,9 +58,9 @@ test.afterEach.always(async t => {
   await lambda.client.deleteFunction({ FunctionName: handlerName }).promise();
 });
 
-test.after.always(async t => {
-  await fs.remove(BUILD_DIRECTORY);
-});
+// test.after.always(async t => {
+//   await fs.remove(BUILD_DIRECTORY);
+// });
 
 function formatRecords (StreamName, records) {
   return {
