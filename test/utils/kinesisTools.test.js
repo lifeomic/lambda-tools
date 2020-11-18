@@ -3,6 +3,7 @@ const path = require('path');
 const { v4: uuid } = require('uuid');
 const fs = require('fs-extra');
 const sinon = require('sinon');
+const StreamZip = require('node-stream-zip');
 
 const { kinesisLambdaTrigger, KinesisIterator, getStreamRecords } = require('../../src/utils/kinesisTools');
 const { useKinesisDocker, streams } = require('../../src/kinesis');
@@ -46,38 +47,51 @@ function formatRecords (StreamName, records) {
   };
 }
 
-test.serial('can get stream records using getStreamRecords function', async t => {
-  const { kinesis: { kinesisClient }, firstStream } = t.context;
-  const expected = [...Array(20)].map(() => ({ key: uuid() }));
-
-  await kinesisClient.putRecords(formatRecords(firstStream, expected)).promise();
-  const records = await getStreamRecords({ kinesisClient, streamName: firstStream });
-
-  const actual = records.map(({ Data }) => {
-    const base64 = Buffer.from(Data, 'base64');
-    const utf8 = base64.toString('utf8');
-    return JSON.parse(utf8);
-  });
-  sinon.assert.match(actual, expected);
-});
-
-test.serial('can access the response from getRecords', async t => {
-  const { kinesis: { kinesisClient }, firstStream } = t.context;
-  const firstIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: firstStream });
-  await firstIterator.next();
-  t.not(firstIterator.response, undefined);
-});
+// test.serial('can get stream records using getStreamRecords function', async t => {
+//   const { kinesis: { kinesisClient }, firstStream } = t.context;
+//   const expected = [...Array(20)].map(() => ({ key: uuid() }));
+//
+//   await kinesisClient.putRecords(formatRecords(firstStream, expected)).promise();
+//   const records = await getStreamRecords({ kinesisClient, streamName: firstStream });
+//
+//   const actual = records.map(({ Data }) => {
+//     const base64 = Buffer.from(Data, 'base64');
+//     const utf8 = base64.toString('utf8');
+//     return JSON.parse(utf8);
+//   });
+//   sinon.assert.match(actual, expected);
+// });
+//
+// test.serial('can access the response from getRecords', async t => {
+//   const { kinesis: { kinesisClient }, firstStream } = t.context;
+//   const firstIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: firstStream });
+//   await firstIterator.next();
+//   t.not(firstIterator.response, undefined);
+// });
 
 test.serial('can iterate through stream to handler', async t => {
   const { kinesis: { kinesisClient }, firstStream, secondStream, localStack: { services: { lambda: { client } } } } = t.context;
   const expected = [...Array(20)].map(() => ({ key: uuid() }));
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
-  const zipFile = fs.readFileSync(path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`));
-  console.log(JSON.stringify({ zipFile: zipFile.toString('utf8') }));
+  const fileDir = path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`);
+  const zip = new StreamZip({
+    file: fileDir,
+    storeEntries: true
+  });
+
+  zip.on('ready', () => {
+    console.log('Entries read: ' + zip.entriesCount);
+    for (const entry of Object.values(zip.entries())) {
+      const desc = entry.isDirectory ? 'directory' : `${entry.size} bytes`;
+      console.log(`Entry ${entry.name}: ${desc}`);
+    }
+    // Do not forget to close the file once you're done
+    zip.close();
+  });
 
   await client.createFunction({
     Code: {
-      ZipFile: zipFile
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      ZipFile: fs.readFileSync(fileDir)
     },
     FunctionName: handlerName,
     Runtime: 'nodejs10.x',
