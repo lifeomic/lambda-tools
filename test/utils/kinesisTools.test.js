@@ -72,6 +72,28 @@ function formatRecords (StreamName, records) {
   };
 }
 
+test.serial('can get stream records using getStreamRecords function', async t => {
+  const { kinesis: { kinesisClient }, firstStream } = t.context;
+  const expected = [...Array(20)].map(() => ({ key: uuid() }));
+
+  await kinesisClient.putRecords(formatRecords(firstStream, expected)).promise();
+  const records = await getStreamRecords({ kinesisClient, streamName: firstStream });
+
+  const actual = records.map(({ Data }) => {
+    const base64 = Buffer.from(Data, 'base64');
+    const utf8 = base64.toString('utf8');
+    return JSON.parse(utf8);
+  });
+  sinon.assert.match(actual, expected);
+});
+
+test.serial('can access the response from getRecords', async t => {
+  const { kinesis: { kinesisClient }, firstStream } = t.context;
+  const firstIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: firstStream });
+  await firstIterator.next();
+  t.not(firstIterator.response, undefined);
+});
+
 test.serial('can iterate through stream to handler', async t => {
   const { kinesis: { kinesisClient }, firstStream, secondStream, localStack: { services: { lambda: { client } } } } = t.context;
   const expected = [...Array(20)].map(() => ({ key: uuid() }));
@@ -95,26 +117,4 @@ test.serial('can iterate through stream to handler', async t => {
     return JSON.parse(utf8);
   });
   sinon.assert.match(actual, expected);
-});
-
-test.serial('can get stream records using getStreamRecords function', async t => {
-  const { kinesis: { kinesisClient }, firstStream } = t.context;
-  const expected = [...Array(20)].map(() => ({ key: uuid() }));
-
-  await kinesisClient.putRecords(formatRecords(firstStream, expected)).promise();
-  const records = await getStreamRecords({ kinesisClient, streamName: firstStream });
-
-  const actual = records.map(({ Data }) => {
-    const base64 = Buffer.from(Data, 'base64');
-    const utf8 = base64.toString('utf8');
-    return JSON.parse(utf8);
-  });
-  sinon.assert.match(actual, expected);
-});
-
-test.serial('can access the response from getRecords', async t => {
-  const { kinesis: { kinesisClient }, firstStream } = t.context;
-  const firstIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: firstStream });
-  await firstIterator.next();
-  t.not(firstIterator.response, undefined);
 });
