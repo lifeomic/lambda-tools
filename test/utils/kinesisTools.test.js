@@ -94,9 +94,20 @@ test.serial('can iterate through stream to handler', async t => {
     }
   }).promise();
 
-  fs.readdirSync('/tmp/localstack').forEach(file => {
-    console.log(file);
-  });
+  try {
+    fs.readdirSync('/tmp/localstack').forEach(file => {
+      console.log(file);
+    });
+  } catch (e) {
+    console.error(e);
+  }
+  try {
+    fs.readdirSync('/temp/localstack').forEach(file => {
+      console.log(file);
+    });
+  } catch (e) {
+    console.error(e);
+  }
 
   await kinesisClient.putRecords(formatRecords(firstStream, expected)).promise();
   const firstIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: firstStream });
