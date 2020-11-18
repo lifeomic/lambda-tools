@@ -273,7 +273,7 @@ export async function createLambdaExecutionEnvironment (options: FinalConfig): P
           Internal: true,
           Name: uuid()
         });
-        logger.debug(`Created network ${executionEnvironment.network.id}`)
+        logger.debug(`Created network ${executionEnvironment.network?.id}`)
       }
     } catch (error) {
       logger.error('Unable to create network', JSON.stringify({ error }, null, 2));
