@@ -13,7 +13,7 @@ streams(['first-stream', 'second-stream']);
 useKinesisDocker(test);
 useLocalStack(test, { services: ['lambda'], versionTag: '0.12.2' });
 
-const handlerName = 'ts_lambda_kinesisHandler';
+const handlerName = 'ts_lambda_kinesis_handler';
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());
 
 // Ava's `serial` hook decorator needs to be used so that `useNewContainer` is
