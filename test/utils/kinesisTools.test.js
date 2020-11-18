@@ -23,29 +23,8 @@ test.serial.before(async () => {
 });
 
 test.serial.beforeEach(async t => {
-  const { kinesis: { streamNames }, localStack: { services: { lambda } } } = t.context;
+  const { kinesis: { streamNames } } = t.context;
   const secondStream = streamNames['second-stream'];
-
-  await lambda.client.createFunction({
-    Code: {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
-      ZipFile: fs.readFileSync(path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`))
-    },
-    FunctionName: handlerName,
-    Runtime: 'nodejs10.x',
-    Handler: `${handlerName}.handler`,
-    MemorySize: 1024,
-    Role: 'arn:aws:iam::123456789012:role/service-role/role-name',
-    Publish: true,
-    Environment: {
-      Variables: {
-        NEXT_KINESIS_STREAM_NAME: secondStream,
-        KINESIS_ENDPOINT: process.env.KINESIS_ENDPOINT,
-        AWS_SECRET_ACCESS_KEY: uuid(),
-        AWS_ACCESS_KEY_ID: uuid()
-      }
-    }
-  }).promise();
 
   Object.assign(t.context, {
     firstStream: streamNames['first-stream'],
@@ -53,14 +32,9 @@ test.serial.beforeEach(async t => {
   });
 });
 
-test.afterEach.always(async t => {
-  const { localStack: { services: { lambda } } } = t.context;
-  await lambda.client.deleteFunction({ FunctionName: handlerName }).promise();
+test.after.always(async t => {
+  await fs.remove(BUILD_DIRECTORY);
 });
-
-// test.after.always(async t => {
-//   await fs.remove(BUILD_DIRECTORY);
-// });
 
 function formatRecords (StreamName, records) {
   return {
@@ -97,6 +71,27 @@ test.serial('can access the response from getRecords', async t => {
 test.serial('can iterate through stream to handler', async t => {
   const { kinesis: { kinesisClient }, firstStream, secondStream, localStack: { services: { lambda: { client } } } } = t.context;
   const expected = [...Array(20)].map(() => ({ key: uuid() }));
+
+  await client.createFunction({
+    Code: {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      ZipFile: fs.readFileSync(path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`))
+    },
+    FunctionName: handlerName,
+    Runtime: 'nodejs10.x',
+    Handler: `${handlerName}.handler`,
+    MemorySize: 1024,
+    Role: 'arn:aws:iam::123456789012:role/service-role/role-name',
+    Publish: true,
+    Environment: {
+      Variables: {
+        NEXT_KINESIS_STREAM_NAME: secondStream,
+        KINESIS_ENDPOINT: process.env.KINESIS_ENDPOINT,
+        AWS_SECRET_ACCESS_KEY: uuid(),
+        AWS_ACCESS_KEY_ID: uuid()
+      }
+    }
+  }).promise();
 
   await kinesisClient.putRecords(formatRecords(firstStream, expected)).promise();
   const firstIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: firstStream });
