@@ -10,7 +10,7 @@
   },
   "scripts": {
     "prepublishOnly": "yarn tsc",
-    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "coverage": "nyc report --reporter=text-lcov > ./.nyc_output/lcov.info",
     "lint": "eslint . --ext .js,.ts -f codeframe",
     "pretest": "yarn lint && tsc --noEmit",
     "test": "nyc ava"
