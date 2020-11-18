@@ -4,7 +4,7 @@ const { v4: uuid } = require('uuid');
 const fs = require('fs-extra');
 const sinon = require('sinon');
 
-const { kinesisLambdaTrigger, KinesisIterator } = require('../../src/utils/kinesisTools');
+const { kinesisLambdaTrigger, KinesisIterator, getStreamRecords } = require('../../src/utils/kinesisTools');
 const { useKinesisDocker, streams } = require('../../src/kinesis');
 const { useLocalStack } = require('../../src/localstack');
 const { FIXTURES_DIRECTORY, buildLambda } = require('../helpers/lambda');
@@ -13,14 +13,14 @@ streams(['first-stream', 'second-stream']);
 useKinesisDocker(test);
 useLocalStack(test, { services: ['lambda'], versionTag: '0.10.6' });
 
-const handlerName = 'lambda_kinesis_handler';
+const handlerName = 'ts_lambda_kinesisHandler';
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());
 process.env.HOST_TMP_FOLDER = BUILD_DIRECTORY;
 
 // Ava's `serial` hook decorator needs to be used so that `useNewContainer` is
 // executed before the useLambda hooks are executed
 test.serial.before(async () => {
-  await buildLambda(BUILD_DIRECTORY, `${handlerName}.js`, { zip: true });
+  await buildLambda(BUILD_DIRECTORY, `${handlerName}.ts`, { zip: true });
 });
 
 test.serial.beforeEach(async t => {
@@ -47,27 +47,27 @@ function formatRecords (StreamName, records) {
   };
 }
 
-// test.serial('can get stream records using getStreamRecords function', async t => {
-//   const { kinesis: { kinesisClient }, firstStream } = t.context;
-//   const expected = [...Array(20)].map(() => ({ key: uuid() }));
-//
-//   await kinesisClient.putRecords(formatRecords(firstStream, expected)).promise();
-//   const records = await getStreamRecords({ kinesisClient, streamName: firstStream });
-//
-//   const actual = records.map(({ Data }) => {
-//     const base64 = Buffer.from(Data, 'base64');
-//     const utf8 = base64.toString('utf8');
-//     return JSON.parse(utf8);
-//   });
-//   sinon.assert.match(actual, expected);
-// });
-//
-// test.serial('can access the response from getRecords', async t => {
-//   const { kinesis: { kinesisClient }, firstStream } = t.context;
-//   const firstIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: firstStream });
-//   await firstIterator.next();
-//   t.not(firstIterator.response, undefined);
-// });
+test.serial('can get stream records using getStreamRecords function', async t => {
+  const { kinesis: { kinesisClient }, firstStream } = t.context;
+  const expected = [...Array(20)].map(() => ({ key: uuid() }));
+
+  await kinesisClient.putRecords(formatRecords(firstStream, expected)).promise();
+  const records = await getStreamRecords({ kinesisClient, streamName: firstStream });
+
+  const actual = records.map(({ Data }) => {
+    const base64 = Buffer.from(Data, 'base64');
+    const utf8 = base64.toString('utf8');
+    return JSON.parse(utf8);
+  });
+  sinon.assert.match(actual, expected);
+});
+
+test.serial('can access the response from getRecords', async t => {
+  const { kinesis: { kinesisClient }, firstStream } = t.context;
+  const firstIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: firstStream });
+  await firstIterator.next();
+  t.not(firstIterator.response, undefined);
+});
 
 test.serial('can iterate through stream to handler', async t => {
   const { kinesis: { kinesisClient }, firstStream, secondStream, localStack: { services: { lambda: { client } } } } = t.context;
@@ -94,14 +94,6 @@ test.serial('can iterate through stream to handler', async t => {
       }
     }
   }).promise();
-
-  try {
-    fs.readdirSync(BUILD_DIRECTORY).forEach(file => {
-      console.log(file);
-    });
-  } catch (e) {
-    console.error(e);
-  }
 
   await kinesisClient.putRecords(formatRecords(firstStream, expected)).promise();
   const firstIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: firstStream });
