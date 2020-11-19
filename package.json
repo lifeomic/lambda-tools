@@ -53,7 +53,8 @@
       "src/**"
     ],
     "exclude": [
-      "src/patches/**"
+      "src/patches/**",
+      "src/**/*.d.ts"
     ]
   },
   "optionalDependencies": {
@@ -75,7 +76,7 @@
     "koa": "^2.5.0",
     "koa-router": "^7.4.0",
     "mockserver-client": "^5.6.1",
-    "nyc": "^15.0.1",
+    "nyc": "^15.1.0",
     "proxyquire": "^2.0.1",
     "serverless-http": "^2.0.0",
     "sinon": "^9.2.1",
