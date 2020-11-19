@@ -393,16 +393,11 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     Env: [
       `SERVICES=${services.join(',')}`,
       'DEBUG=1',
-      /* istanbul ignore next */
-      `LAMBDA_EXECUTOR=${process.env.LAMBDA_EXECUTOR || 'docker'}`,
-      /* istanbul ignore next */
-      `LAMBDA_REMOTE_DOCKER=${process.env.LAMBDA_REMOTE_DOCKER || ''}`,
-      /* istanbul ignore next */
-      `LAMBDA_DOCKER_NETWORK=${process.env.LAMBDA_DOCKER_NETWORK || 'host'}`,
-      /* istanbul ignore next */
-      `LAMBDA_TOOLS_LOCALSTACK_PORT=${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || ''}`,
-      /* istanbul ignore next */
-      `HOST_TMP_FOLDER=${process.env.HOST_TMP_FOLDER || ''}`
+      `LAMBDA_EXECUTOR=${process.env.LAMBDA_EXECUTOR || /* istanbul ignore next */ 'docker'}`,
+      `LAMBDA_REMOTE_DOCKER=${process.env.LAMBDA_REMOTE_DOCKER || /* istanbul ignore next */ ''}`,
+      `LAMBDA_DOCKER_NETWORK=${process.env.LAMBDA_DOCKER_NETWORK || /* istanbul ignore next */ 'host'}`,
+      `LAMBDA_TOOLS_LOCALSTACK_PORT=${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || /* istanbul ignore next */ ''}`,
+      `HOST_TMP_FOLDER=${process.env.HOST_TMP_FOLDER || /* istanbul ignore next */ ''}`
     ]
   });
 
