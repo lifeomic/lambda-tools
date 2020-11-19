@@ -15,7 +15,7 @@ test.afterEach((test) => {
   test.context.sandbox.restore();
 });
 
-test.serial('Cleanups up the network and container on failure after start', async function (test) {
+test.serial('Cleans up the network and container on failure after start', async function (test) {
   const error = new Error('Failure to start');
   const originalStart = Docker.Container.prototype.start;
   test.context.sandbox.stub(Docker.Container.prototype, 'start').callsFake(async function () {
@@ -29,7 +29,7 @@ test.serial('Cleanups up the network and container on failure after start', asyn
     mountpoint: path.join(FIXTURES_DIRECTORY, 'build')
   });
 
-  await test.throwsAsync(() => create, error.message);
+  await test.throwsAsync(() => create, { message: error.message });
 
   sinon.assert.calledOnce(containerStopSpy);
   sinon.assert.calledOnce(networkRemoveSpy);
@@ -38,15 +38,19 @@ test.serial('Cleanups up the network and container on failure after start', asyn
 test.serial('Sends AWS_XRAY_CONTEXT_MISSING var to createContainer with no value when it is null (removing env vars)', async function (test) {
   const createSpy = test.context.sandbox.spy(Docker.prototype, 'createContainer');
 
-  await lambda.createLambdaExecutionEnvironment({
+  const env = await lambda.createLambdaExecutionEnvironment({
     environment: { AWS_XRAY_CONTEXT_MISSING: null },
     mountpoint: path.join(FIXTURES_DIRECTORY, 'build')
   });
 
-  sinon.assert.calledWithMatch(createSpy, sinon.match((arg) => {
-    assert.deepStrictEqual(arg.Env, ['AWS_XRAY_CONTEXT_MISSING']);
-    return true;
-  }));
+  try {
+    sinon.assert.calledWithMatch(createSpy, sinon.match((arg) => {
+      assert.deepStrictEqual(arg.Env, ['AWS_XRAY_CONTEXT_MISSING']);
+      return true;
+    }));
+  } finally {
+    await lambda.destroyLambdaExecutionEnvironment(env);
+  }
 });
 
 test.serial('Cleanups up temp directory when unzipping fails', async (test) => {

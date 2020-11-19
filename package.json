@@ -10,7 +10,7 @@
   },
   "scripts": {
     "prepublishOnly": "yarn tsc",
-    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "coverage": "nyc report --reporter=text-lcov > ./.nyc_output/lcov.info",
     "lint": "eslint . --ext .js,.ts -f codeframe",
     "pretest": "yarn lint && tsc --noEmit",
     "test": "nyc ava"
@@ -23,15 +23,18 @@
   "license": "MIT",
   "ava": {
     "verbose": true,
-    "compileEnhancements": false,
     "failWithoutAssertions": false,
     "timeout": "10m",
     "files": [
-      "test/**/*.test.js"
+      "test/**/*.test.*"
     ],
     "require": [
       "ts-node/register",
       "source-map-support/register"
+    ],
+    "extensions": [
+      "ts",
+      "js"
     ]
   },
   "eslintIgnore": [
@@ -50,7 +53,8 @@
       "src/**"
     ],
     "exclude": [
-      "src/patches/**"
+      "src/patches/**",
+      "src/**/*.d.ts"
     ]
   },
   "optionalDependencies": {
@@ -72,7 +76,7 @@
     "koa": "^2.5.0",
     "koa-router": "^7.4.0",
     "mockserver-client": "^5.6.1",
-    "nyc": "^15.0.1",
+    "nyc": "^15.1.0",
     "proxyquire": "^2.0.1",
     "serverless-http": "^2.0.0",
     "sinon": "^9.2.1",
@@ -98,7 +102,7 @@
     "@types/unzipper": "^0.10.3",
     "@types/uuid": "^7.0.3",
     "archiver": "^3.0.0",
-    "ava": "^2.4.0",
+    "ava": "^3.13.0",
     "aws-sdk": "^2.290.0",
     "babel-loader": "^8.0.2",
     "chalk": "^3.0.0",

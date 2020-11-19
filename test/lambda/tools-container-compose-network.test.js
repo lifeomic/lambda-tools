@@ -1,7 +1,7 @@
 const Docker = require('dockerode');
 const sinon = require('sinon');
 const test = require('ava');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const { useNewContainer, useLambda } = require('../../src/lambda');
 const { FIXTURES_DIRECTORY } = require('../helpers/lambda');

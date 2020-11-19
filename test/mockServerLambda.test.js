@@ -3,7 +3,7 @@ const Docker = require('dockerode');
 const AWS = require('aws-sdk');
 const promiseRetry = require('promise-retry');
 const NestedError = require('nested-error-stacks');
-const uuid = require('uuid');
+const { v4: uuid } = require('uuid');
 
 const { mockInvocation, verifyInvocation } = require('../src').mockServerLambda;
 

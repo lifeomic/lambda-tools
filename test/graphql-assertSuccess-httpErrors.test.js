@@ -26,5 +26,5 @@ test('assertSuccess throws on an HTTP error', async (test) => {
   "method": "POST",
   "path": "/graphql"
 }`;
-  test.throws(() => assertSuccess(response), expectedErrorMessage);
+  test.throws(() => assertSuccess(response), { message: expectedErrorMessage });
 });

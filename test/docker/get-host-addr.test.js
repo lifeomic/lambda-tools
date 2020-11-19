@@ -2,7 +2,7 @@ const Docker = require('dockerode');
 const proxyquire = require('proxyquire').noPreserveCache();
 const sinon = require('sinon');
 const test = require('ava');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 test.beforeEach((test) => {
   test.context.createContainer = sinon.spy(Docker.prototype, 'createContainer');

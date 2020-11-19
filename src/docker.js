@@ -105,6 +105,7 @@ exports.getHostAddress = async () => {
   });
 
   await container.start();
+  logger.debug(`Started container ${container.id}`);
 
   try {
     const { stdout: routeTable } = await executeContainerCommand({ container, command: ['route'] });
@@ -113,8 +114,8 @@ exports.getHostAddress = async () => {
     const { stdout: ifconfig } = await executeContainerCommand({ container, command: ['ifconfig', defaultInterface] });
     return getInterfaceAddress(ifconfig.toString('utf8'));
   } finally {
-    // Don't wait for the container to stop (this can take a while).
-    container.stop();
+    await container.stop();
+    logger.debug(`Stopped container ${container.id}`);
   }
 };
 

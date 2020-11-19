@@ -2,7 +2,7 @@ const test = require('ava');
 const AWS = require('aws-sdk');
 const Docker = require('dockerode');
 const sinon = require('sinon');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const { tableSchema, getConnection, createTables, destroyTables, launchDynamoContainer } = require('../../src/dynamodb');
 

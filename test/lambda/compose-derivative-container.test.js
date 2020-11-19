@@ -1,7 +1,7 @@
 const Docker = require('dockerode');
 const path = require('path');
 const test = require('ava');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const { promisify } = require('util');
 const { useLambdaContainer, FIXTURES_DIRECTORY } = require('../helpers/lambda');
