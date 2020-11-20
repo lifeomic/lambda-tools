@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Print
         env:
-          GITHUB_CONTEXT=${{github}}
+          GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo ${GITHUB_CONTEXT}
   test:
     runs-on: ubuntu-latest
