@@ -27,7 +27,7 @@ jobs:
         uses: coverallsapp/github-action@v1.1.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: .nyc_output/lcov.info
+          path-to-lcov: coverage/lcov.info
           flag-name: run-${{ matrix.node }}
           parallel: true
   preRelease:
@@ -44,7 +44,7 @@ jobs:
       - name: Version
         env:
           PRE_ID=pr-${{ github.event.number }}-${{ github.run_id }}
-        run: npm version --git-tag-version=false --preid="${PRE_ID}"
+        run: npm version --git-tag-version=false --preid="${PRE_ID}-$(date '+%s')"
       - name: PrePublish
         env:
           NODE_AUTH_TOKEN: ${{secrets.LIFEOMIC_NPM_TOKEN}}

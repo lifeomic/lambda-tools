@@ -375,6 +375,8 @@ export async function getConnection <Service extends keyof LocalStackServices>({
       localStackPort = `${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || 4566}`;
       ExposedPorts[`${localStackPort}/tcp`] = {}
     }
+  } else {
+    throw new Error(`We don't know how to handle ${versionTag}`);
   }
   const image = `${LOCALSTACK_IMAGE}:${versionTag}`;
   const docker = new Docker();

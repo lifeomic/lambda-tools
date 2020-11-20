@@ -71,6 +71,11 @@ test('getConnection throws when specifying the latest tag', async t => {
   await t.throwsAsync(getConnection({ versionTag: 'latest', services: ['sqs'] }), { message: 'We refuse to try to work with the latest tag' });
 });
 
+test('getConnection throws when specifying a version greater than 0.x.x', async t => {
+  const { getConnection } = require('../../src/localstack');
+  await t.throwsAsync(getConnection({ versionTag: '1.0.0', services: ['sqs'] }), { message: 'We refuse to try to work with the latest tag' });
+});
+
 test('getConnection throws when invalid services are requested', async t => {
   const serviceName = uuid();
   const { getConnection } = require('../../src/localstack');
