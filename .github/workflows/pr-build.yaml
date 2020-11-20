@@ -43,7 +43,7 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: Version
         env:
-          PRE_ID=pr-${{ github.event.number }}-${{ github.run_id }}
+          PRE_ID: pr-${{ github.event.number }}-${{ github.run_id }}
         run: npm version --git-tag-version=false --preid="${PRE_ID}-$(date '+%s')"
       - name: PrePublish
         env:
