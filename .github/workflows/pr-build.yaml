@@ -4,6 +4,14 @@ on:
   pull_request
 
 jobs:
+  printEnv:
+    runs-on: ubuntu-latest
+    name: Print Context
+    steps:
+      - name: Print
+        env:
+          GITHUB_CONTEXT=${{github}}
+        run: echo ${GITHUB_CONTEXT}
   test:
     runs-on: ubuntu-latest
     name: Node.JS ${{ matrix.node-version }}
@@ -43,8 +51,8 @@ jobs:
         run: yarn install --frozen-lockfile
       - name: Version
         env:
-          PRE_ID=${{ github.event.issue.number }}-${{ github.job }}
-        run: npm version --git-tag-version=false --preid=${PRE_ID}
+          PRE_ID=${{ github.event.issue.number }}-${{ github.run_id }}-${{ github.run_number }}
+        run: npm version --git-tag-version=false --preid="${PRE_ID}"
       - name: PrePublish
         env:
           NODE_AUTH_TOKEN: ${{secrets.LIFEOMIC_NPM_TOKEN}}
