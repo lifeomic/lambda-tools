@@ -2,8 +2,6 @@ name: Release
 
 on:
   push:
-    branches:
-      - master
     tags:
       - 'v*'
 
@@ -12,15 +10,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Exit if not on master branch
+        if: endsWith(github.ref, 'master') == false
+        run: exit 0
       - uses: actions/setup-node@v1
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org
-      - name: Build and Test
-        run: |
-          yarn
-          yarn test
-          npm publish --access public
+      - name: Install
+        run: yarn install --frozen-lockfile
+      - name: Test
+        env:
+          LAMBDA_REMOTE_DOCKER: true
+        run: yarn test
+      - name: Publish
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.LIFEOMIC_NPM_TOKEN}}
       - name: Create Release

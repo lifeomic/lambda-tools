@@ -1,9 +1,7 @@
 name: PR Branch Build and Test
 
 on:
-  push:
-    branches-ignore:
-      - master
+  pull_request
 
 jobs:
   test:
@@ -21,7 +19,6 @@ jobs:
         run: yarn install
       - name: Test
         env:
-          DEBUG: lambda-tools:*
           LAMBDA_REMOTE_DOCKER: true
         run: yarn test
       - name: Coverage
@@ -33,6 +30,21 @@ jobs:
           path-to-lcov: .nyc_output/lcov.info
           flag-name: run-${{ matrix.node }}
           parallel: true
+  preRelease:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      with:
+        node-version: 12
+        registry-url: https://registry.npmjs.org
+      - name: Install
+        run: yarn install --production --frozen-lockfile
+      - name: Version
+        run: npm version --git-tag-version=false --preid=${{ github.event.issue.number }}-${{ github.event.id }}
+      - name: PrePublish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.LIFEOMIC_NPM_TOKEN}}
+        run: npm publish --tag pr-${{ github.event.issue.number }}
   finish:
     needs: test
     runs-on: ubuntu-latest
