@@ -1,4 +1,4 @@
-name: PR Branch Build and Test
+name: PR Build and Test
 
 on:
   pull_request
@@ -34,9 +34,11 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      with:
-        node-version: 12
-        registry-url: https://registry.npmjs.org
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: https://registry.npmjs.org
       - name: Install
         run: yarn install --production --frozen-lockfile
       - name: Version
