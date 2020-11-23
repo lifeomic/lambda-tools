@@ -368,14 +368,13 @@ export async function getConnection <Service extends keyof LocalStackServices>({
   const [major, minor] = [Number.parseInt(majorStr, 10), Number.parseInt(minorStr, 10)];
   const ExposedPorts: ContainerCreateOptions['ExposedPorts'] = {}
   let localStackPort: string | undefined;
-  if (major < 1) {
-    if (minor <= 10) {
-      Object.assign(ExposedPorts, getExposedPorts());
-    } else {
-      localStackPort = `${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || 4566}`;
-      ExposedPorts[`${localStackPort}/tcp`] = {}
-    }
+  if (major < 1 && minor <= 10) {
+    Object.assign(ExposedPorts, getExposedPorts());
+  } else {
+    localStackPort = `${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || 4566}`;
+    ExposedPorts[`${localStackPort}/tcp`] = {}
   }
+
   const image = `${LOCALSTACK_IMAGE}:${versionTag}`;
   const docker = new Docker();
   const environment = new Environment();
