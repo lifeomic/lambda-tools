@@ -1,6 +1,11 @@
 import assert from 'assert';
-import { Kinesis } from "aws-sdk";
-import {Callback, Context, KinesisStreamHandler, KinesisStreamRecord} from "aws-lambda";
+import Kinesis from "aws-sdk/clients/kinesis";
+import {
+  Callback,
+  Context,
+  KinesisStreamHandler,
+  KinesisStreamRecord
+} from "aws-lambda";
 
 export interface BasicKinesisConfig {
   kinesisClient: Kinesis;
@@ -15,8 +20,8 @@ export interface LambdaTriggerConfig{
   callback?: Callback<void>;
 }
 
-class KinesisIterator {
-  static async newIterator (config: BasicKinesisConfig) {
+export class KinesisIterator {
+  static async newIterator (config: BasicKinesisConfig): Promise<KinesisIterator> {
     const iterator = new KinesisIterator(config);
     await iterator.init();
     return iterator;
@@ -27,7 +32,12 @@ class KinesisIterator {
   private _shardIterator: string | undefined;
   private _getRecordsResponse: Kinesis.GetRecordsOutput | undefined;
 
-  constructor ({ kinesisClient, streamName }: BasicKinesisConfig) {
+  constructor (
+    {
+      kinesisClient,
+      streamName,
+    }: BasicKinesisConfig
+  ) {
     assert.ok(kinesisClient, 'kinesisClient client needs to be provided');
     assert.ok(kinesisClient.getRecords && kinesisClient.describeStream && kinesisClient.getShardIterator, 'kinesisClient client needs to be of type AWS.Kinesis');
     assert.ok(typeof streamName === 'string', 'streamName needs to be defined and a string');
@@ -36,7 +46,7 @@ class KinesisIterator {
     this._streamName = streamName;
   }
 
-  async init () {
+  async init (): Promise<this> {
     const describeStreamResult = await this._kinesis.describeStream({
       StreamName: this._streamName
     }).promise();
@@ -51,7 +61,9 @@ class KinesisIterator {
     return this;
   }
 
-  async next (Limit?: Kinesis.GetRecordsInputLimit) {
+  async next (
+    Limit?: Kinesis.GetRecordsInputLimit
+  ): Promise<this> {
     if (!this._shardIterator) {
       await this.init();
     }
@@ -63,22 +75,22 @@ class KinesisIterator {
     return this;
   }
 
-  get records () {
-    return this._getRecordsResponse?.Records;
+  get records (): Kinesis.GetRecordsOutput['Records'] {
+    return this._getRecordsResponse!.Records;
   }
 
-  get response () {
+  get response (): Kinesis.GetRecordsOutput | undefined {
     return this._getRecordsResponse;
   }
 }
 
-async function getStreamRecords (config: BasicKinesisConfig) {
+export async function getStreamRecords (config: BasicKinesisConfig): Promise<Kinesis.GetRecordsOutput['Records']> {
   const kinesisIterator = await KinesisIterator.newIterator(config);
   await kinesisIterator.next();
   return kinesisIterator.records;
 }
 
-function createLambdaEvent (records: Kinesis.RecordList): KinesisStreamRecord[] {
+export function createLambdaEvent (records: Kinesis.RecordList): KinesisStreamRecord[] {
   return records.map(record => ({
     eventID: `shardId-000000000000:${record.SequenceNumber}`,
     eventVersion: '1.0',
@@ -105,7 +117,7 @@ function createLambdaEvent (records: Kinesis.RecordList): KinesisStreamRecord[] 
  * @param limit An optional limit to the number of records in each iterator batch.
  * @returns {Promise<{processedRecordCount}>}
  */
-async function kinesisLambdaTrigger ({
+export async function kinesisLambdaTrigger ({
   lambdaHandler,
   kinesisIterator,
   limit,
@@ -135,10 +147,3 @@ async function kinesisLambdaTrigger ({
     processedRecordCount
   };
 }
-
-module.exports = {
-  KinesisIterator,
-  getStreamRecords,
-  createLambdaEvent,
-  kinesisLambdaTrigger
-};
