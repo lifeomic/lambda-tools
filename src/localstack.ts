@@ -195,7 +195,7 @@ export function getService<Service extends keyof LocalStackServices>(service: Se
       return {
         port: '4587',
         getClient: ({config}) => new AWS.CloudWatchEvents(config),
-        isReady: (client: AWS.CloudWatchEvents) => client.testEventPattern().promise()
+        isReady: (client: AWS.CloudWatchEvents) => client.listRules().promise()
       };
     case 'firehose':
       return {
