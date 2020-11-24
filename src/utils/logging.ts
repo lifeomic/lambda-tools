@@ -6,10 +6,10 @@ const loggers: Record<string, Logger> = {};
 const consoleLog = console.log.bind(console);
 
 export interface Logger {
-  info(...any: any): void;
-  error(...any: any): void;
-  warn(...any: any): void;
-  debug(...any: any): void;
+  info: Debugger;
+  error: Debugger;
+  warn: Debugger;
+  debug: Debugger;
   child(name: string): Logger;
 }
 
@@ -20,14 +20,14 @@ interface LoggerExtension {
   log?: typeof console.log;
 }
 
-function extendLogger ({ logger, name, enabled, log }: LoggerExtension) {
-  const childLogger = logger.extend(name);
+function extendLogger ({ logger, name, enabled, log }: LoggerExtension): Debugger {
+  const childLogger: Debugger = logger.extend(name);
   childLogger.log = log || logger.log;
   childLogger.enabled = enabled || logger.enabled;
   return childLogger;
 }
 
-function createChildLogger (name: string, root: Debugger) {
+function createChildLogger (name: string, root: Debugger): Logger {
   return {
     info: extendLogger({ logger: root, name: 'info', log: consoleLog, enabled: true }),
     error: extendLogger({ logger: root, name: 'error', enabled: true }),
