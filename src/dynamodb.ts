@@ -1,8 +1,6 @@
 import assert from 'assert';
-import {
-  DynamoDB,
-  DynamoDBStreams
-} from 'aws-sdk';
+import DynamoDB from 'aws-sdk/clients/dynamodb'
+import DynamoDBStreams from 'aws-sdk/clients/dynamodbstreams'
 import cloneDeep from 'lodash/cloneDeep';
 import fromPairs from 'lodash/fromPairs';
 import Docker from 'dockerode';
@@ -96,7 +94,7 @@ async function assertTableDoesNotExist (dynamoClient: DynamoDB, tableName: strin
 
 export async function destroyTables (
   schemas: DynamoDB.CreateTableInput[],
-  dynamoClient: AWS.DynamoDB,
+  dynamoClient: DynamoDB,
   uniqueIdentifier?: string
 ) {
   const failedDeletions: string[] = [];
@@ -140,7 +138,7 @@ export async function destroyTables (
 
 export async function createTables (
   schemas: DynamoDB.CreateTableInput[],
-  dynamoClient: AWS.DynamoDB,
+  dynamoClient: DynamoDB,
   uniqueIdentifier?: string
 ) {
   const failedProvisons: string[] = [];
