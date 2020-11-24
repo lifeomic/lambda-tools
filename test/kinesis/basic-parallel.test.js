@@ -77,6 +77,6 @@ test('The helper provides a config object', async (test) => {
   const { config } = test.context.kinesis;
 
   test.true(config.credentials instanceof AWS.Credentials);
-  test.true(config.endpoint instanceof AWS.Endpoint);
+  test.true(config.endpoint.startsWith('http://127.0.0.1'));
   test.truthy(config.region);
 });

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [12.0.1] - ***
+### Typescript conversions
+- Converted the utils to full Typescript
+
+## [12.0.0] - 2020-11-23
+### Type Breaking
+- Converted localstack to typescript, and fixed some inputs
+- Updated deployment to use `github-actions`
+
 ## [11.2.2] - 2020-07-31
 ### Fixed
 - Add explicit peerDependency entry for `@lifeomic/alpha`. Previously, alpha
