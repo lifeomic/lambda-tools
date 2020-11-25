@@ -1,7 +1,5 @@
-class Environment {
-  constructor () {
-    this._backup = {};
-  }
+export class Environment {
+  private _backup: Record<string, any> = {}
 
   restore () {
     for (const [ name, value ] of Object.entries(this._backup)) {
@@ -13,10 +11,10 @@ class Environment {
     }
   }
 
-  set (name, value) {
+  set (name: string, value: any) {
     this._backup[name] = process.env[name];
     process.env[name] = value;
   }
 }
 
-module.exports = Environment;
+export default Environment;

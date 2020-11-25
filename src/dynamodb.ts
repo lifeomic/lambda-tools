@@ -10,7 +10,7 @@ import { pQueue } from './utils/config';
 import {
   AwsUtilsConnection,
   ConnectionAndConfig,
-  SimpleServiceConfigurationOptions,
+  ConfigurationOptions,
 } from "./utils/awsUtils";
 import {TestInterface} from "ava";
 import {Response} from "aws-sdk/lib/response";
@@ -31,7 +31,7 @@ export interface DynamoDBContext<TableNames extends string[]> {
 
   tableNames: MappedTableNames<TableNames>;
   uniqueIdentifier: string;
-  config: SimpleServiceConfigurationOptions;
+  config: ConfigurationOptions;
 }
 
 export interface DynamoDBTestContext<TableNames extends string[]> {
@@ -56,7 +56,7 @@ export function tableSchema (schema: DynamoDB.CreateTableInput[]): void {
   tableSchemas.push(...cloneDeep(schema));
 }
 
-function setNotRetryable (response: Response<any, any>) {
+function setNotRetryable (response: Response<any, any>): void {
   if (response.error.code !== 'InternalFailure') {
     // Do not retry table deletion because it leads to
     // ResourceNotFoundException when trying to delete the table twice
@@ -79,7 +79,7 @@ function buildTableNameMapping (
   }));
 }
 
-async function assertTableDoesNotExist (dynamoClient: DynamoDB, tableName: string) {
+async function assertTableDoesNotExist (dynamoClient: DynamoDB, tableName: string): Promise<boolean> {
   try {
     await dynamoClient.describeTable({ TableName: tableName }).promise();
   } catch (e) {
@@ -184,13 +184,23 @@ export async function createTables (
   }
 }
 
+export interface LaunchDynamoContainerResult {
+  url: string;
+  stopContainer: () => Promise<any>;
+}
+
 /**
  * @param {object} opts
  * @param {object} opts.docker Used to mock the Docker library in tests
  * @param {boolean} opts.inMemory Whether to run local DynamoDB in in-memory mode.
  * 'false' persists data to disk.
  */
-export async function launchDynamoContainer ({ docker = new Docker(), inMemory = false }: DynamoDBTestOptions = {}) {
+export async function launchDynamoContainer (
+  {
+    docker = new Docker(),
+    inMemory = false
+  }: DynamoDBTestOptions = {}
+): Promise<LaunchDynamoContainerResult> {
   await ensureImage(docker, DYNAMODB_IMAGE);
 
   const container = await docker.createContainer({
@@ -257,7 +267,7 @@ export function dynamoDBTestHooks <TableNames extends string[]>(
   opts?: DynamoDBTestOptions
 ) {
   let connection: AwsUtilsConnection | undefined;
-  let config: SimpleServiceConfigurationOptions | undefined;
+  let config: ConfigurationOptions | undefined;
   const schemas: DynamoDB.CreateTableInput[] = opts?.tableSchemas || tableSchemas;
 
   async function beforeAll () {
@@ -285,7 +295,7 @@ export function dynamoDBTestHooks <TableNames extends string[]>(
     return context;
   }
 
-  async function afterEach (context?: DynamoDBContext<any>) {
+  async function afterEach (context?: DynamoDBContext<any>): Promise<void> {
     if (!context) {
       return;
     }
@@ -293,7 +303,7 @@ export function dynamoDBTestHooks <TableNames extends string[]>(
     await destroyTables(schemas, dynamoClient, uniqueIdentifier);
   }
 
-  async function afterAll () {
+  async function afterAll (): Promise<void> {
     // If the beforeAll block executed long enough to set a connection,
     // then it should be cleaned up
     if (connection) {
@@ -317,7 +327,7 @@ export function useDynamoDB (
   anyTest: TestInterface,
   useUniqueTables?: boolean,
   opts?: DynamoDBTestOptions
-) {
+): void {
   const test = anyTest as TestInterface<DynamoDBTestContext<any>>
   const testHooks = dynamoDBTestHooks(useUniqueTables, opts);
 
