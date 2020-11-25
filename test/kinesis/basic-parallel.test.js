@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 const test = require('ava');
-const uuid = require('uuid');
+const { v4: uuid } = require('uuid');
 
 const { streams, useKinesisDocker } = require('../../src/kinesis');
 
@@ -77,6 +77,6 @@ test('The helper provides a config object', async (test) => {
   const { config } = test.context.kinesis;
 
   test.true(config.credentials instanceof AWS.Credentials);
-  test.true(config.endpoint instanceof AWS.Endpoint);
+  test.is(typeof config.endpoint, 'string', config.endpoint);
   test.truthy(config.region);
 });

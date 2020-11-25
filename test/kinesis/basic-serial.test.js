@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 const test = require('ava');
-const uuid = require('uuid');
+const { v4: uuid } = require('uuid');
 
 const { streams, useKinesisDocker } = require('../../src/kinesis');
 

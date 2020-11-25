@@ -17,6 +17,7 @@ type LocalStackServiceClients = AWS.APIGateway |
   AWS.CloudFormation |
   AWS.CloudWatch |
   AWS.CloudWatchLogs |
+  AWS.CloudWatchEvents |
   AWS.DynamoDB |
   AWS.DynamoDBStreams |
   AWS.EC2 |
@@ -54,7 +55,7 @@ export interface LocalStackServices {
   ec2: LocalStackService<AWS.EC2>;
   es: LocalStackService<AWS.ES>;
   elasticsearch: LocalStackService<ElasticSearchClient>;
-  //?eLocalStackService<vents: aws.CloudWatchEvents>;
+  events: LocalStackService<AWS.CloudWatchEvents>;
   firehose: LocalStackService<AWS.Firehose>;
   iam: LocalStackService<AWS.IAM>;
   kinesis: LocalStackService<AWS.Kinesis>;
@@ -134,7 +135,7 @@ export interface LocalStackBaseService<Client extends LocalStackServiceClients> 
   isReady(client: Client): Promise<any>;
 }
 
-function getService<Service extends keyof LocalStackServices>(service: Service): LocalStackBaseService<LocalStackServices[Service]['client']> {
+export function getService<Service extends keyof LocalStackServices>(service: Service): LocalStackBaseService<LocalStackServices[Service]['client']> {
   switch (service) {
     case 'apigateway':
       return {
@@ -190,11 +191,12 @@ function getService<Service extends keyof LocalStackServices>(service: Service):
         getClient: ({ connection: { url: node } }) => new ElasticSearchClient({ node }),
         isReady: async (client: ElasticSearchClient) => client.ping()
       };
-    // 'events': {
-    //   port: '4587',
-    //   getClient: ({config}) => new AWS.CloudWatchEvents(config),
-    //   isReady: (client) => client.testEventPattern().promise()
-    // },
+    case 'events':
+      return {
+        port: '4587',
+        getClient: ({config}) => new AWS.CloudWatchEvents(config),
+        isReady: (client: AWS.CloudWatchEvents) => client.listRules().promise()
+      };
     case 'firehose':
       return {
         port: '4573',
@@ -294,7 +296,7 @@ export const LOCALSTACK_SERVICES = {
   ec2: getService('ec2'),
   es: getService('es'),
   elasticsearch: getService('elasticsearch'),
-  //?e getService('//?'),
+  events: getService('events'),
   firehose: getService('firehose'),
   iam: getService('iam'),
   kinesis: getService('kinesis'),
@@ -310,6 +312,8 @@ export const LOCALSTACK_SERVICES = {
   stepfunctions: getService('stepfunctions'),
   sts: getService('sts'),
 }
+
+const validServices = Object.keys(LOCALSTACK_SERVICES);
 
 function getExposedPorts (): ContainerCreateOptions['ExposedPorts'] {
   const ports: ContainerCreateOptions['ExposedPorts'] = {};
@@ -355,18 +359,24 @@ export async function getConnection <Service extends keyof LocalStackServices>({
   if (services.length === 0) {
     throw new Error('No services provided');
   }
+
+  services.forEach(service => {
+    if (!validServices.includes(service)) {
+      throw new Error(`Unknown service ${service}`)
+    }
+  })
+
   const [majorStr, minorStr] =  versionTag.split(/\./g);
   const [major, minor] = [Number.parseInt(majorStr, 10), Number.parseInt(minorStr, 10)];
   const ExposedPorts: ContainerCreateOptions['ExposedPorts'] = {}
   let localStackPort: string | undefined;
-  if (major < 1) {
-    if (minor <= 10) {
-      Object.assign(ExposedPorts, getExposedPorts());
-    } else {
-      localStackPort = `${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || 4566}`;
-      ExposedPorts[`${localStackPort}/tcp`] = {}
-    }
+  if (major < 1 && minor <= 10) {
+    Object.assign(ExposedPorts, getExposedPorts());
+  } else {
+    localStackPort = `${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || 4566}`;
+    ExposedPorts[`${localStackPort}/tcp`] = {}
   }
+
   const image = `${LOCALSTACK_IMAGE}:${versionTag}`;
   const docker = new Docker();
   const environment = new Environment();
@@ -384,9 +394,11 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     Env: [
       `SERVICES=${services.join(',')}`,
       'DEBUG=1',
-      'LAMBDA_EXECUTOR=docker',
-      'LAMBDA_DOCKER_NETWORK=host',
-      `LAMBDA_TOOLS_LOCALSTACK_PORT=${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT}`,
+      `LAMBDA_EXECUTOR=${process.env.LAMBDA_EXECUTOR || /* istanbul ignore next */ 'docker'}`,
+      `LAMBDA_REMOTE_DOCKER=${process.env.LAMBDA_REMOTE_DOCKER || /* istanbul ignore next */ ''}`,
+      `LAMBDA_DOCKER_NETWORK=${process.env.LAMBDA_DOCKER_NETWORK || /* istanbul ignore next */ 'host'}`,
+      `LAMBDA_TOOLS_LOCALSTACK_PORT=${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || /* istanbul ignore next */ ''}`,
+      `HOST_TMP_FOLDER=${process.env.HOST_TMP_FOLDER || /* istanbul ignore next */ ''}`
     ]
   });
 
@@ -411,9 +423,9 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     mappedServices,
     getOutput: () => output.toString(),
     clearOutput: () => output.reset(),
-    cleanup: () => {
+    cleanup: async () => {
       environment.restore();
-      return container.stop();
+      return await container.stop();
     }
   };
 }

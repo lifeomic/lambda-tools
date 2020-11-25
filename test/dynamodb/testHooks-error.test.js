@@ -38,7 +38,7 @@ test.serial('the beforeEach hook does not create clients when beforeAll fails', 
 
   try {
     await test.throwsAsync(beforeAll, { instanceOf: Error, message: error.message });
-    await test.throwsAsync(beforeEach, 'Invalid DynamoDB test configuration.');
+    await test.throwsAsync(beforeEach, { message: 'Invalid DynamoDB test configuration.' });
   } finally {
     ensureStub.restore();
   }

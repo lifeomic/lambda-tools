@@ -58,13 +58,13 @@ test('assertSuccess throws on a graphql error', async (test) => {
   }
 ]`;
 
-  test.throws(() => assertSuccess(response), expectedErrorMessage);
+  test.throws(() => assertSuccess(response), { message: expectedErrorMessage });
 });
 
 test('assertError throws on a successful response', async (test) => {
   const query = '{ success }';
   const response = await test.context.graphql(query);
-  test.throws(() => assertError(response), 'Expected error but none found');
+  test.throws(() => assertError(response), { message: 'Expected error but none found' });
 });
 
 test('assertError does not throw on a failed response', async (test) => {
@@ -76,7 +76,7 @@ test('assertError does not throw on a failed response', async (test) => {
 test('assertError throws if no error matches the path', async (test) => {
   const query = '{ error }';
   const response = await test.context.graphql(query);
-  test.throws(() => assertError(response, 'some.other.path', 'boom!'), `No error found with path 'some.other.path'. The paths with errors were: error`);
+  test.throws(() => assertError(response, 'some.other.path', 'boom!'), { message: `No error found with path 'some.other.path'. The paths with errors were: error` });
 });
 
 test('assertError throws if the error does not match the message', async (test) => {
@@ -93,7 +93,7 @@ test('assertError throws if the error does not match the message', async (test) 
     expectedMessage = e.message;
   }
 
-  test.throws(() => assertError(response, 'error', 'some other message'), expectedMessage);
+  test.throws(() => assertError(response, 'error', 'some other message'), { message: expectedMessage });
 });
 
 test('assertError throws if the path is undefined and no error has undefined path', test => {
@@ -102,7 +102,7 @@ test('assertError throws if the path is undefined and no error has undefined pat
       errors: [{ message: 'foo', path: ['some', 'path'] }]
     }
   };
-  test.throws(() => assertError(response, undefined, 'something'), `No error found with path 'undefined'. The paths with errors were: some.path`);
+  test.throws(() => assertError(response, undefined, 'something'), { message: `No error found with path 'undefined'. The paths with errors were: some.path` });
 });
 
 test('assertError doesn\'t throw on mixed path/no-path errors', test => {

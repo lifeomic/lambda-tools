@@ -4,6 +4,7 @@ const { executeContainerCommand } = require('../../src/docker');
 
 test('response includes stdout, stderr, and inspectOutput with ExitCode 0', async (t) => {
   const container = await createDefaultContainer();
+  console.log(`Started container ${container.id}`);
   try {
     await container.start();
     const command = ['pwd'];
@@ -12,7 +13,7 @@ test('response includes stdout, stderr, and inspectOutput with ExitCode 0', asyn
     t.is(stderr.toString('utf8'), '');
     t.is(inspectOutput.ExitCode, 0);
   } finally {
-    // don't wait for container to stop since it could take a while
-    container.stop();
+    await container.stop();
+    console.log(`Stopped container ${container.id}`);
   }
 });

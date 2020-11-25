@@ -1,6 +1,6 @@
 const path = require('path');
 const test = require('ava');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const { build, useComposeContainer, useLambda } = require('../../src/lambda');
 const { createContainer, FIXTURES_DIRECTORY } = require('../helpers/lambda');
@@ -32,9 +32,12 @@ test.before(async () => {
 test.after.always(async () => {
   delete process.env.COMPOSE_PROJECT_NAME;
   try {
-    container.stop();
+    if (container) {
+      await container.stop();
+      console.log(`Stopped container ${container.id}`);
+    }
   } catch (error) {
-    // swallow errors...
+    console.error(error);
   }
 });
 

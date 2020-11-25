@@ -4,14 +4,14 @@ const { LOCALSTACK_SERVICES, getConnection } = require('../../src/localstack');
 const services = Object.keys(LOCALSTACK_SERVICES);
 
 test.before(async t => {
-  const { mappedServices, cleanup } = await getConnection({ services, versionTag: '0.10.6' });
+  const { mappedServices, cleanup } = await getConnection({ services, versionTag: '0.12.2' });
   Object.assign(t.context, { mappedServices, cleanup });
 });
 
-test.after.always(t => {
+test.after.always(async t => {
   const { cleanup } = t.context;
   if (cleanup) {
-    cleanup();
+    await cleanup();
   }
 });
 

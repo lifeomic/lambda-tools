@@ -8,14 +8,17 @@ test.before(async t => {
   Object.assign(t.context, { mappedServices, cleanup });
 });
 
-test.after.always(t => {
+test.after.always(async t => {
   const { cleanup } = t.context;
   if (cleanup) {
-    cleanup();
+    await cleanup();
   }
 });
 
 services.forEach(serviceName => {
+  if (serviceName === 'events') {
+    return;
+  }
   test(`${serviceName} should be available`, async t => {
     const { mappedServices } = t.context;
     const service = mappedServices[serviceName];
