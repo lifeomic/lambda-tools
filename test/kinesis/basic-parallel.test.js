@@ -77,6 +77,6 @@ test('The helper provides a config object', async (test) => {
   const { config } = test.context.kinesis;
 
   test.true(config.credentials instanceof AWS.Credentials);
-  test.true(config.endpoint instanceof AWS.Endpoint);
+  test.is(typeof config.endpoint, 'string', config.endpoint);
   test.truthy(config.region);
 });

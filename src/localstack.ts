@@ -17,6 +17,7 @@ type LocalStackServiceClients = AWS.APIGateway |
   AWS.CloudFormation |
   AWS.CloudWatch |
   AWS.CloudWatchLogs |
+  AWS.CloudWatchEvents |
   AWS.DynamoDB |
   AWS.DynamoDBStreams |
   AWS.EC2 |
@@ -54,7 +55,7 @@ export interface LocalStackServices {
   ec2: LocalStackService<AWS.EC2>;
   es: LocalStackService<AWS.ES>;
   elasticsearch: LocalStackService<ElasticSearchClient>;
-  //?eLocalStackService<vents: aws.CloudWatchEvents>;
+  events: LocalStackService<AWS.CloudWatchEvents>;
   firehose: LocalStackService<AWS.Firehose>;
   iam: LocalStackService<AWS.IAM>;
   kinesis: LocalStackService<AWS.Kinesis>;
@@ -190,11 +191,12 @@ export function getService<Service extends keyof LocalStackServices>(service: Se
         getClient: ({ connection: { url: node } }) => new ElasticSearchClient({ node }),
         isReady: async (client: ElasticSearchClient) => client.ping()
       };
-    // 'events': {
-    //   port: '4587',
-    //   getClient: ({config}) => new AWS.CloudWatchEvents(config),
-    //   isReady: (client) => client.testEventPattern().promise()
-    // },
+    case 'events':
+      return {
+        port: '4587',
+        getClient: ({config}) => new AWS.CloudWatchEvents(config),
+        isReady: (client: AWS.CloudWatchEvents) => client.listRules().promise()
+      };
     case 'firehose':
       return {
         port: '4573',
@@ -294,7 +296,7 @@ export const LOCALSTACK_SERVICES = {
   ec2: getService('ec2'),
   es: getService('es'),
   elasticsearch: getService('elasticsearch'),
-  //?e getService('//?'),
+  events: getService('events'),
   firehose: getService('firehose'),
   iam: getService('iam'),
   kinesis: getService('kinesis'),
