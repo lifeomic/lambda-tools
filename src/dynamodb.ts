@@ -1,10 +1,12 @@
 import assert from 'assert';
-import DynamoDB from 'aws-sdk/clients/dynamodb'
-import DynamoDBStreams from 'aws-sdk/clients/dynamodbstreams'
+import {
+  DynamoDB,
+  DynamoDBStreams
+} from 'aws-sdk'
 import cloneDeep from 'lodash/cloneDeep';
 import fromPairs from 'lodash/fromPairs';
 import Docker from 'dockerode';
-import Environment from './Environment';
+import { Environment } from './Environment';
 import { v4 as uuid } from 'uuid';
 import { pQueue } from './utils/config';
 import {
@@ -12,8 +14,8 @@ import {
   ConnectionAndConfig,
   ConfigurationOptions,
 } from "./utils/awsUtils";
-import {TestInterface} from "ava";
-import {Response} from "aws-sdk/lib/response";
+import { TestInterface } from "ava";
+import { Response } from "aws-sdk/lib/response";
 
 const { getHostAddress, ensureImage } = require('./docker');
 const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
@@ -93,9 +95,9 @@ async function assertTableDoesNotExist (dynamoClient: DynamoDB, tableName: strin
 }
 
 export async function destroyTables (
-  schemas: DynamoDB.CreateTableInput[],
   dynamoClient: DynamoDB,
-  uniqueIdentifier?: string
+  uniqueIdentifier?: string,
+  schemas: DynamoDB.CreateTableInput[] = tableSchemas,
 ) {
   const failedDeletions: string[] = [];
   const { TableNames = [] } = await dynamoClient.listTables().promise();
@@ -137,9 +139,9 @@ export async function destroyTables (
 }
 
 export async function createTables (
-  schemas: DynamoDB.CreateTableInput[],
   dynamoClient: DynamoDB,
-  uniqueIdentifier?: string
+  uniqueIdentifier?: string,
+  schemas: DynamoDB.CreateTableInput[] = tableSchemas,
 ) {
   const failedProvisons: string[] = [];
   await pQueue.addAll(
@@ -176,7 +178,7 @@ export async function createTables (
 
   if (failedProvisons.length) {
     try {
-      await destroyTables(schemas, dynamoClient, uniqueIdentifier);
+      await destroyTables(dynamoClient, uniqueIdentifier, schemas);
     } catch (err) {
       logger.error(`Failed to destroy tables after error`, err);
     }
@@ -291,7 +293,7 @@ export function dynamoDBTestHooks <TableNames extends string[]>(
       config: config!
     };
 
-    await createTables(schemas, dynamoClient, uniqueIdentifier);
+    await createTables(dynamoClient, uniqueIdentifier, schemas);
     return context;
   }
 
@@ -300,7 +302,7 @@ export function dynamoDBTestHooks <TableNames extends string[]>(
       return;
     }
     const { dynamoClient, uniqueIdentifier } = context;
-    await destroyTables(schemas, dynamoClient, uniqueIdentifier);
+    await destroyTables(dynamoClient, uniqueIdentifier, schemas);
   }
 
   async function afterAll (): Promise<void> {

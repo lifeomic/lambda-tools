@@ -1,5 +1,5 @@
 const test = require('ava');
-const WriteBuffer = require('../src/WriteBuffer');
+const { WriteBuffer } = require('../src/WriteBuffer');
 
 const { Writable } = require('stream');
 

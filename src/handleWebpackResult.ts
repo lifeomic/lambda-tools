@@ -18,5 +18,3 @@ export const handleWebpackResults = (webpackResult: webpack.Stats) => {
     throw new Error('compilation_error');
   }
 };
-
-export default handleWebpackResults;

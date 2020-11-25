@@ -5,7 +5,7 @@ const cloneDeep = require('lodash/cloneDeep');
 const fromPairs = require('lodash/fromPairs');
 
 const { getHostAddress, ensureImage } = require('./docker');
-const Environment = require('./Environment');
+const { Environment } = require('./Environment');
 const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 const kinesisTools = require('./utils/kinesisTools');
 const { localstackReady } = require('./localstack');

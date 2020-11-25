@@ -7,7 +7,7 @@ export interface Entry {
   name: string;
 }
 
-module.exports = async function (zipFile: string, entries: Entry[]) {
+export async function zip(zipFile: string, entries: Entry[]) {
   await fs.mkdirp(path.dirname(zipFile));
 
   return new Promise((resolve, reject) => {
@@ -32,4 +32,4 @@ module.exports = async function (zipFile: string, entries: Entry[]) {
 
     archive.finalize();
   });
-};
+}

@@ -5,7 +5,7 @@ const { v4: uuid } = require('uuid');
 const crypto = require('crypto');
 const debug = require('debug');
 
-const WriteBuffer = require('../../src/WriteBuffer');
+const { WriteBuffer } = require('../../src/WriteBuffer');
 
 const { build, useNewContainer, useLambda } = require('../../src/lambda');
 const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
