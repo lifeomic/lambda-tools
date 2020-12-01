@@ -101,10 +101,10 @@ export async function destroyTables (
   schemas: DynamoDB.CreateTableInput[] = tableSchemas,
 ) {
   const failedDeletions: string[] = [];
-  const { TableNames = [] } = await dynamoClient.listTables().promise();
+  const { TableNames } = await dynamoClient.listTables().promise();
   const schemaTableNames = schemas
     .map(({ TableName }) => getTableName(TableName, uniqueIdentifier));
-  const tablesToDestroy = TableNames
+  const tablesToDestroy = TableNames!
     .filter(name => schemaTableNames.includes(name));
 
   await pQueue.addAll(
@@ -298,7 +298,7 @@ export function dynamoDBTestHooks <TableNames extends string[]>(
     return context;
   }
 
-  async function afterEach (context?: DynamoDBContext<any>): Promise<void> {
+  async function afterEach (context?: DynamoDBContext<TableNames>): Promise<void> {
     if (!context) {
       return;
     }
