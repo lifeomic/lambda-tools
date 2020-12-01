@@ -89,6 +89,7 @@ async function assertTableDoesNotExist (dynamoClient: DynamoDB, tableName: strin
     if (e.code === 'ResourceNotFoundException'){
       return true;
     }
+    logger.error(e);
     throw e;
   }
   throw new Error(`Table ${tableName} still exists`);

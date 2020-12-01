@@ -16,3 +16,13 @@ test('A buffer can encode the collected data as a string', async (test) => {
 
   test.is(buffer.toString('utf8'), 'hello world');
 });
+
+test('the buffer can be reset', async (test) => {
+  const buffer = new WriteBuffer();
+  buffer.write('aGVsbG8=', 'base64');
+  buffer.write('20', 'hex');
+  buffer.reset();
+  buffer.write('world');
+
+  test.is(buffer.toString('utf8'), 'world');
+});
