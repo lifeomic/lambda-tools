@@ -423,20 +423,20 @@ async function compileAndRunTest (test, fixture, nodeVersion, expectedResult) {
 
 for (const nodeVersion of SUPPORTED_NODE_VERSIONS) {
   // Test that a common pattern can be packed without a regression
-  test.serial(`Can webpack files that use await inside for...of statements targetting ${nodeVersion}`, async (test) => {
+  test.serial(`Can webpack files that use await inside for...of statements targeting ${nodeVersion}`, async (test) => {
     await compileAndRunTest(test, 'async_test', nodeVersion);
   });
 
-  test.serial(`Can webpack files that use arrow functions inside async functions when targetting ${nodeVersion}`, async (test) => {
+  test.serial(`Can webpack files that use arrow functions inside async functions when targeting ${nodeVersion}`, async (test) => {
     await compileAndRunTest(test, 'async_with_arrow', nodeVersion, {});
   });
 
-  test.serial(`Can webpack files that use async iterators inside when targetting ${nodeVersion}`, async (test) => {
+  test.serial(`Can webpack files that use async iterators inside when targeting ${nodeVersion}`, async (test) => {
     await compileAndRunTest(test, 'async_iterators', nodeVersion, 5 + 4 + 3 + 2 + 1);
   });
 
   // Test that EJS modules can be packed because they are used by graphql
-  test.serial(`Can webpack modules that use .mjs modules when targetting ${nodeVersion}`, async (test) => {
+  test.serial(`Can webpack modules that use .mjs modules when targeting ${nodeVersion}`, async (test) => {
     await compileAndRunTest(test, 'es_modules/index', nodeVersion);
   });
 }

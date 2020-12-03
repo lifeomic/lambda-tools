@@ -1,8 +1,13 @@
-const archiver = require('archiver');
-const fs = require('fs-extra');
-const path = require('path');
+import archiver from 'archiver';
+import fs from 'fs-extra';
+import path from 'path';
 
-module.exports = async function (zipFile, entries) {
+export interface Entry {
+  file: string;
+  name: string;
+}
+
+export async function zip(zipFile: string, entries: Entry[]) {
   await fs.mkdirp(path.dirname(zipFile));
 
   return new Promise((resolve, reject) => {
@@ -27,4 +32,4 @@ module.exports = async function (zipFile, entries) {
 
     archive.finalize();
   });
-};
+}

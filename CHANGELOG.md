@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [12.0.1] - ***
 ### Typescript conversions
 - Converted the utils to full Typescript
+- Converted more files and DynamoDb to Typescript
 
 ## [12.0.0] - 2020-11-23
 ### Type Breaking

@@ -1,6 +1,6 @@
 const test = require('ava');
 const debug = require('debug');
-const WriteBuffer = require('../../src/WriteBuffer');
+const { WriteBuffer } = require('../../src/WriteBuffer');
 
 const { useLambdaContainer } = require('../helpers/lambda');
 

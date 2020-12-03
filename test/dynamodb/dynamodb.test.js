@@ -107,14 +107,16 @@ async function assertTablesPresent (t, client, expected, message) {
 
 function stubTableChangeFailure (t, client, functionName, errorCode) {
   let retryHook;
-  sinon.stub(client, functionName).onFirstCall().returns({
+  sinon.stub(client, functionName).returns({
     on: (_, func) => { retryHook = func; },
     promise: async () => {
       const error = new Error();
       error.code = errorCode;
       error.retryable = true;
-      retryHook({ error });
-      t.is(error.retryable, errorCode === 'InternalFailure');
+      if (retryHook) {
+        retryHook({ error });
+        t.is(error.retryable, errorCode === 'InternalFailure', JSON.stringify({ functionName, errorCode }));
+      }
       throw error;
     }
   });
@@ -261,6 +263,26 @@ test.serial('throws when destroyTables fails', async t => {
     });
 
     stubTableChangeFailure(t, client, 'deleteTable', 'SomeUnknownError');
+    const { message } = await t.throwsAsync(destroyTables(client));
+    t.is(message, 'Failed to destroy tables: test-table');
+  } finally {
+    await connection.cleanup();
+  }
+});
+
+test.serial('records when we could not find out the tables status', async t => {
+  const { connection, config } = await getConnection();
+
+  try {
+    const client = new AWS.DynamoDB(config);
+    sinon.stub(client, 'listTables').onFirstCall().returns({
+      promise: () => Promise.resolve({
+        TableNames: ['test-table']
+      })
+    });
+
+    stubTableChangeFailure(t, client, 'describeTable', 'SomeUnknownError');
+    stubTableChangeFailure(t, client, 'deleteTable', 'TimeoutError');
     const { message } = await t.throwsAsync(destroyTables(client));
     t.is(message, 'Failed to destroy tables: test-table');
   } finally {

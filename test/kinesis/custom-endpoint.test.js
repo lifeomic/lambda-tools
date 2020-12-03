@@ -1,4 +1,4 @@
-const Environment = require('../../src/Environment');
+const { Environment } = require('../../src/Environment');
 const test = require('ava');
 const sinon = require('sinon');
 const AWS = require('aws-sdk');

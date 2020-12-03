@@ -1,7 +1,10 @@
 import AWS from 'aws-sdk';
 import NestedError from 'nested-error-stacks';
 import promiseRetry from 'promise-retry';
-import {ServiceConfigurationOptions} from "aws-sdk/lib/service";
+import {ServiceConfigurationOptions} from 'aws-sdk/lib/service';
+import { getLogger } from './logging';
+
+const logger = getLogger('awsUtils');
 
 export interface AwsUtilsConnection {
   url: string;
@@ -48,11 +51,14 @@ export function buildConnectionAndConfig ({
 }
 
 export async function waitForReady (awsType: string, retryFunc: () => Promise<any>) {
+  const start = Date.now();
   await promiseRetry(async function (retry, retryNumber) {
     try {
       await retryFunc();
     } catch (error) {
-      retry(new NestedError(`${awsType} is still not ready after ${retryNumber} connection attempts`, error));
+      const message = `${awsType} is still not ready after ${retryNumber} connection attempts. Running for ${Date.now() - start}`
+      logger.debug(message, error);
+      retry(new NestedError(message, error));
     }
-  }, { minTimeout: 500, retries: 20 });
+  }, { maxTimeout: 1000, retries: 20 });
 }

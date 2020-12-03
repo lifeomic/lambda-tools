@@ -3,11 +3,11 @@ const fs = require('fs-extra');
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 const webpack = require('webpack');
-const zip = require('./zip');
+const { zip } = require('./zip');
 const chalk = require('chalk');
 const { promisify } = require('util');
 const glob = promisify(require('glob'));
-const handleWebpackResult = require('./handleWebpackResult');
+const { handleWebpackResults } = require('./handleWebpackResult');
 const defaults = require('lodash/defaults');
 
 const { loadPatch } = require('./patches');
@@ -330,7 +330,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
 
   const webpackResult = await run(transformedConfig);
 
-  handleWebpackResult(webpackResult);
+  handleWebpackResults(webpackResult);
 
   if (options.zip) {
     await zipOutputFiles(outputDir, Object.keys(entry));

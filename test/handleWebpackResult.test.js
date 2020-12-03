@@ -1,9 +1,9 @@
 const test = require('ava');
-const handleWebpackResult = require('../src/handleWebpackResult');
+const { handleWebpackResults } = require('../src/handleWebpackResult');
 
 test('Throw error if webpack result hasErrors() returns true', (test) => {
   const err = test.throws(() => {
-    handleWebpackResult({
+    handleWebpackResults({
       hasErrors: () => {
         return true;
       }

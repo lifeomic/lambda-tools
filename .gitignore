@@ -6,3 +6,5 @@ node_modules/
 yarn-error.log
 coverage/
 src/lambda.js
+src/localstack.js
+src/dynamodb.js

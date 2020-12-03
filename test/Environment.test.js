@@ -1,4 +1,4 @@
-const Environment = require('../src/Environment');
+const { Environment } = require('../src/Environment');
 const test = require('ava');
 
 test.serial('Setting an environment variable modifies the process state', async (test) => {

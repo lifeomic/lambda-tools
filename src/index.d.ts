@@ -1,6 +1,6 @@
 import * as docker from './docker';
 import * as dynamodb from './dynamodb';
-import { default as Environment } from './Environment';
+import * as Environment from './Environment';
 import * as graphql from './graphql';
 import * as lambda from './lambda';
 import * as localStack from './localstack';

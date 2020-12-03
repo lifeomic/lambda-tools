@@ -1,7 +1,7 @@
 const assert = require('assert');
 const Docker = require('dockerode');
 const os = require('os');
-const WriteBuffer = require('./WriteBuffer');
+const { WriteBuffer } = require('./WriteBuffer');
 const map = require('lodash/map');
 const flatten = require('lodash/flatten');
 
