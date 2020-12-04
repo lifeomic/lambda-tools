@@ -4,7 +4,7 @@ import * as index from '../src';
 
 import * as docker from '../src/docker';
 import * as dynamodb from '../src/dynamodb';
-import { default as  Environment } from '../src/Environment';
+import { default as Environment } from '../src/Environment';
 import * as graphql from '../src/graphql';
 import * as lambda from '../src/lambda';
 import * as localStack from '../src/localstack';
