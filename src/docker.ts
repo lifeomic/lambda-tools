@@ -15,23 +15,9 @@ const logger = getLogger('docker');
 
 export interface ExecuteCommandConfig {
   container: Docker.Container;
-  command: string | string[];
+  command: string[];
   environment?: string[];
   stdin?: string;
-}
-
-interface DockerOptions {
-  AttachStdin?: boolean;
-  AttachStdout?: boolean;
-  AttachStderr?: boolean;
-  DetachKeys?: string;
-  Tty?: boolean;
-  Env?: string[];
-  Cmd?: string | string[];
-  Privileged?: boolean;
-  User?: string;
-  WorkingDir?: string;
-  StdinOnce?: boolean;
 }
 
 type DockerExec = Exec & {
@@ -39,7 +25,7 @@ type DockerExec = Exec & {
 }
 
 export const executeContainerCommand = async ({ container, command, environment, stdin }: ExecuteCommandConfig) => {
-  const options: DockerOptions = {
+  const options: ExecCreateOptions = {
     AttachStderr: true,
     AttachStdout: true,
     Cmd: command
@@ -53,10 +39,9 @@ export const executeContainerCommand = async ({ container, command, environment,
 
   if (usingStdin) {
     options.AttachStdin = true;
-    options.StdinOnce = true;
   }
 
-  const exec = await container.exec(options as ExecCreateOptions) as DockerExec;
+  const exec = await container.exec(options) as DockerExec;
 
   const stderr = new WriteBuffer();
   const stdout = new WriteBuffer();
@@ -131,7 +116,7 @@ export const getHostAddress = async () => {
       UsernsMode: 'host'
     },
     Image: DEFAULT_IMAGE,
-    OpenStdin: true
+    OpenStdin: true,
   });
 
   await container.start();

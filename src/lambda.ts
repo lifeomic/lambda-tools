@@ -10,6 +10,7 @@ import { promisify } from 'util';
 import { Handler} from "aws-lambda";
 import { AxiosRequestConfig } from "axios";
 import { TestInterface } from "ava";
+import flatten from 'lodash/flatten';
 
 import { executeContainerCommand, ensureImage } from './docker';
 import { getLogger } from './utils/logging';
@@ -72,11 +73,11 @@ export async function destroyLambdaExecutionEnvironment (environment: ExecutionE
   }
 }
 
-async function getEntrypoint (docker: Docker, imageName: string): Promise<string | string[]> {
+async function getEntrypoint (docker: Docker, imageName: string): Promise<string[]> {
   const image = await (await docker.getImage(imageName)).inspect();
 
   if (image.ContainerConfig.Entrypoint) {
-    return image.ContainerConfig.Entrypoint;
+    return flatten([image.ContainerConfig.Entrypoint]);
   } else {
     const parentImageName = image.Parent;
     assert(parentImageName, `The image ${imageName} has no entrypoint and no parent image`);
@@ -113,7 +114,7 @@ export class LambdaRunner {
     return JSON.parse(result || '{}');
   }
 
-  private async buildCommand (): Promise<string | string[]> {
+  private async buildCommand (): Promise<string[]> {
     const container = await this.getContainer();
     const description = await container.inspect();
     const entrypoint = await getEntrypoint(this.docker, description.Image);
@@ -164,9 +165,9 @@ export class AlphaClient extends Alpha {
 
 const globalOptions: LambdaConfigOptions = {};
 
-exports.getGlobalOptions = () => Object.assign({}, globalOptions);
+export const getGlobalOptions = () => Object.assign({}, globalOptions);
 
-exports.build = webpack;
+export const build = webpack;
 
 async function buildMountpointFromZipfile (zipfile: string, mountpointParent?: string) {
   // It would be simpler if the standard TMPDIR directory could be used
@@ -205,7 +206,7 @@ async function buildMountpointFromZipfile (zipfile: string, mountpointParent?: s
   }
 }
 
-exports.useNewContainer = (
+export const useNewContainer = (
   {
     environment,
     mountpoint,
@@ -229,7 +230,7 @@ exports.useNewContainer = (
   Object.assign(globalOptions, { environment, handler, image, mountpoint, zipfile, mountpointParent, network });
 };
 
-exports.useComposeContainer = ({ environment, service, handler }: Pick<LambdaConfigOptions, 'environment' | 'handler'> & {service: string}) => {
+export const useComposeContainer = ({ environment, service, handler }: Pick<LambdaConfigOptions, 'environment' | 'handler'> & {service: string}) => {
   const container = `${process.env.COMPOSE_PROJECT_NAME}_${service}_1`;
   Object.assign(globalOptions, { container, environment, handler });
 };
@@ -288,15 +289,15 @@ export async function createLambdaExecutionEnvironment (options: FinalConfig): P
         HostConfig: {
           AutoRemove: true,
           Binds: [
-            `${mountpoint}:/var/task`
+            `${mountpoint}:/var/task`,
           ],
-          NetworkMode: networkId || executionEnvironment.network!.id
+          NetworkMode: networkId || executionEnvironment.network!.id,
         },
         Image: image,
         OpenStdin: true,
         Volumes: {
-          '/var/task': {}
-        }
+          '/var/task': {},
+        },
       });
       logger.debug(`Created container ${executionEnvironment.container.id}`)
     } catch (error) {
@@ -317,7 +318,7 @@ export async function createLambdaExecutionEnvironment (options: FinalConfig): P
   return executionEnvironment;
 }
 
-function useLambdaHooks (localOptions: LambdaConfigOptions) {
+export function useLambdaHooks (localOptions: LambdaConfigOptions) {
   const impliedOptions: Partial<FinalConfig> = {};
 
   let executionEnvironment: ExecutionEnvironment = {};
@@ -343,13 +344,11 @@ function useLambdaHooks (localOptions: LambdaConfigOptions) {
   return { beforeAll, beforeEach, afterAll };
 }
 
-exports.useLambdaHooks = useLambdaHooks;
-
 export interface LambdaTestContext {
   lambda: AlphaClient;
 }
 
-exports.useLambda = <T extends LambdaTestContext>(test: TestInterface<T>, localOptions: LambdaConfigOptions = {}) => {
+export const useLambda = <T extends LambdaTestContext>(test: TestInterface<T>, localOptions: LambdaConfigOptions = {}) => {
   const hooks = useLambdaHooks(localOptions);
 
   test.serial.before(async () => {
