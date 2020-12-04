@@ -5,25 +5,33 @@
 // failing completely.
 //
 // See https://docs.aws.amazon.com/lambda/latest/dg/vpc.html#vpc-configuring
+
+import dns, {LookupOneOptions} from 'dns';
+
+type CallbackWrapper = (err: NodeJS.ErrnoException | null, address: string, family: number) => void;
+type LookupMethod = (hostname: string, options: LookupOneOptions, callback: (err: NodeJS.ErrnoException | null, address: string, family: number) => void) => void;
+
 (function () {
-  const dns = require('dns');
+  const newDns: typeof dns & {
+    _raw?: { lookup: LookupMethod };
+    lookup: LookupMethod;
+  } = dns;
 
   const DELAY = 1000;
   const TRIES = 5;
 
-  dns._raw = { lookup: dns.lookup };
+  newDns._raw = { lookup: dns.lookup };
 
-  dns.lookup = function dnsLookupWrapper (hostname, options, callback) {
+  const lookup: LookupMethod = (hostname: string, options, callback) => {
     let remaining = TRIES;
-
-    function dnsLookupWrapperResponse (error, address, family) {
-      if (error && error.code === dns.NOTFOUND && --remaining > 0) {
+    const wrapper: CallbackWrapper = (error, address, family) => {
+      if (error?.code === dns.NOTFOUND && --remaining > 0) {
         // Using a logger other than the console would be ideal. Since this
         // code is injected as a patch, it is hard to get access to a better
         // logger
         console.error(`DNS lookup of ${hostname} failed and will be retried ${remaining} more times`);
         setTimeout(
-          () => dns._raw.lookup(hostname, options, dnsLookupWrapperResponse),
+          () => newDns._raw!.lookup(hostname, options, wrapper),
           DELAY
         );
         return;
@@ -37,6 +45,7 @@
       options = {};
     }
 
-    return dns._raw.lookup(hostname, options, dnsLookupWrapperResponse);
+    return newDns._raw!.lookup(hostname, options, wrapper);
   };
+  newDns.lookup = lookup as typeof dns.lookup;
 })();

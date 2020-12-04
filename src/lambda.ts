@@ -15,7 +15,7 @@ import flatten from 'lodash/flatten';
 import { executeContainerCommand, ensureImage } from './docker';
 import { getLogger } from './utils/logging';
 
-const webpack = require('./webpack');
+import webpack from './webpack';
 
 const logger = getLogger('lambda');
 

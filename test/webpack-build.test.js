@@ -1,4 +1,4 @@
-const build = require('../src/webpack');
+const build = require('../src/webpack').default;
 const fs = require('fs-extra');
 const JSZip = require('jszip');
 const path = require('path');
