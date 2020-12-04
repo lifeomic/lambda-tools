@@ -2,7 +2,7 @@ const sinon = require('sinon');
 const test = require('ava');
 
 function resetGraphqlHelper () {
-  const path = require.resolve('../src/graphql');
+  const path = require.resolve('../../src/graphql');
   // eslint-disable-next-line security/detect-object-injection
   delete require.cache[path];
 }
@@ -10,7 +10,7 @@ function resetGraphqlHelper () {
 test.before(resetGraphqlHelper);
 
 test.beforeEach((test) => {
-  const { useGraphQL } = require('../src/graphql');
+  const { useGraphQL } = require('../../src/graphql');
 
   test.context.mock = {
     serial: {

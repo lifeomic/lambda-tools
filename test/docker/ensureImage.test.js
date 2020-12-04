@@ -39,5 +39,5 @@ test('calls pullImage if listImages does not include the image', async function 
   // make sure that pull is not called with that image name
   const IMAGE_NEEDING_PULL = 'needs-pull:latest';
   await ensureImage(docker, IMAGE_NEEDING_PULL);
-  sinon.assert.calledWithExactly(docker.pull, IMAGE_NEEDING_PULL);
+  sinon.assert.calledWithExactly(docker.pull, IMAGE_NEEDING_PULL, {});
 });

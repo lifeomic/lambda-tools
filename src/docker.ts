@@ -1,19 +1,35 @@
-const assert = require('assert');
-const Docker = require('dockerode');
-const os = require('os');
-const { WriteBuffer } = require('./WriteBuffer');
-const map = require('lodash/map');
-const flatten = require('lodash/flatten');
+import assert from 'assert';
+import Docker, { Exec, ExecCreateOptions } from 'dockerode';
+import os from 'os';
+import { WriteBuffer } from './WriteBuffer';
+import map from 'lodash/map';
+import flatten from 'lodash/flatten';
+import { getLogger } from './utils/logging';
+import { EventEmitter } from 'events'
 
 const DEFAULT_IMAGE = 'alpine:3.6';
 const DEFAULT_ROUTE_PATTERN = /^default\b.*$/m;
 const INTERFACE_ADDRESS_PATTERN = /\binet addr:\d{1,3}\.\d{1,3}.\d{1,3}\.\d{1,3}\b/m;
 
-const { getLogger } = require('./utils/logging');
 const logger = getLogger('docker');
 
-const executeContainerCommand = async ({ container, command, environment, stdin }) => {
-  const options = {
+export interface ExecuteCommandConfig {
+  container: Docker.Container;
+  command: string[];
+  environment?: string[];
+  stdin?: string;
+}
+
+interface DockerOptions extends ExecCreateOptions {
+  StdinOnce?: boolean;
+}
+
+type DockerExec = Exec & {
+  output: EventEmitter & { end: (...args: any[]) => any };
+}
+
+export const executeContainerCommand = async ({ container, command, environment, stdin }: ExecuteCommandConfig) => {
+  const options: DockerOptions = {
     AttachStderr: true,
     AttachStdout: true,
     Cmd: command
@@ -30,13 +46,13 @@ const executeContainerCommand = async ({ container, command, environment, stdin 
     options.StdinOnce = true;
   }
 
-  const exec = await container.exec(options);
+  const exec = await container.exec(options) as DockerExec;
 
   const stderr = new WriteBuffer();
   const stdout = new WriteBuffer();
-  await exec.start(usingStdin ? { stdin: true, hijack: true } : undefined);
+  await exec.start(usingStdin ? { stdin: true, hijack: true } : {});
   if (usingStdin) {
-    exec.output.end(Buffer.from(stdin));
+    exec.output.end(Buffer.from(stdin!));
   }
   container.modem.demuxStream(exec.output, stdout, stderr);
   await new Promise((resolve, reject) => {
@@ -47,39 +63,43 @@ const executeContainerCommand = async ({ container, command, environment, stdin 
   return { stderr, stdout, inspectOutput };
 };
 
-const getDefaultInterface = (routeTable) => {
+const getDefaultInterface = (routeTable: string) => {
   const route = routeTable.match(DEFAULT_ROUTE_PATTERN);
   assert(route && route.length, 'Failed to parse route table for host');
 
-  const columns = route[0].split(/\s+/);
+  const columns = route![0].split(/\s+/);
   assert(columns.length > 7, 'Failed to parse default route');
   return columns[7];
 };
 
-const getInterfaceAddress = (ifconfig) => {
+const getInterfaceAddress = (ifconfig: string) => {
   const match = ifconfig.match(INTERFACE_ADDRESS_PATTERN);
   assert(match && match.length, 'Failed to parse interface configuration');
-  return match[0].split(':')[1];
+  return match![0].split(':')[1];
 };
 
-const pullImage = async (docker, image) => {
-  const stream = await docker.pull(image);
-  await new Promise(async (resolve, reject) => {
-    docker.modem.followProgress(stream, resolve, (progress) => {
+export const pullImage = async (docker: Docker, image: string) => {
+  const stream = await docker.pull(image, {});
+  await new Promise((resolve) => {
+    docker.modem.followProgress(stream, resolve, (progress: {status: string; progress?: string}) => {
       logger.debug(`${image}: ${progress.status} ${progress.progress ? progress.progress : ''}`);
     });
   });
 };
 
-const imageExists = async (docker, image) => {
+export const imageExists = async (docker: Docker, image: string) => {
   const images = await docker.listImages();
   const imageTags = flatten(map(images, 'RepoTags'));
   return imageTags.includes(image);
 };
 
-exports.executeContainerCommand = executeContainerCommand;
+export const ensureImage = async (docker: Docker, image: string) => {
+  if (!await imageExists(docker, image)) {
+    await pullImage(docker, image);
+  }
+};
 
-exports.getHostAddress = async () => {
+export const getHostAddress = async () => {
   if (process.env.DOCKER_HOST_ADDR) {
     return process.env.DOCKER_HOST_ADDR;
   }
@@ -118,14 +138,3 @@ exports.getHostAddress = async () => {
     logger.debug(`Stopped container ${container.id}`);
   }
 };
-
-exports.pullImage = pullImage;
-exports.imageExists = imageExists;
-
-const ensureImage = async (docker, image) => {
-  if (!await imageExists(docker, image)) {
-    await pullImage(docker, image);
-  }
-};
-
-exports.ensureImage = ensureImage;
