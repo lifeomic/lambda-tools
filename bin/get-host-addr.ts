@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-const { getHostAddress } = require('../src/docker');
+import { getHostAddress } from '../src/docker';
 
 getHostAddress()
-  .then(console.log)
+  .then(console.log.bind(console))
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;
