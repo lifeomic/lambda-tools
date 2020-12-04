@@ -1,29 +1,35 @@
 const babelEnvDeps = require('webpack-babel-env-deps');
-const fs = require('fs-extra');
-const path = require('path');
-const TerserPlugin = require('terser-webpack-plugin');
-const webpack = require('webpack');
-const { zip } = require('./zip');
-const chalk = require('chalk');
-const { promisify } = require('util');
-const glob = promisify(require('glob'));
-const { handleWebpackResults } = require('./handleWebpackResult');
-const defaults = require('lodash/defaults');
+import fs from 'fs-extra';
+import path from 'path';
+import TerserPlugin from 'terser-webpack-plugin';
+import webpack from 'webpack';
+const WebpackOptionsDefaulter = require('webpack/lib/WebpackOptionsDefaulter');
+import { zip } from './zip';
+import chalk from 'chalk';
+import { promisify } from 'util';
+import { default as rawGlob } from 'glob';
+import { handleWebpackResults } from './handleWebpackResult';
+import defaults from 'lodash/defaults';
+import flatten from 'lodash/flatten';
 
-const { loadPatch } = require('./patches');
-const { getLogger } = require('./utils/logging');
+import { loadPatch } from './patches';
+import { getLogger } from './utils/logging';
+
+const glob = promisify(rawGlob);
 const logger = getLogger('webpack');
 
-const WEBPACK_DEFAULTS = new webpack.WebpackOptionsDefaulter().process({});
-const run = promisify(webpack);
+const WEBPACK_DEFAULTS = new WebpackOptionsDefaulter().process({});
+const run = promisify<webpack.Configuration, webpack.Stats>(webpack);
 
 const CALLER_NODE_MODULES = 'node_modules';
 const DEFAULT_NODE_VERSION = '12.13.0';
 const LAMBDA_TOOLS_NODE_MODULES = path.resolve(__dirname, '..', 'node_modules');
 
-const getNormalizedFileName = (file) => path.basename(file).replace(/.ts$/, '.js');
+type Mode = 'development' | 'production' | 'none';
 
-const parseEntrypoint = (entrypoint) => {
+const getNormalizedFileName = (file: string) => path.basename(file).replace(/.ts$/, '.js');
+
+const parseEntrypoint = (entrypoint: string): Entrypoint => {
   const [ file, name ] = entrypoint.split(':');
 
   return {
@@ -36,7 +42,7 @@ const parseEntrypoint = (entrypoint) => {
  * Helper function to trim absolute file path by removing the `process.cwd()`
  * prefix if file is nested under `process.cwd()`.
  */
-function makeFilePathRelativeToCwd (file) {
+function makeFilePathRelativeToCwd (file: string) {
   const cwd = process.cwd();
   return (file.startsWith(cwd)) ? '.' + file.substring(cwd.length) : file;
 }
@@ -45,7 +51,7 @@ function makeFilePathRelativeToCwd (file) {
  * @param {String} outputDir the directory that contains output files
  * @param {String[]} entryNames the entrypoint names from which output was produced
  */
-async function zipOutputFiles (outputDir, entryNames) {
+async function zipOutputFiles (outputDir: string, entryNames: string[]) {
   logger.info('\nCreating zip file for each entrypoint...\n');
 
   for (const entryName of entryNames) {
@@ -78,7 +84,7 @@ async function zipOutputFiles (outputDir, entryNames) {
 
 const INDEX_FILES = ['index.js', 'index.ts'];
 
-async function findIndexFile (dir) {
+async function findIndexFile (dir: string) {
   for (const indexFile of INDEX_FILES) {
     const candidateFile = path.join(dir, indexFile);
     try {
@@ -105,7 +111,12 @@ async function findIndexFile (dir) {
   return null;
 }
 
-async function expandEntrypoints (entrypoints) {
+export interface Entrypoint {
+  file: string;
+  name: string;
+}
+
+async function expandEntrypoints (entrypoints: Entrypoint[]) {
   const finalEntrypoints = [];
 
   for (const entrypoint of entrypoints) {
@@ -155,7 +166,21 @@ async function expandEntrypoints (entrypoints) {
   return finalEntrypoints;
 }
 
-module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }) => {
+export interface Config {
+  entrypoint: string | string[];
+  serviceName: string;
+  nodeVersion: string;
+  cacheDirectory?: string;
+  enableDnsRetry?: boolean;
+  outputPath?: string;
+  enableRuntimeSourceMaps?: boolean;
+  tsconfig?: boolean;
+  minify?: boolean;
+  configTransformer?: (config: webpack.Configuration) => webpack.Configuration;
+  zip?: boolean;
+}
+
+export default async ({ entrypoint, serviceName = 'test-service', ...options }: Config) => {
   options = defaults(options, { enableRuntimeSourceMaps: false });
 
   // If an entrypoint is a directory then we discover all of the entrypoints
@@ -163,19 +188,15 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
   // For example, entrypoint might be "./src/lambdas" and we might discover
   // "./src/lambdas/abc/index.js" (a subdirectory with index file)
   // and "./src/lambdas/def.js" (a simple file)
-  const entrypoints = await expandEntrypoints(
-    [].concat(entrypoint).map((entrypoint) => {
-      return parseEntrypoint(entrypoint);
-    }));
+  const entrypoints = await expandEntrypoints(flatten([entrypoint]).map(parseEntrypoint));
 
-  const entry = entrypoints.reduce(
+  const entry = entrypoints.reduce<Record<string, string[]>>(
     (accumulator, entry) => {
       const { file, name } = entry;
       const preloadModules = ['@babel/polyfill'];
       if (options.enableRuntimeSourceMaps) {
         preloadModules.push('source-map-support/register');
       }
-      // eslint-disable-next-line security/detect-object-injection
       accumulator[name] = [...preloadModules, file];
       return accumulator;
     },
@@ -257,14 +278,14 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     };
 
   const optimization = options.minify
-    ? { minimizer: [new TerserPlugin({ sourceMap: true })] }
+    ? { minimizer: [new TerserPlugin({ terserOptions: { sourceMap: true } })] }
     : { minimize: false };
 
   const devtool = options.enableRuntimeSourceMaps
     ? 'source-map'
     : 'hidden-source-map';
 
-  const config = {
+  const config: webpack.Configuration = {
     entry,
     output: {
       path: outputDir,
@@ -292,7 +313,7 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
         }
       ]
     },
-    mode: process.env.WEBPACK_MODE || 'production',
+    mode: (process.env.WEBPACK_MODE || 'production') as Mode,
     optimization,
     resolve: {
       // Since build is being called by other packages dependencies may be
@@ -325,8 +346,8 @@ module.exports = async ({ entrypoint, serviceName = 'test-service', ...options }
     }
   };
 
-  const transformer = options.configTransformer || function (config) { return config; };
-  const transformedConfig = await transformer(config);
+  const transformer = options.configTransformer || function (config: webpack.Configuration) { return config; };
+  const transformedConfig: webpack.Configuration = await transformer(config);
 
   const webpackResult = await run(transformedConfig);
 
