@@ -19,7 +19,9 @@ test.afterEach(() => {
   sinon.restore();
 });
 
-test.afterEach.always(async (test) => fs.remove(test.context.buildDirectory));
+test.afterEach.always(async (test) => {
+  await fs.remove(test.context.buildDirectory);
+});
 
 test('Setting WEBPACK_MODE to development disables minification', async (test) => {
   const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');

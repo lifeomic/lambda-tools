@@ -1,7 +1,7 @@
 const Koa = require('koa');
 const test = require('ava');
 
-const { setupGraphQL, useGraphQL } = require('../src/graphql');
+const { setupGraphQL, useGraphQL } = require('../../src/graphql');
 const { ApolloServer, gql } = require('apollo-server-koa');
 
 const graphql = new ApolloServer({

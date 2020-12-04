@@ -2,7 +2,7 @@ const Koa = require('koa');
 const Router = require('koa-router');
 const test = require('ava');
 
-const { assertSuccess, setupGraphQL, useGraphQL } = require('../src/graphql');
+const { assertSuccess, setupGraphQL, useGraphQL } = require('../../src/graphql');
 
 useGraphQL(test);
 

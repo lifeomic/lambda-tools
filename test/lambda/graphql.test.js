@@ -1,11 +1,12 @@
 const path = require('path');
 const test = require('ava');
+const fs = require('fs-extra');
 const { v4: uuid } = require('uuid');
 
 const { build, useComposeContainer, useLambda } = require('../../src/lambda');
 const { createContainer, FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
-const LAMBDA_IMAGE = 'lambci/lambda:nodejs8.10';
+const LAMBDA_IMAGE = 'lambci/lambda:nodejs12.x';
 
 const buildDirectory = path.join(FIXTURES_DIRECTORY, 'build', uuid());
 let container = null;
@@ -31,6 +32,7 @@ test.before(async () => {
 
 test.after.always(async () => {
   delete process.env.COMPOSE_PROJECT_NAME;
+  await fs.remove(buildDirectory);
   try {
     if (container) {
       await container.stop();

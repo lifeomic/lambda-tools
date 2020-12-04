@@ -1,34 +1,84 @@
-const AWS = require('aws-sdk');
-const uuid = require('uuid');
-const Docker = require('dockerode');
-const cloneDeep = require('lodash/cloneDeep');
-const fromPairs = require('lodash/fromPairs');
+import AWS from 'aws-sdk';
+import { v4 as uuid } from 'uuid';
+import Docker from 'dockerode';
+import cloneDeep from 'lodash/cloneDeep';
+import fromPairs from 'lodash/fromPairs';
 
-const { getHostAddress, ensureImage } = require('./docker');
-const { Environment } = require('./Environment');
-const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
-const kinesisTools = require('./utils/kinesisTools');
-const { localstackReady } = require('./localstack');
-const logger = require('./utils/logging').getLogger('kinesis');
-const { pQueue } = require('./utils/config');
+import * as tools from './utils/kinesisTools';
 
-const KINESIS_IMAGE = 'localstack/localstack:0.10.6';
+import { getHostAddress, ensureImage } from './docker';
+import { Environment } from './Environment';
+import { AwsUtilsConnection, buildConnectionAndConfig, ConfigurationOptions, waitForReady } from './utils/awsUtils';
+import { localstackReady } from './localstack';
+import { getLogger } from './utils/logging';
+import { pQueue } from './utils/config';
+import { TestInterface } from 'ava';
 
-let kinesisStreams = [];
+const logger = getLogger('kinesis');
 
-function streams (streams) {
-  kinesisStreams = streams.map(StreamName => ({
-    StreamName,
-    ShardCount: 1
-  }));
+const KINESIS_IMAGE = 'localstack/localstack:0.12.2';
+
+export { tools };
+
+export type MappedStreamNames<KeyArray extends string[]> = {[Key in KeyArray[number]]: string}
+
+export interface KinesisContext<KeyArray extends string[]> {
+  kinesisClient: AWS.Kinesis;
+  config: ConfigurationOptions;
+  streamNames: MappedStreamNames<KeyArray>;
+  uniqueIdentifier: string;
 }
 
-function getStreamName (streamName, uniqueIdentifier) {
+export interface KinesisTestContext<KeyArray extends string[]> {
+  kinesis: KinesisContext<KeyArray>;
+}
+
+export interface UseKinesisContext {
+  kinesis: AWS.Kinesis;
+}
+
+const kinesisStreams: { StreamName: string; ShardCount: number }[] = [];
+
+export function streams (streams: string[]) {
+  kinesisStreams.length = 0;
+  kinesisStreams.push(...streams.map(StreamName => ({
+    StreamName,
+    ShardCount: 1
+  })));
+}
+
+function getStreamName (streamName: string, uniqueIdentifier: string) {
   return uniqueIdentifier ? `${streamName}-${uniqueIdentifier}` : streamName;
 }
 
-async function createStreams (kinesisClient, uniqueIdentifier) {
-  const failedProvisons = [];
+export async function destroyStreams (kinesisClient: AWS.Kinesis, uniqueIdentifier: string): Promise<void> {
+  const failedDeletions: string[] = [];
+  const { StreamNames } = await kinesisClient.listStreams().promise();
+  const streamNames = kinesisStreams
+    .map(({ StreamName }) => getStreamName(StreamName, uniqueIdentifier));
+  const streamsToDestroy = StreamNames
+    .filter(name => streamNames.includes(name));
+
+  await pQueue.addAll(
+    streamsToDestroy
+      .map(StreamName => async () => {
+        try {
+          await kinesisClient.deleteStream({ StreamName }).promise();
+          await kinesisClient.waitFor('streamNotExists', { StreamName }).promise();
+        } catch (err) {
+          failedDeletions.push(StreamName);
+          logger.error(`Failed to destroy stream "${StreamName}"`, err);
+        }
+      })
+  );
+
+  if (failedDeletions.length) {
+    throw new Error(`Failed to destroy streams: ${failedDeletions.join(', ')}`);
+  }
+}
+
+export async function createStreams (kinesisClient: AWS.Kinesis, uniqueIdentifier: string): Promise<void> {
+  const failedProvisons: string[] = [];
   await pQueue.addAll(
     kinesisStreams.map(stream => async () => {
       const newStream = cloneDeep(stream);
@@ -55,39 +105,13 @@ async function createStreams (kinesisClient, uniqueIdentifier) {
   }
 }
 
-async function destroyStreams (kinesisClient, uniqueIdentifier) {
-  const failedDeletions = [];
-  const { StreamNames } = await kinesisClient.listStreams().promise();
-  const streamNames = kinesisStreams
-    .map(({ StreamName }) => getStreamName(StreamName, uniqueIdentifier));
-  const streamsToDestroy = StreamNames
-    .filter(name => streamNames.includes(name));
-
-  await pQueue.addAll(
-    streamsToDestroy
-      .map(StreamName => async () => {
-        try {
-          await kinesisClient.deleteStream({ StreamName }).promise();
-          await kinesisClient.waitFor('streamNotExists', { StreamName }).promise();
-        } catch (err) {
-          failedDeletions.push(StreamName);
-          logger.error(`Failed to destroy stream "${StreamName}"`, err);
-        }
-      })
-  );
-
-  if (failedDeletions.length) {
-    throw new Error(`Failed to destroy streams: ${failedDeletions.join(', ')}`);
-  }
-}
-
-function buildStreamNameMapping (uniqueIdentifier) {
+function buildStreamNameMapping (uniqueIdentifier: string) {
   return fromPairs(kinesisStreams.map(({ StreamName }) => {
     return [StreamName, getStreamName(StreamName, uniqueIdentifier)];
   }));
 }
 
-async function getConnection () {
+export async function getConnection () {
   if (process.env.KINESIS_ENDPOINT) {
     return buildConnectionAndConfig({ url: process.env.KINESIS_ENDPOINT });
   }
@@ -97,12 +121,14 @@ async function getConnection () {
 
   await ensureImage(docker, KINESIS_IMAGE);
 
+  const localstackPort = `${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || 4566}`;
+
   const container = await docker.createContainer({
     HostConfig: {
       AutoRemove: true,
       PublishAllPorts: true
     },
-    ExposedPorts: { '4568/tcp': {} },
+    ExposedPorts: { [`${localstackPort}/tcp`]: {} },
     Image: KINESIS_IMAGE,
     Env: [
       'SERVICES=kinesis'
@@ -114,7 +140,7 @@ async function getConnection () {
 
   const containerData = await container.inspect();
   const host = await getHostAddress();
-  const port = containerData.NetworkSettings.Ports['4568/tcp'][0].HostPort;
+  const port = containerData.NetworkSettings.Ports[`${localstackPort}/tcp`][0].HostPort;
   const url = `http://${host}:${port}`;
 
   environment.set('AWS_ACCESS_KEY_ID', 'bogus');
@@ -137,9 +163,9 @@ async function getConnection () {
   return { connection, config };
 }
 
-function kinesisTestHooks (useUniqueStreams) {
-  let connection;
-  let config;
+export function kinesisTestHooks <KeyArray extends string[]>(useUniqueStreams?: boolean) {
+  let connection: AwsUtilsConnection;
+  let config: ConfigurationOptions;
 
   async function beforeAll () {
     const result = await getConnection();
@@ -159,7 +185,7 @@ function kinesisTestHooks (useUniqueStreams) {
     };
   }
 
-  async function afterEach (context) {
+  async function afterEach (context: KinesisContext<KeyArray>) {
     if (!context) {
       return;
     }
@@ -180,25 +206,25 @@ function kinesisTestHooks (useUniqueStreams) {
   };
 }
 
-function useKinesisDocker (test, useUniqueStreams) {
+export function useKinesisDocker (anyTest: TestInterface, useUniqueStreams?: boolean) {
+  const test = anyTest as TestInterface<KinesisTestContext<any>>;
   const testHooks = kinesisTestHooks(useUniqueStreams);
 
   test.serial.before(testHooks.beforeAll);
 
-  test.serial.beforeEach(async (test) => {
-    const context = await testHooks.beforeEach();
-    test.context.kinesis = context;
+  test.serial.beforeEach(async (t) => {
+    t.context.kinesis = await testHooks.beforeEach();
   });
 
-  test.serial.afterEach.always(async test => {
-    const context = test.context.kinesis;
-    await testHooks.afterEach(context);
+  test.serial.afterEach.always(async t => {
+    await testHooks.afterEach(t.context.kinesis);
   });
 
   test.serial.after.always(testHooks.afterAll);
 }
 
-function useKinesis (test, streamName) {
+export function useKinesis (anyTest: TestInterface, streamName: string) {
+  const test = anyTest as TestInterface<UseKinesisContext>;
   const kinesis = new AWS.Kinesis({
     endpoint: process.env.KINESIS_ENDPOINT
   });
@@ -210,8 +236,8 @@ function useKinesis (test, streamName) {
     }).promise();
   });
 
-  test.serial.beforeEach(function (test) {
-    test.context.kinesis = kinesis;
+  test.serial.beforeEach(t => {
+    t.context.kinesis = kinesis;
   });
 
   test.serial.after(async () => {
@@ -220,14 +246,3 @@ function useKinesis (test, streamName) {
     });
   });
 }
-
-module.exports = {
-  kinesisTestHooks,
-  useKinesisDocker,
-  useKinesis,
-  streams,
-  createStreams,
-  destroyStreams,
-  getConnection,
-  tools: kinesisTools
-};

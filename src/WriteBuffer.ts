@@ -4,7 +4,7 @@ type WriteParams = Parameters<Writable['_write']>;
 
 export class WriteBuffer extends Writable {
   private _buffer: Buffer[] = []
-  constructor (options: WritableOptions) {
+  constructor (options?: WritableOptions) {
     super(options);
   }
 
