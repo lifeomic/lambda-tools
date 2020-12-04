@@ -15,12 +15,22 @@ const logger = getLogger('docker');
 
 export interface ExecuteCommandConfig {
   container: Docker.Container;
-  command: string[];
+  command: string | string[];
   environment?: string[];
   stdin?: string;
 }
 
-interface DockerOptions extends ExecCreateOptions {
+interface DockerOptions {
+  AttachStdin?: boolean;
+  AttachStdout?: boolean;
+  AttachStderr?: boolean;
+  DetachKeys?: string;
+  Tty?: boolean;
+  Env?: string[];
+  Cmd?: string | string[];
+  Privileged?: boolean;
+  User?: string;
+  WorkingDir?: string;
   StdinOnce?: boolean;
 }
 
@@ -46,7 +56,7 @@ export const executeContainerCommand = async ({ container, command, environment,
     options.StdinOnce = true;
   }
 
-  const exec = await container.exec(options) as DockerExec;
+  const exec = await container.exec(options as ExecCreateOptions) as DockerExec;
 
   const stderr = new WriteBuffer();
   const stdout = new WriteBuffer();
