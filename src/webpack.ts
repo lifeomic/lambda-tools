@@ -168,13 +168,13 @@ async function expandEntrypoints (entrypoints: Entrypoint[]) {
 
 export interface Config {
   entrypoint: string | string[];
-  serviceName: string;
-  nodeVersion: string;
-  cacheDirectory?: string;
+  serviceName?: string;
+  nodeVersion?: string;
+  cacheDirectory?: boolean;
   enableDnsRetry?: boolean;
   outputPath?: string;
   enableRuntimeSourceMaps?: boolean;
-  tsconfig?: boolean;
+  tsconfig?: string;
   minify?: boolean;
   configTransformer?: (config: webpack.Configuration) => webpack.Configuration;
   zip?: boolean;

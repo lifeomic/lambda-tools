@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-const path = require('path');
-const chalk = require('chalk');
+import path from 'path';
+import chalk from 'chalk';
+import yargs from 'yargs';
 
-const { build } = require('../src/lambda');
+import build, {Config} from '../src/webpack';
 
-const epilog = `
+const epilogue = `
 Each entrypoint is a single source file that represents the top-level module for
 the bundle being produced. By default, the resulting bundle will use the
 basename of the entrypoint as the bundle name. If a :name suffix is provided
@@ -13,7 +14,7 @@ src/app.js:lambda.js would use src/app.js as the entrypoint and produce a bundle
 named lambda.js in the output directory.
 `;
 
-const argv = require('yargs')
+const argv = yargs
   .usage('$0 [<options>] <entrypoint[:name]>...')
   .option('d', {
     alias: 'dns-retry',
@@ -65,15 +66,15 @@ const argv = require('yargs')
     type: 'boolean'
   })
   .demandCommand(1)
-  .epilog(epilog)
+  .epilog(epilogue)
   .argv;
 
-const buildOptions = {
+const buildOptions: Config = {
   enableDnsRetry: argv.d,
-  entrypoint: argv._,
+  entrypoint: argv._ as string[],
   nodeVersion: argv.n,
   outputPath: argv.o,
-  minify: argv['minify'],
+  minify: argv.minify,
   serviceName: argv.s,
   zip: argv.z,
   tsconfig: argv.t,
