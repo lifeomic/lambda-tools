@@ -15,10 +15,10 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-       - name: Test Rev parse
-         run: git rev-parse "v$(npm -v)"
-       - name: Test Missing Tag
-         run: git rev-parse "v99.99.99"
+      - name: Test Rev parse
+        run: git rev-parse "v$(npm -v)"
+      - name: Test Missing Tag
+        run: git rev-parse "v99.99.99"
 #      - name: Install
 #        run: yarn install
 #      - name: Test
