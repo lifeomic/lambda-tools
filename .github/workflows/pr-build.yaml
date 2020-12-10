@@ -33,7 +33,7 @@ jobs:
           MASTER_COMMIT: ${{ steps.masterAndTagCommit.outputs.masterCommit }}
           TAG_COMMIT: ${{ steps.masterAndTagCommit.outputs.tagCommit }}
         if: ${{ steps.masterAndTagCommit.outputs.masterCommit != steps.masterAndTagCommit.outputs.tagCommit }}
-          run: echo "Tagged commit exists ${MASTER_COMMIT} ${TAG_COMMIT}"
+        run: echo "Tagged commit exists ${MASTER_COMMIT} ${TAG_COMMIT}"
 #      - name: Install
 #        run: yarn install
 #      - name: Test
