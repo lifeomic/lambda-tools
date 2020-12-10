@@ -22,7 +22,7 @@ jobs:
         env:
           LAMBDA_REMOTE_DOCKER: true
         run: yarn test
-      - id: masterAndTagCommit
+      - id: checkIfWeShouldRelease
         name: Check if tags exist in NPM and GIT
         run: |
           set +e
@@ -36,16 +36,17 @@ jobs:
           npm view "${PACKAGE_AND_VERSION}" dist.tarball | grep "v${PACKAGE_VERSION}" > /dev/null
           npmTagExists="$([ "$?" = "0" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
 
+          shouldRelease="$([ "$npmTagExists" = "false" ] && [ "$gitTagExists" = "true" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
+
           set -e
-          echo "::set-output name=gitTagExists::${gitTagExists}"
-          echo "::set-output name=npmTagExists::${npmTagExists}"
+          echo "::set-output name=shouldRelease::${shouldRelease}"
       - name: Publish
-        if: ${{ steps.masterAndTagCommit.outputs.gitTagExists == 'true' && steps.masterAndTagCommit.outputs.npmTagExists == 'false'}}
+        if: ${{ steps.checkIfWeShouldRelease.outputs.shouldRelease == 'true'}}
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.LIFEOMIC_NPM_TOKEN}}
       - name: Create Release
-        if: ${{ steps.masterAndTagCommit.outputs.gitTagExists == 'true' && steps.masterAndTagCommit.outputs.npmTagExists == 'false'}}
+        if: ${{ steps.checkIfWeShouldRelease.outputs.shouldRelease == 'true'}}
         id: create_release
         uses: actions/create-release@latest
         env:
