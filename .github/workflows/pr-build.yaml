@@ -31,20 +31,20 @@ jobs:
           npm view "${PACKAGE_AND_VERSION}" dist.tarball | grep "v${PACKAGE_VERSION}" > /dev/null
           npmTagExists="$([ "$?" = "1" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
 
+          shouldRelease="$([ "$npmTagExists" = "false" ] && [ "$gitTagExists" = "true" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
+
+          echo "${shouldRelease}"
           set -e
-          echo "::set-output name=gitTagExists::${gitTagExists}"
-          echo "::set-output name=npmTagExists::${npmTagExists}"
-      - name: No match
+          echo "::set-output name=shouldRelease::${shouldRelease}"
+      - name: Should not release
+        if: ${{ steps.masterAndTagCommit.outputs.shouldRelease == 'true'}}
         env:
-          GIT_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.gitTagExists }}
-          NPM_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.npmTagExists }}
-        if: ${{ steps.masterAndTagCommit.outputs.gitTagExists == 'true' && steps.masterAndTagCommit.outputs.npmTagExists == 'false'}}
-        run: echo "Tagged commit exists ${GIT_TAG_EXISTS} ${NPM_TAG_EXISTS}"
+          SHOULD_RELEASE: ${{ steps.masterAndTagCommit.outputs.shouldRelease }}
+        run: echo "Should release was true ${SHOULD_RELEASE}"
       - name: Matches
         env:
-          GIT_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.gitTagExists }}
-          NPM_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.npmTagExists }}
-        run: echo "Tagged commit exists ${GIT_TAG_EXISTS} ${NPM_TAG_EXISTS}"
+          SHOULD_RELEASE: ${{ steps.masterAndTagCommit.outputs.shouldRelease }}
+        run: echo "steps.masterAndTagCommit.outputs.shouldRelease == ${SHOULD_RELEASE}"
 #      - name: Install
 #        run: yarn install
 #      - name: Test
