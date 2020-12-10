@@ -23,11 +23,17 @@ jobs:
           echo "::set-output name=masterCommit::$(git rev-parse HEAD~2)"
           echo "::set-output name=tagCommit::$(git rev-list -n 1 "v$(node -p "require('./package').version")")"
       - name: No match
+        env:
+            MASTER_COMMIT: ${{ steps.masterAndTagCommit.outputs.masterCommit }}
+            TAG_COMMIT: ${{ steps.masterAndTagCommit.outputs.tagCommit }}
         if: ${{ steps.masterAndTagCommit.outputs.masterCommit == steps.masterAndTagCommit.outputs.tagCommit }}
-        run: echo "Tagged commit exists"
+        run: echo "Tagged commit exists ${MASTER_COMMIT} ${TAG_COMMIT}"
       - name: Matches
+        env:
+          MASTER_COMMIT: ${{ steps.masterAndTagCommit.outputs.masterCommit }}
+          TAG_COMMIT: ${{ steps.masterAndTagCommit.outputs.tagCommit }}
         if: ${{ steps.masterAndTagCommit.outputs.masterCommit != steps.masterAndTagCommit.outputs.tagCommit }}
-        run: echo "Tagged commit exists"
+          run: echo "Tagged commit exists ${MASTER_COMMIT} ${TAG_COMMIT}"
 #      - name: Install
 #        run: yarn install
 #      - name: Test
