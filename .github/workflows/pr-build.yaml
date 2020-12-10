@@ -15,10 +15,17 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Test Rev parse
-        run: git rev-parse "v$(npm -v)"
-      - name: Test Missing Tag
-        run: git rev-parse "v99.99.99"
+      - id: masterAndTagCommit
+        name: Get tag and expected commit hash
+        run: |
+          echo "::set-output name=masterCommit::$(git rev-parse HEAD~2)"
+          echo "::set-output name=tagCommit::$(git rev-list -n 1 "v$(node -p "require('./package').version")")"
+      - name: No match
+        if: ${{ steps.masterAndTagCommit.outputs.masterCommit == steps.masterAndTagCommit.outputs.tagCommit }}
+        run: echo "Tagged commit exists"
+      - name: Matches
+        if: ${{ steps.masterAndTagCommit.outputs.masterCommit != steps.masterAndTagCommit.outputs.tagCommit }}
+        run: echo "Tagged commit exists"
 #      - name: Install
 #        run: yarn install
 #      - name: Test
