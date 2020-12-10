@@ -26,10 +26,10 @@ jobs:
           export PACKAGE_AND_VERSION="${PACKAGE_NAME}@${PACKAGE_VERSION}"
           echo "${PACKAGE_NAME} ${PACKAGE_VERSION} ${PACKAGE_AND_VERSION}"
           git describe --exact-match --match "v${PACKAGE_VERSION}" HEAD^2 &>/dev/null
-          gitTagExists="$([ "$?" = "0" ] && BOOL="false" || BOOL="true"; echo $BOOL)"
+          gitTagExists="$([ "$?" = "0" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
 
           npm view "${PACKAGE_AND_VERSION}" dist.tarball | grep "v${PACKAGE_VERSION}" > /dev/null
-          npmTagExists="$([ "$?" = "0" ] && BOOL="false" || BOOL="true"; echo $BOOL)"
+          npmTagExists="$([ "$?" = "0" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
 
           set -e
           echo "::set-output name=gitTagExists::${gitTagExists}"
