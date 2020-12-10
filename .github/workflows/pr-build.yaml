@@ -34,13 +34,12 @@ jobs:
         env:
           GIT_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.gitTagExists }}
           NPM_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.npmTagExists }}
-        if: ${{ steps.masterAndTagCommit.outputs.gitTagExists == "true" && steps.masterAndTagCommit.outputs.npmTagExists == "false"}}
+        if: ${{ steps.masterAndTagCommit.outputs.gitTagExists == 'true' && steps.masterAndTagCommit.outputs.npmTagExists == 'false'}}
         run: echo "Tagged commit exists ${GIT_TAG_EXISTS} ${NPM_TAG_EXISTS}"
       - name: Matches
         env:
           GIT_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.gitTagExists }}
           NPM_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.npmTagExists }}
-        if: ${{ steps.masterAndTagCommit.outputs.gitTagExists == "true" && steps.masterAndTagCommit.outputs.npmTagExists == "false"}}
         run: echo "Tagged commit exists ${GIT_TAG_EXISTS} ${NPM_TAG_EXISTS}"
 #      - name: Install
 #        run: yarn install
