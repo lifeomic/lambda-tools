@@ -20,20 +20,28 @@ jobs:
       - id: masterAndTagCommit
         name: Get tag and expected commit hash
         run: |
-          echo "::set-output name=masterCommit::$(git rev-parse HEAD~2)"
-          echo "::set-output name=tagCommit::$(git rev-list -n 1 "v$(node -p "require('./package').version")")"
+          set +e
+          git describe --exact-match --match "${TAG_PREFIX}${NPM_PUBLISH_PACKAGE_VERSION}" HEAD^2 &>/dev/null
+          gitTagExists="$([ "$?" = "0" ] && BOOL="false" || BOOL="true"; echo $BOOL)"
+
+          npm view "${NPM_PACKAGE_AND_VERSION}" dist.tarball | grep "${NPM_PUBLISH_PACKAGE_VERSION}" > /dev/null
+          npmTagExists="$([ "$?" = "0" ] && BOOL="false" || BOOL="true"; echo $BOOL)"
+
+          set -e
+          echo "::set-output name=gitTagExists::${gitTagExists}"
+          echo "::set-output name=npmTagExists::${npmTagExists}"
       - name: No match
         env:
-            MASTER_COMMIT: ${{ steps.masterAndTagCommit.outputs.masterCommit }}
-            TAG_COMMIT: ${{ steps.masterAndTagCommit.outputs.tagCommit }}
-        if: ${{ steps.masterAndTagCommit.outputs.masterCommit == steps.masterAndTagCommit.outputs.tagCommit }}
-        run: echo "Tagged commit exists ${MASTER_COMMIT} ${TAG_COMMIT}"
+          GIT_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.gitTagExists }}
+          NPM_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.npmTagExists }}
+        if: ${{ steps.masterAndTagCommit.outputs.gitTagExists == "true" && steps.masterAndTagCommit.outputs.npmTagExists == "false"}}
+        run: echo "Tagged commit exists ${GIT_TAG_EXISTS} ${NPM_TAG_EXISTS}"
       - name: Matches
         env:
-          MASTER_COMMIT: ${{ steps.masterAndTagCommit.outputs.masterCommit }}
-          TAG_COMMIT: ${{ steps.masterAndTagCommit.outputs.tagCommit }}
-        if: ${{ steps.masterAndTagCommit.outputs.masterCommit != steps.masterAndTagCommit.outputs.tagCommit }}
-        run: echo "Tagged commit exists ${MASTER_COMMIT} ${TAG_COMMIT}"
+          GIT_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.gitTagExists }}
+          NPM_TAG_EXISTS: ${{ steps.masterAndTagCommit.outputs.npmTagExists }}
+        if: ${{ steps.masterAndTagCommit.outputs.gitTagExists == "true" && steps.masterAndTagCommit.outputs.npmTagExists == "false"}}
+        run: echo "Tagged commit exists ${GIT_TAG_EXISTS} ${NPM_TAG_EXISTS}"
 #      - name: Install
 #        run: yarn install
 #      - name: Test
