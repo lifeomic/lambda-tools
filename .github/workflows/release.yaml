@@ -2,17 +2,16 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - 'master'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Exit if not on master branch
-        if: endsWith(github.ref, 'master') == false
-        run: exit 0
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v1
         with:
           node-version: 12
@@ -23,11 +22,30 @@ jobs:
         env:
           LAMBDA_REMOTE_DOCKER: true
         run: yarn test
+      - id: masterAndTagCommit
+        name: Check if tags exist in NPM and GIT
+        run: |
+          set +e
+          export PACKAGE_NAME="$(node -p "require('./package').name")"
+          export PACKAGE_VERSION="$(node -p "require('./package').version")"
+          export PACKAGE_AND_VERSION="${PACKAGE_NAME}@${PACKAGE_VERSION}"
+
+          git describe --exact-match --match "v${PACKAGE_VERSION}" HEAD^2 &>/dev/null
+          gitTagExists="$([ "$?" = "0" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
+
+          npm view "${PACKAGE_AND_VERSION}" dist.tarball | grep "v${PACKAGE_VERSION}" > /dev/null
+          npmTagExists="$([ "$?" = "0" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
+
+          set -e
+          echo "::set-output name=gitTagExists::${gitTagExists}"
+          echo "::set-output name=npmTagExists::${npmTagExists}"
       - name: Publish
+        if: ${{ steps.masterAndTagCommit.outputs.gitTagExists == 'true' && steps.masterAndTagCommit.outputs.npmTagExists == 'false'}}
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.LIFEOMIC_NPM_TOKEN}}
       - name: Create Release
+        if: ${{ steps.masterAndTagCommit.outputs.gitTagExists == 'true' && steps.masterAndTagCommit.outputs.npmTagExists == 'false'}}
         id: create_release
         uses: actions/create-release@latest
         env:
