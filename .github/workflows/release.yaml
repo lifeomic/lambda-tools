@@ -30,7 +30,7 @@ jobs:
           packageVersion="$(node -p "require('./package').version")"
           packageNameAndVersion="${packageName}@${packageVersion}"
 
-          npm view "${packageNameAndVersion}" dist.tarball | grep "v${packageVersion}" > /dev/null
+          npm view "${packageNameAndVersion}" dist.tarball | grep "${packageVersion}" > /dev/null
           npmTagExists="$([ "$?" = "0" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
 
           set -e
