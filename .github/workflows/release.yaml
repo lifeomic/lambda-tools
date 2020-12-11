@@ -22,37 +22,33 @@ jobs:
         env:
           LAMBDA_REMOTE_DOCKER: true
         run: yarn test
-      - id: checkIfWeShouldRelease
+      - id: tagExistsAndVersion
         name: Check if tags exist in NPM and GIT
         run: |
           set +e
-          export PACKAGE_NAME="$(node -p "require('./package').name")"
-          export PACKAGE_VERSION="$(node -p "require('./package').version")"
-          export PACKAGE_AND_VERSION="${PACKAGE_NAME}@${PACKAGE_VERSION}"
+          packageName="$(node -p "require('./package').name")"
+          packageVersion="$(node -p "require('./package').version")"
+          packageNameAndVersion="${packageName}@${packageVersion}"
 
-          git describe --exact-match --match "v${PACKAGE_VERSION}" HEAD^2 &>/dev/null
-          gitTagExists="$([ "$?" = "0" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
-
-          npm view "${PACKAGE_AND_VERSION}" dist.tarball | grep "v${PACKAGE_VERSION}" > /dev/null
+          npm view "${packageNameAndVersion}" dist.tarball | grep "v${packageVersion}" > /dev/null
           npmTagExists="$([ "$?" = "0" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
 
-          shouldRelease="$([ "$npmTagExists" = "false" ] && [ "$gitTagExists" = "true" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
-
           set -e
-          echo "::set-output name=shouldRelease::${shouldRelease}"
+          echo "::set-output name=npmTagExists::${npmTagExists}"
+          echo "::set-output name=packageVersion::${packageVersion}"
       - name: Publish
-        if: ${{ steps.checkIfWeShouldRelease.outputs.shouldRelease == 'true'}}
+        if: ${{ steps.tagExistsAndVersion.outputs.npmTagExists == 'false'}}
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.LIFEOMIC_NPM_TOKEN}}
       - name: Create Release
-        if: ${{ steps.checkIfWeShouldRelease.outputs.shouldRelease == 'true'}}
+        if: ${{ steps.tagExistsAndVersion.outputs.npmTagExists == 'false'}}
         id: create_release
         uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          tag_name: v${{ steps.tagExistsAndVersion.outputs.packageVersion }}
+          release_name: v${{ steps.tagExistsAndVersion.outputs.packageVersion }}
           draft: false
           prerelease: false
