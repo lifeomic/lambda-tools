@@ -234,31 +234,18 @@ export default async ({ entrypoint, serviceName = 'test-service', ...options }: 
 
   const outputDir = path.resolve(options.outputPath || process.cwd());
 
-  const removeAsyncAwaitLoader = {
+  const jsRule = {
     loader: 'babel-loader',
     options: {
       cacheDirectory: options.cacheDirectory,
       presets: [ babelEnvConfig ],
-      plugins: [
-        // This plugin will transform async iterators into generator functions
-        '@babel/plugin-proposal-async-generator-functions',
-        // X-Ray tracing cannot currently track execution across
-        // async/await calls. The issue is tracked upstream at
-        // https://github.com/aws/aws-xray-sdk-node/issues/12
-        // https://github.com/aws/aws-xray-sdk-node/issues/60
-        // Using transform-async-to-generator will convert async/await into
-        // generators which can be traced with X-Ray
-        '@babel/plugin-transform-async-to-generator'
-      ]
+      plugins: []
     }
   };
 
   const tsRule = options.tsconfig
     ? {
       use: [
-        // Remove any async/await calls that might be left over from
-        // TypeScript transpiling so that X-Ray integration is good.
-        removeAsyncAwaitLoader,
         {
           loader: 'ts-loader',
           options: {
@@ -305,7 +292,7 @@ export default async ({ entrypoint, serviceName = 'test-service', ...options }: 
         },
         {
           test: /\.js$/,
-          ...removeAsyncAwaitLoader
+          ...jsRule
         },
         {
           test: /\.ts$/,
