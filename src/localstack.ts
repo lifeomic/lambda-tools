@@ -112,7 +112,7 @@ class LocalstackWriteBuffer extends Writable {
 
   _write (chunk: any, encoding: string, callback: (error?: Error | null) => void) {
     const asBuffer = Buffer.from(chunk, 'utf8');
-    const asString = asBuffer.toString('utf8').replace(/\r/, '').trim();
+    const asString = asBuffer.toString('utf8').replace(/\r/g, '').trim();
     const logs = asString.split('\n');
     this._buffer.push(...logs);
     if (!this._isSetUp) {
