@@ -15,7 +15,7 @@ useLambda(test);
 
 useNewContainer({
   handler: 'bundled_service.handler',
-  image: 'lambci/lambda:nodejs8.10',
+  image: 'lambci/lambda:nodejs12.x',
   mountpoint: FIXTURES_DIRECTORY
 });
 
@@ -31,7 +31,7 @@ test('Managed containers can use a custom image', async (test) => {
   sinon.assert.calledWithExactly(
     createContainer,
     sinon.match({
-      Image: 'lambci/lambda:nodejs8.10'
+      Image: 'lambci/lambda:nodejs12.x'
     })
   );
 });

@@ -22,7 +22,7 @@ const WEBPACK_DEFAULTS = new WebpackOptionsDefaulter().process({});
 const run = promisify<webpack.Configuration, webpack.Stats>(webpack);
 
 const CALLER_NODE_MODULES = 'node_modules';
-const DEFAULT_NODE_VERSION = '12.13.0';
+const DEFAULT_NODE_VERSION = '12.20.0';
 const LAMBDA_TOOLS_NODE_MODULES = path.resolve(__dirname, '..', 'node_modules');
 
 type Mode = 'development' | 'production' | 'none';
@@ -180,8 +180,8 @@ export interface Config {
   zip?: boolean;
 }
 
-export default async ({ entrypoint, serviceName = 'test-service', ...options }: Config) => {
-  options = defaults(options, { enableRuntimeSourceMaps: false });
+export default async ({ entrypoint, serviceName = 'test-service', ...config }: Config) => {
+  const options = defaults(config, { enableRuntimeSourceMaps: false });
 
   // If an entrypoint is a directory then we discover all of the entrypoints
   // within that directory.
@@ -234,7 +234,7 @@ export default async ({ entrypoint, serviceName = 'test-service', ...options }: 
 
   const outputDir = path.resolve(options.outputPath || process.cwd());
 
-  const jsRule = {
+  const babelLoader = {
     loader: 'babel-loader',
     options: {
       cacheDirectory: options.cacheDirectory,
@@ -246,6 +246,7 @@ export default async ({ entrypoint, serviceName = 'test-service', ...options }: 
   const tsRule = options.tsconfig
     ? {
       use: [
+        babelLoader,
         {
           loader: 'ts-loader',
           options: {
@@ -272,7 +273,7 @@ export default async ({ entrypoint, serviceName = 'test-service', ...options }: 
     ? 'source-map'
     : 'hidden-source-map';
 
-  const config: webpack.Configuration = {
+  const webpackConfig: webpack.Configuration = {
     entry,
     output: {
       path: outputDir,
@@ -292,7 +293,7 @@ export default async ({ entrypoint, serviceName = 'test-service', ...options }: 
         },
         {
           test: /\.js$/,
-          ...jsRule
+          ...babelLoader
         },
         {
           test: /\.ts$/,
@@ -334,7 +335,7 @@ export default async ({ entrypoint, serviceName = 'test-service', ...options }: 
   };
 
   const transformer = options.configTransformer || function (config: webpack.Configuration) { return config; };
-  const transformedConfig: webpack.Configuration = await transformer(config);
+  const transformedConfig: webpack.Configuration = await transformer(webpackConfig);
 
   const webpackResult = await run(transformedConfig);
 

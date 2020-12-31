@@ -352,7 +352,7 @@ export async function localstackReady (container: Docker.Container): Promise<Loc
   });
 }
 
-export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.10.6', services }: Config<Service>) {
+export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.12.4', services }: Config<Service>) {
   if (versionTag === 'latest') {
     throw new Error('We refuse to try to work with the latest tag');
   }
@@ -461,6 +461,8 @@ export function useLocalStack <Services extends keyof LocalStackServices>(anyTes
     throw new Error('Config is required');
   }
   const testHooks = localStackHooks(config);
+  // The base ava test doesn't have context, and has to be cast.
+  // This allows clients to send in the default ava export, and they can cast later or before.
   const test = anyTest as TestInterface<LocalStackTestContext<Services>>
 
   test.serial.before(async t => {

@@ -12,7 +12,7 @@ const { FIXTURES_DIRECTORY, buildLambda } = require('../helpers/lambda');
 const streamNames = ['first-stream', 'second-stream'];
 streams(streamNames);
 
-useLocalStack(test, { services: ['lambda', 'kinesis'], versionNumberTag: '0.10.6' });
+useLocalStack(test, { services: ['lambda', 'kinesis'], versionTag: '0.12.4' });
 const handlerName = 'ts_lambda_kinesisHandler';
 
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());
@@ -34,7 +34,7 @@ test.serial.beforeEach(async t => {
       ZipFile: fs.readFileSync(path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`))
     },
     FunctionName: handlerName,
-    Runtime: 'nodejs10.x',
+    Runtime: 'nodejs12.x',
     Handler: `${handlerName}.handler`,
     MemorySize: 1024,
     Role: 'arn:aws:iam::123456789012:role/service-role/role-name',

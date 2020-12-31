@@ -70,6 +70,7 @@
     "apollo-server-koa": "^2.0.0",
     "aws-sdk-mock": "^4.0.0",
     "coveralls": "^3.0.1",
+    "crypto-browserify": "^3.12.0",
     "eslint": "^7.0.0",
     "graphql": "^14.0.2",
     "graphql-tools": "^4.0.0",

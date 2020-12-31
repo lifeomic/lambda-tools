@@ -348,7 +348,10 @@ export interface LambdaTestContext {
   lambda: AlphaClient;
 }
 
-export const useLambda = <T extends LambdaTestContext>(test: TestInterface<T>, localOptions: LambdaConfigOptions = {}) => {
+export const useLambda = (anyTest: TestInterface, localOptions: LambdaConfigOptions = {}) => {
+  // The base ava test doesn't have context, and has to be cast.
+  // This allows clients to send in the default ava export, and they can cast later or before.
+  const test = anyTest as TestInterface<LambdaTestContext>;
   const hooks = useLambdaHooks(localOptions);
 
   test.serial.before(async () => {
