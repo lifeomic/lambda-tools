@@ -331,6 +331,8 @@ export function useDynamoDB (
   useUniqueTables?: boolean,
   opts?: DynamoDBTestOptions
 ): void {
+  // The base ava test doesn't have context, and has to be cast.
+  // This allows clients to send in the default ava export, and they can cast later or before.
   const test = anyTest as TestInterface<DynamoDBTestContext<any>>
   const testHooks = dynamoDBTestHooks(useUniqueTables, opts);
 

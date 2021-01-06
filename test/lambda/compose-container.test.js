@@ -4,7 +4,7 @@ const { WriteBuffer } = require('../../src/WriteBuffer');
 
 const { useLambdaContainer } = require('../helpers/lambda');
 
-const LAMBDA_IMAGE = 'lambci/lambda:nodejs6.10';
+const LAMBDA_IMAGE = 'lambci/lambda:nodejs12.x';
 
 useLambdaContainer(test, LAMBDA_IMAGE);
 

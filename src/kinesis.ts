@@ -224,6 +224,8 @@ export function useKinesisDocker (anyTest: TestInterface, useUniqueStreams?: boo
 }
 
 export function useKinesis (anyTest: TestInterface, streamName: string) {
+  // The base ava test doesn't have context, and has to be cast.
+  // This allows clients to send in the default ava export, and they can cast later or before.
   const test = anyTest as TestInterface<UseKinesisContext>;
   const kinesis = new AWS.Kinesis({
     endpoint: process.env.KINESIS_ENDPOINT

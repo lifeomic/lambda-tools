@@ -134,7 +134,7 @@ provided in the streams array. This allows tests to be run in parallel.
 ## `KinesisIterator`
 
 The `KinesisIterator` class provides a simple method to get the records from a stream by creating the stream iterator,
-and reusing it to get records.  
+and reusing it to get records.
 
 ### Iterator `config`
 | Attribute     | Description/Type |
@@ -155,11 +155,11 @@ Fetches the next batch of records from the stream.  It auto updates it's positio
 | limit | an optional limit to how many records to return.  Max is 10,000 |
 
 ### `records`
-The records returned from the last `KinesisIterator.next()` call.  
+The records returned from the last `KinesisIterator.next()` call.
 
 ### `response`
 The complete response from the last `KinesisIterator.next()` call.
- 
+
 ### `static async newIterator(config)`
 The static `KinesisIterator.newIterator` function creates a new `KinesisIterator`, and calls the init function.
 
@@ -179,7 +179,7 @@ Convert an array of kinesis records into a lambda trigger event.
 | Data           | The data buffer returned by `kinesis.getRecords(...)` |
 
 ## `kinesisLambdaTrigger({lambdaHandler, kinesisIterator, limit})`
-Will iterate through a kinesis stream, and pass the events to the lambdaHandler.  
+Will iterate through a kinesis stream, and pass the events to the lambdaHandler.
 
 
 | Attribute       | Description/Type |
@@ -261,7 +261,7 @@ Configures the `lambda` helper to provision a new Docker container managed by
  - **handler** - _required._ The reference to the Lambda handler function in
    the form `<module>.<function name>`
  - **image** - the docker image used to provide the Lambda runtime. By default
-   `lambci/lambda:nodejs8.10` is used.
+   `lambci/lambda:nodejs10.x` is used.
  - **useComposeNetwork** - a flag indicating if the container should be attached
    to a docker-compose managed network. By default the container uses a
    dedicated isolated network. If set to `true`, the `COMPOSE_PROJECT_NAME`
@@ -344,9 +344,9 @@ You will also find the following intermediate files:
 
 ## Debugging
 
-To enable debug level logging we are using the [debug][debug] library to create the log lines.  
+To enable debug level logging we are using the [debug][debug] library to create the log lines.
 
-Available flags are 
+Available flags are
 - `lambda-tools:lambda`
 - `lambda-tools:docker`
 - `lambda-tools:localstack`

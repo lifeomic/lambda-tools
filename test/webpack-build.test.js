@@ -9,7 +9,7 @@ const { createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment, Lam
 const { FIXTURES_DIRECTORY } = require('./helpers/lambda');
 const find = require('lodash/find');
 
-const SUPPORTED_NODE_VERSIONS = ['8.10', '10.16.3', '12.13.0'];
+const SUPPORTED_NODE_VERSIONS = ['10.23.0', '12.20.0'];
 
 test.beforeEach((test) => {
   test.context.buildDirectory = path.join(FIXTURES_DIRECTORY, 'build', uuid());
@@ -116,23 +116,6 @@ test('Typescript bundles are supported by default', async (test) => {
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'ts_lambda_service.js.map')));
 });
 
-test('Typescript code has async/await removed for good X-Ray integration', async (test) => {
-  const sourceRoot = path.join(FIXTURES_DIRECTORY, 'typescript-es2017');
-  const source = path.join(sourceRoot, 'async_test.ts');
-
-  const result = await build({
-    tsconfig: path.join(sourceRoot, 'tsconfig.json'),
-    entrypoint: source,
-    outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
-  });
-  test.false(result.hasErrors());
-
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
-  const contents = await fs.readFile(path.join(test.context.buildDirectory, 'async_test.js'), 'utf8');
-  test.is(/await handler/.test(contents), false, 'await found');
-});
-
 test('Node 12 bundles are produced by default', async (test) => {
   const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');
 
@@ -151,7 +134,7 @@ test('Node 12 bundles are produced by default', async (test) => {
 
   const config = transformer.firstCall.args[0];
   const babel = config.module.rules.find((rule) => rule.loader === 'babel-loader');
-  test.is(babel.options.presets[0][1].targets.node, '12.13.0');
+  test.is(babel.options.presets[0][1].targets.node, '12.20.0');
 });
 
 test('A custom Node version can be used', async (test) => {

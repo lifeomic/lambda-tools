@@ -25,7 +25,7 @@ test.serial.before(async () => {
 
   useNewContainer({
     handler: 'runtime_dns.handler',
-    image: 'lambci/lambda:nodejs8.10',
+    image: 'lambci/lambda:nodejs12.x',
     mountpoint: BUILD_DIRECTORY
   });
 });

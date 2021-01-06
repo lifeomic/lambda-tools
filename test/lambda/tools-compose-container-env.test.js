@@ -8,7 +8,7 @@ const containerConfig = {
   }
 };
 
-const LAMBDA_IMAGE = 'lambci/lambda:nodejs6.10';
+const LAMBDA_IMAGE = 'lambci/lambda:nodejs12.x';
 
 useLambdaContainer(test, LAMBDA_IMAGE, { containerConfig });
 

@@ -26,7 +26,7 @@ test.serial.before(async () => {
     handler: 'runtime_promises.handler',
     // Using Node 6.10 gives a more thorough test since this isn't normally
     // supported.
-    image: 'lambci/lambda:nodejs6.10',
+    image: 'lambci/lambda:nodejs12.x',
     mountpoint: BUILD_DIRECTORY
   });
 });
