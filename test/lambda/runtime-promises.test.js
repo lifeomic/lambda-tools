@@ -24,7 +24,7 @@ test.serial.before(async () => {
 
   useNewContainer({
     handler: 'runtime_promises.handler',
-    // Using Node 6.10 gives a more thorough test since this isn't normally
+    // Using Node 12.x gives a more thorough test since this isn't normally
     // supported.
     image: 'lambci/lambda:nodejs12.x',
     mountpoint: BUILD_DIRECTORY
