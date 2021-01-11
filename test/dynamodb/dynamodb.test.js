@@ -365,7 +365,7 @@ test.serial('destroyTables destroys created tables when uniqueIdentifier is used
 
 test('Setting inMemory to true runs the container in in-memory mode', async t => {
   const docker = sinon.stub(new Docker());
-  docker.listImages.returns([{ RepoTags: ['amazon/dynamodb-local:1.13.6'] }]);
+  docker.listImages.returns([{ RepoTags: ['cnadiminti/dynamodb-local:2020-09-11'] }]);
   const container = sinon.stub({ start: () => null, inspect: () => null });
   container.start.returns(Promise.resolve(null));
   container.inspect.returns({
@@ -384,7 +384,7 @@ test('Setting inMemory to true runs the container in in-memory mode', async t =>
 
 test('Setting inMemory to false runs the container in persistent mode', async t => {
   const docker = sinon.stub(new Docker());
-  docker.listImages.returns([{ RepoTags: ['amazon/dynamodb-local:1.13.6'] }]);
+  docker.listImages.returns([{ RepoTags: ['cnadiminti/dynamodb-local:2020-09-11'] }]);
   const container = sinon.stub({ start: () => null, inspect: () => null });
   container.start.returns(Promise.resolve(null));
   container.inspect.returns({

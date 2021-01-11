@@ -20,8 +20,8 @@ import { Response } from "aws-sdk/lib/response";
 const { getHostAddress, ensureImage } = require('./docker');
 const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 
-const DYNAMODB_IMAGE_BASE = 'amazon/dynamodb-local';
-const DYNAMODB_IMAGE_VERSION = '1.13.6';
+const DYNAMODB_IMAGE_BASE = 'cnadiminti/dynamodb-local';
+const DYNAMODB_IMAGE_VERSION = '2020-09-11';
 
 const logger = require('./utils/logging').getLogger('dynamodb');
 
