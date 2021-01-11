@@ -204,7 +204,7 @@ export async function launchDynamoContainer (
     dynamoDbImageVersion = DYNAMODB_IMAGE_VERSION,
   }: DynamoDBTestOptions = {}
 ): Promise<LaunchDynamoContainerResult> {
-  const Image = `${dynamoDbImageBase}/dynamodb-local:${dynamoDbImageVersion}`;
+  const Image = `${dynamoDbImageBase}:${dynamoDbImageVersion}`;
   await ensureImage(docker, Image);
 
   const container = await docker.createContainer({
