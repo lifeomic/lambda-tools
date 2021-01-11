@@ -20,7 +20,8 @@ import { Response } from "aws-sdk/lib/response";
 const { getHostAddress, ensureImage } = require('./docker');
 const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
 
-const DYNAMODB_IMAGE = 'cnadiminti/dynamodb-local:latest';
+const DYNAMODB_IMAGE_BASE = 'amazon/dynamodb-local';
+const DYNAMODB_IMAGE_VERSION = '1.13.6';
 
 const logger = require('./utils/logging').getLogger('dynamodb');
 
@@ -44,11 +45,8 @@ export interface DynamoDBTestOptions {
   inMemory?: boolean;
   docker?: Docker;
   tableSchemas?: DynamoDB.CreateTableInput[];
-}
-
-export interface LaunchDockerContainerResults {
-  url: string;
-  stopContainer(): Promise<any>;
+  dynamoDbImageBase?: 'cnadiminti/dynamodb-local' | 'amazon/dynamodb-local' | string;
+  dynamoDbImageVersion?: string;
 }
 
 const tableSchemas: DynamoDB.CreateTableInput[] = [];
@@ -201,10 +199,13 @@ export interface LaunchDynamoContainerResult {
 export async function launchDynamoContainer (
   {
     docker = new Docker(),
-    inMemory = false
+    inMemory = false,
+    dynamoDbImageBase = DYNAMODB_IMAGE_BASE,
+    dynamoDbImageVersion = DYNAMODB_IMAGE_VERSION,
   }: DynamoDBTestOptions = {}
 ): Promise<LaunchDynamoContainerResult> {
-  await ensureImage(docker, DYNAMODB_IMAGE);
+  const Image = `${dynamoDbImageBase}/dynamodb-local:${dynamoDbImageVersion}`;
+  await ensureImage(docker, Image);
 
   const container = await docker.createContainer({
     HostConfig: {
@@ -212,7 +213,7 @@ export async function launchDynamoContainer (
       PublishAllPorts: true
     },
     ExposedPorts: { '8000/tcp': {} },
-    Image: DYNAMODB_IMAGE,
+    Image,
     ...(inMemory ? { Cmd: ['-inMemory', '-sharedDb'] } : {})
   });
 

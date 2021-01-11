@@ -368,7 +368,7 @@ set the `LAMBDA_TOOLS_CONCURRENCY` environment variable to some integer value.
 [dynamodb]: https://aws.amazon.com/documentation/dynamodb/ "DynamoDB"
 [dynamodb-client]: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html "DynamoDB Client"
 [dynamodb-create-table]: https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#createTable-property "DynamoDB Client: Create Table"
-[dynamodb-image]: https://hub.docker.com/r/cnadiminti/dynamodb-local/ "DynamoDB Docker Image"
+[dynamodb-image]: https://hub.docker.com/r/amazon/dynamodb-local "DynamoDB Docker Image"
 [dynamodb-local]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html "DynamoDB Local"
 [koa]: http://koajs.com/ "koa"
 [supertest]: https://github.com/visionmedia/supertest "supertest"
