@@ -12,7 +12,7 @@ export class WriteBuffer extends Writable {
     this._buffer = [];
   }
 
-  toString (encoding?: string) {
+  toString (encoding?: BufferEncoding) {
     return this._buffer.map((chunk) => chunk.toString(encoding)).join('');
   }
 
