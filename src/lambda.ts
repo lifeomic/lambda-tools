@@ -191,7 +191,7 @@ async function buildMountpointFromZipfile (zipfile: string, mountpointParent?: s
 
     await new Promise((resolve, reject) => {
       const endOnError = (error: Error) => reject(error);
-      unzipper.on('close', resolve);
+      unzipper.on('close', () => resolve(undefined));
       fsStream.on('error', endOnError);
       unzipper.on('error', endOnError);
     });
