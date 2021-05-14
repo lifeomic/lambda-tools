@@ -33,3 +33,49 @@ test.serial('will debug the progress of pulling an image', async (test) => {
   sinon.assert.called(logSpy);
   sinon.assert.calledWithExactly(logSpy, `${TEST_IMAGE}: Status: Downloaded newer image for ${TEST_IMAGE} `);
 });
+
+test.serial('will provide empty credentials if no docker env variables exist when pulling an image from docker hub', async (test) => {
+  const { logger } = test.context;
+  const docker = new Docker();
+  const logSpy = sinon.spy(logger, 'debug');
+  const dockerSpy = sinon.spy(docker, 'pull');
+
+  if (await imageExists(docker, TEST_IMAGE)) {
+    const image = await docker.getImage(TEST_IMAGE);
+    await image.remove();
+  }
+
+  await pullImage(docker, TEST_IMAGE);
+  sinon.assert.called(logSpy);
+  sinon.assert.called(dockerSpy);
+  sinon.assert.calledWithExactly(logSpy, `${TEST_IMAGE}: Status: Downloaded newer image for ${TEST_IMAGE} `);
+  sinon.assert.calledWithExactly(dockerSpy, TEST_IMAGE, { });
+});
+
+test.serial('will provide credentials from env variables when pulling an image from docker hub', async (test) => {
+  process.env.DOCKER_HUB_USER = 'docker_user';
+  process.env.DOCKER_HUB_PASS = 'docker_pass';
+  try {
+    const { logger } = test.context;
+    const docker = new Docker();
+    const logSpy = sinon.spy(logger, 'debug');
+    const dockerSpy = sinon.spy(docker, 'pull');
+
+    if (await imageExists(docker, TEST_IMAGE)) {
+      const image = await docker.getImage(TEST_IMAGE);
+      await image.remove();
+    }
+
+    await pullImage(docker, TEST_IMAGE);
+    sinon.assert.called(logSpy);
+    sinon.assert.called(dockerSpy);
+    sinon.assert.calledWithExactly(logSpy, `${TEST_IMAGE}: Status: Downloaded newer image for ${TEST_IMAGE} `);
+    sinon.assert.calledWithExactly(dockerSpy, TEST_IMAGE, {
+      username: 'docker_user',
+      password: 'docker_pass'
+    });
+  } finally {
+    delete process.env.DOCKER_HUB_USER;
+    delete process.env.DOCKER_HUB_PASS;
+  }
+});
