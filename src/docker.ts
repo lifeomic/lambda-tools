@@ -73,15 +73,23 @@ const getInterfaceAddress = (ifconfig: string) => {
   return match![0].split(':')[1];
 };
 
-export const pullImage = async (docker: Docker, image: string) => {
-  const dockerPass = process.env.DOCKER_HUB;
-  const authConfig = dockerPass ?  {
-    username: 'lifeomicdockerhub',
-    password: dockerPass
-  }: {};
+const buildAuthForDocker = () => {
+  const dockerUser = process.env.DOCKER_HUB_USER;
+  const dockerPass = process.env.DOCKER_HUB_PASS;
+  if (dockerUser && dockerPass) {
+    logger.debug(`Pulling image as ${dockerUser}`);
+    return {
+      username: dockerUser,
+      password: dockerPass
+    }
+  }
 
-  logger.debug(`Pulling image as ${authConfig.username || 'anon'}`);
-  const stream = await docker.pull(image, authConfig);
+  logger.debug('Pulling image as anon');
+  return {};
+}
+
+export const pullImage = async (docker: Docker, image: string) => {
+  const stream = await docker.pull(image, buildAuthForDocker());
   await new Promise((resolve) => {
     docker.modem.followProgress(stream, resolve, (progress: {status: string; progress?: string}) => {
       logger.debug(`${image}: ${progress.status} ${progress.progress ? progress.progress : ''}`);
