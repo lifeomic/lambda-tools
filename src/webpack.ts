@@ -117,7 +117,7 @@ export interface Entrypoint {
 }
 
 async function expandEntrypoints (entrypoints: Entrypoint[]) {
-  const finalEntrypoints = [];
+  const finalEntrypoints = [] as Entrypoint[];
 
   for (const entrypoint of entrypoints) {
     // eslint-disable-next-line security/detect-non-literal-fs-filename
