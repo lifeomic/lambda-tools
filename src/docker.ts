@@ -80,7 +80,7 @@ export const pullImage = async (docker: Docker, image: string) => {
     password: dockerPass
   }: {};
 
-  console.log(`dockerAuth ${authConfig.username}`);
+  logger.debug(`Pulling image as ${authConfig.username || 'anon'}`);
   const stream = await docker.pull(image, authConfig);
   await new Promise((resolve) => {
     docker.modem.followProgress(stream, resolve, (progress: {status: string; progress?: string}) => {
