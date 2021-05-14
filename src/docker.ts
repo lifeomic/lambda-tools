@@ -74,7 +74,14 @@ const getInterfaceAddress = (ifconfig: string) => {
 };
 
 export const pullImage = async (docker: Docker, image: string) => {
-  const stream = await docker.pull(image, {});
+  const dockerPass = process.env.DOCKER_HUB;
+  const authConfig = dockerPass ?  {
+    username: 'lifeomicdockerhub',
+    password: dockerPass
+  }: {};
+
+  console.log(`dockerAuth ${authConfig.username}`);
+  const stream = await docker.pull(image, authConfig);
   await new Promise((resolve) => {
     docker.modem.followProgress(stream, resolve, (progress: {status: string; progress?: string}) => {
       logger.debug(`${image}: ${progress.status} ${progress.progress ? progress.progress : ''}`);
