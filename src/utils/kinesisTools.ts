@@ -39,7 +39,7 @@ export class KinesisIterator {
     }: BasicKinesisConfig
   ) {
     assert.ok(kinesisClient, 'kinesisClient client needs to be provided');
-    assert.ok(kinesisClient.getRecords && kinesisClient.describeStream && kinesisClient.getShardIterator, 'kinesisClient client needs to be of type AWS.Kinesis');
+    assert.ok(!!kinesisClient.getRecords && !!kinesisClient.describeStream && !!kinesisClient.getShardIterator, 'kinesisClient client needs to be of type AWS.Kinesis');
     assert.ok(typeof streamName === 'string', 'streamName needs to be defined and a string');
 
     this._kinesis = kinesisClient;
