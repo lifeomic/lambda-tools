@@ -62,7 +62,7 @@ const argv = yargs
     type: 'string'
   })
   .option('transpile-only', {
-    describe: 'When using --tsconfig, disable typechecking in ts-loader',
+    describe: 'when using --tsconfig, disable typechecking in ts-loader',
     type: 'boolean'
   })
   .options('enable-cache-directory', {
