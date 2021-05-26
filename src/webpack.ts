@@ -175,6 +175,7 @@ export interface Config {
   outputPath?: string;
   enableRuntimeSourceMaps?: boolean;
   tsconfig?: string;
+  transpileOnly?: boolean;
   minify?: boolean;
   configTransformer?: (config: webpack.Configuration) => webpack.Configuration;
   zip?: boolean;
@@ -250,7 +251,8 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
         {
           loader: 'ts-loader',
           options: {
-            configFile: options.tsconfig
+            configFile: options.tsconfig,
+            transpileOnly: options.transpileOnly
           }
         }
       ]
