@@ -61,6 +61,10 @@ const argv = yargs
     describe: 'relative path to a tsconfig.json file to compile typescript',
     type: 'string'
   })
+  .option('transpile-only', {
+    describe: 'When using --tsconfig, disable typechecking in ts-loader',
+    type: 'boolean'
+  })
   .options('enable-cache-directory', {
     describe: 'enables babel-loader cache directory',
     type: 'boolean'
@@ -78,6 +82,7 @@ const buildOptions: Config = {
   serviceName: argv.s,
   zip: argv.z,
   tsconfig: argv.t,
+  transpileOnly: argv['transpile-only'],
   enableRuntimeSourceMaps: argv['enable-runtime-source-maps'],
   cacheDirectory: argv['enable-cache-directory']
 };
