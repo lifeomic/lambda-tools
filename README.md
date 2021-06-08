@@ -1,9 +1,9 @@
 # lambda-tools
 
 [![npm](https://img.shields.io/npm/v/@lifeomic/lambda-tools.svg)](https://www.npmjs.com/package/@lifeomic/lambda-tools)
-[![Build Status](https://travis-ci.org/lifeomic/lambda-tools.svg?branch=master)](https://travis-ci.org/lifeomic/lambda-tools)
+[![Build Status](https://github.com/lifeomic/lambda-tools/actions/workflows/release.yaml/badge.svg)](https://github.com/lifeomic/lambda-tools/actions/workflows/release.yaml)
 [![Coverage Status](https://coveralls.io/repos/github/lifeomic/lambda-tools/badge.svg?branch=master)](https://coveralls.io/github/lifeomic/lambda-tools?branch=master)
-[![Greenkeeper badge](https://badges.greenkeeper.io/lifeomic/lambda-tools.svg)](https://greenkeeper.io/)
+![Dependabot Badge](https://flat.badgen.net/dependabot/lifeomic/lambda-tools?icon=dependabot)
 
 `lambda-tools` provides a set of utilities that are useful for development and
 testing of Lambda based services. The functionality is divided into several
