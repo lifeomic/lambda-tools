@@ -4,7 +4,13 @@ import { Client as ElasticSearchClient } from '@elastic/elasticsearch';
 
 import Environment from './Environment';
 import { getHostAddress, ensureImage } from './docker';
-import {AwsUtilsConnection, buildConnectionAndConfig, ConnectionAndConfig, waitForReady} from './utils/awsUtils';
+import {
+  AwsUtilsConnection,
+  buildConnectionAndConfig,
+  BuildConnectionAndConfigOptions,
+  ConnectionAndConfig,
+  waitForReady
+} from './utils/awsUtils';
 import { pQueue } from './utils/config';
 
 import { Writable } from 'stream';
@@ -72,19 +78,19 @@ export interface LocalStackServices {
   sts: LocalStackService<AWS.STS>;
 }
 
-export type LocalStackContext<Services extends keyof LocalStackServices> = {
-  services: Pick<LocalStackServices, Services>;
+export type LocalStackContext<Service extends keyof LocalStackServices> = {
+  services: Pick<LocalStackServices, Service>;
   getOutput: () => string;
   clearOutput: () => void;
 }
 
-export interface LocalStackTestContext<Services extends keyof LocalStackServices> {
-  localStack: LocalStackContext<Services>;
+export interface LocalStackTestContext<Service extends keyof LocalStackServices> {
+  localStack: LocalStackContext<Service>;
 }
 
-export interface Config<Services extends keyof LocalStackServices> {
+export interface Config<Service extends keyof LocalStackServices> {
   versionTag?: string;
-  services: Services[];
+  services: Service[];
 }
 
 
@@ -140,8 +146,8 @@ export function getService<Service extends keyof LocalStackServices>(service: Se
     case 'apigateway':
       return {
         port: '4567',
-          getClient: ({ config }) => new AWS.APIGateway(config),
-          isReady: (client: AWS.APIGateway) => client.getApiKeys().promise()
+        getClient: ({ config }) => new AWS.APIGateway(config),
+        isReady: (client: AWS.APIGateway) => client.getApiKeys().promise()
       };
     case 'cloudformation':
       return {
@@ -428,6 +434,20 @@ export async function getConnection <Service extends keyof LocalStackServices>({
       return await container.stop();
     }
   };
+}
+
+export type ServicesAndConfigs<Service extends keyof LocalStackServices> = Record<Service, BuildConnectionAndConfigOptions>;
+
+export async function waitForServicesToBeReady<Service extends keyof LocalStackServices> (
+  services: ServicesAndConfigs<Service>,
+): Promise<void> {
+  await pQueue.addAll(Object.keys(services).map(serviceNameString => async () => {
+    const serviceName = serviceNameString as Service;
+    const connectionAndConfig = buildConnectionAndConfig(services[serviceName]);
+    const { getClient, isReady } = getService(serviceName);
+    const client = getClient(connectionAndConfig);
+    await waitForReady(serviceName, () => isReady(client));
+  }));
 }
 
 export function localStackHooks <Services extends keyof LocalStackServices>({ versionTag, services }: Config<Services>) {
