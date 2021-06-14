@@ -94,7 +94,7 @@ export const pullImage = async (docker: Docker, image: string) => {
   const stream = await docker.pull(image, buildAuthForDocker());
   await new Promise((resolve) => {
     docker.modem.followProgress(stream, resolve, (progress: {status: string; progress?: string}) => {
-      logger.debug(`${image}: ${progress.status} ${progress.progress ? progress.progress : ''}`);
+      logger.debug(`${image}: ${progress.status}${progress.progress ? ` ${progress.progress}` : ''}`);
     });
   });
 };
