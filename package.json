@@ -4,6 +4,9 @@
   "description": "Common utilities for Lambda testing and development",
   "main": "src/index.js",
   "types": "src/index.ts",
+  "engines": {
+    "node": ">12"
+  },
   "bin": {
     "lambda-tools-build": "./bin/build.js",
     "lambda-tools-host-addr": "./bin/get-host-addr.js"
