@@ -79,7 +79,7 @@ const buildAuthForDocker = () => {
   if (dockerUser && dockerPass) {
     logger.debug(`Pulling image as ${dockerUser}`);
     return {
-      authConfig: {
+      authconfig: {
         username: dockerUser,
         password: dockerPass,
       }
