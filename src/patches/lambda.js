@@ -1,8 +1,15 @@
+let xraySdk;
+try {
+  xraySdk = require('aws-xray-sdk-core');
+  console.error('[lambda-tools] required aws-xray-sdk-core');
+} catch (err) {
+  console.error('[lambda-tools] did not require aws-xray-sdk-core', err);
+}
 // Wrap the patch implementation in a closure in order to avoid polluting the
 // Lambda module's namespace.
 (function () {
   const tag = '[lambda-tools]';
-
+  const timeoutBufferMs = 100;
   const addAllEventHandlers = (handlers) => {
     for (const [ event, handler ] of Object.entries(handlers)) {
       process.prependListener(event, handler);
@@ -12,25 +19,53 @@
   const getHandlerName = () => process.env._HANDLER.split('.')[1];
   const log = (...message) => console.error(tag, ...message);
 
-  const removeAllEventHandlers = (handlers) => {
+  const removeAllEventHandlersAndTimeouts = (handlers, timeoutIds) => {
     for (const [ event, handler ] of Object.entries(handlers)) {
       process.removeListener(event, handler);
+    }
+    for (const timeoutId of timeoutIds) {
+      clearTimeout(timeoutId);
+    }
+  };
+
+  const imminentTimeoutError = new Error(`${tag}: Lambda function timeout imminent, forcing early exit to allow for proper cleanup`);
+  const closePendingSubsegments = (segmentOrSubsegment) => {
+    const subsegments = segmentOrSubsegment.subsegments || [];
+    subsegments.forEach((subsegment) => {
+      closePendingSubsegments(subsegment);
+    });
+
+    if (!segmentOrSubsegment.isClosed()) {
+      segmentOrSubsegment.close(imminentTimeoutError);
     }
   };
 
   const wrapHandler = (handler) => (event, context, done) => {
+    const requestId = context.awsRequestId;
+    const remainingExecutionTimeMs = context.getRemainingTimeInMillis();
+
     // Bind the logging to the current request ID. This prevents AWS log patches
     // from changing the ID if a new request starts while backgrounded tasks
     // are executing.
-    const requestId = context.awsRequestId;
     const logWithContext = (...message) => log(`RequestId: ${requestId}`, ...message);
+
+    let imminentExitTid;
+    if (xraySdk) {
+      imminentExitTid = setTimeout(() => {
+        const mainSegment = xraySdk.getSegment();
+        if (mainSegment) {
+          closePendingSubsegments(mainSegment);
+          finish(imminentTimeoutError);
+        }
+      }, Math.max(remainingExecutionTimeMs - timeoutBufferMs, 0));
+    }
 
     const eventHandlers = {
       beforeExit: (code) => {
         logWithContext(`Received 'beforeExit' with code ${code} before the handler completed. This usually means the handler never called back.`);
         // without this event handlers will pile up with each new event.
         // Eventually the maximum listener count will be hit (the default is 10).
-        removeAllEventHandlers(eventHandlers);
+        removeAllEventHandlersAndTimeouts(eventHandlers, [ imminentExitTid ]);
       },
       // process should terminate. no cleanup neeed.
       uncaughtException: (error) => logWithContext('Uncaught exception', error),
@@ -48,7 +83,7 @@
       }
 
       completions.push(args);
-      removeAllEventHandlers(eventHandlers);
+      removeAllEventHandlersAndTimeouts(eventHandlers, [ imminentExitTid ]);
       done(...args);
     };
 
