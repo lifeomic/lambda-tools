@@ -5,6 +5,7 @@ import supertest, {Response} from 'supertest';
 import {ExecutionContext, TestInterface} from 'ava';
 import Koa from 'koa';
 
+export type SetupContextGraphQl<Context extends GraphQLTestContext = GraphQLTestContext> = (context: Context) => Koa;
 export type SetupGraphQL = <T extends GraphQLTestContext>(test: ExecutionContext<T>) => Koa;
 
 export interface GraphQLErrorLocation {
@@ -91,16 +92,49 @@ export interface GraphQLTestContext {
   graphql: (query: string, variables: Record<string, any>) => Promise<Response>;
 }
 
+export interface GraphQlHooksOptions<Context extends GraphQLTestContext = GraphQLTestContext> {
+  getApp: SetupContextGraphQl<Context>;
+  context: Context;
+  url?: string;
+}
+
+export function graphqlHooks (
+  {
+    getApp,
+    context,
+    url = '/graphql'
+  }: GraphQlHooksOptions
+) {
+  return {
+    beforeEach() {
+      const app = getApp(context);
+      assert(app, 'GraphQL setup must return a Koa application');
+      const request = supertest(app.callback());
+
+      context.graphql = (query, variables) => {
+        if (Array.isArray(query)) {
+          return request.post(url)
+            .send(query);
+        }
+        return request.post(url)
+          .send({ query, variables });
+      };
+    }
+  }
+}
+
+
 export interface GraphQlOptions {
   url?: string;
 }
 
-export const useGraphQL = <T extends GraphQLTestContext>(
-  test: TestInterface<T>,
+export const useGraphQL = (
+  anyTest: TestInterface,
   {
     url = '/graphql'
   }: GraphQlOptions = {}
 ) => {
+  const test = anyTest as TestInterface<GraphQLTestContext>;
   test.serial.beforeEach((t) => {
     const app = setupGraphQLFunc(t);
     assert(app, 'GraphQL setup must return a Koa application');
