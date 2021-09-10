@@ -20,8 +20,7 @@ export interface GraphQLError {
 }
 
 export interface GraphQlResponse {
-  statusCode?: number;
-  status?: number;
+  statusCode: number;
   error: any;
   body: {
     errors: GraphQLError[];
@@ -70,7 +69,7 @@ export const assertError = (response: GraphQlResponse, path: string | undefined,
 };
 
 export const assertSuccess = (response: GraphQlResponse) => {
-  const status = response.statusCode ?? response.status ?? 600;
+  const status = response.statusCode;
   assert(status >= 200 && status < 300,
     `Did not succeed. HTTP status code was ${status}` +
     ` and error was ${JSON.stringify(response.error, null, 2)}`);
