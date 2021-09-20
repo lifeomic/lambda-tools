@@ -318,7 +318,13 @@ export async function createLambdaExecutionEnvironment (options: FinalConfig): P
   return executionEnvironment;
 }
 
-export function useLambdaHooks (localOptions: LambdaConfigOptions) {
+export interface LambdaHooks {
+  beforeAll(): Promise<void>;
+  beforeEach(): Promise<AlphaClient>;
+  afterAll(): Promise<void>;
+}
+
+export function useLambdaHooks (localOptions: LambdaConfigOptions): LambdaHooks {
   const impliedOptions: Partial<FinalConfig> = {};
 
   let executionEnvironment: ExecutionEnvironment = {};
