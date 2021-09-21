@@ -1,12 +1,12 @@
 import assert from 'assert';
 import map from 'lodash/map';
 import isString from 'lodash/isString';
-import supertest, {Response} from 'supertest';
-import {ExecutionContext, TestInterface} from 'ava';
+import supertest, { Test } from 'supertest';
+import { ExecutionContext, TestInterface } from 'ava';
 import Koa from 'koa';
 
 export type SetupContextGraphQl<Context extends GraphQLTestContext = GraphQLTestContext> = (context: Context) => Koa;
-export type SetupGraphQL = <T extends GraphQLTestContext>(test: ExecutionContext<T>) => Koa;
+export type SetupGraphQL = <Context extends GraphQLTestContext = GraphQLTestContext>(test: ExecutionContext<Context>) => Koa;
 
 export interface GraphQLErrorLocation {
   line: number;
@@ -89,7 +89,7 @@ export const setupGraphQL = (func: SetupGraphQL) => {
 };
 
 export interface GraphQLTestContext {
-  graphql: (query: string, variables: Record<string, any>) => Promise<Response>;
+  graphql: (query: string, variables?: Record<string, any>) => Test;
 }
 
 export interface GraphQlHooksOptions<Context extends GraphQLTestContext = GraphQLTestContext> {
@@ -98,12 +98,12 @@ export interface GraphQlHooksOptions<Context extends GraphQLTestContext = GraphQ
   url?: string;
 }
 
-export function graphqlHooks (
+export function graphqlHooks <Context extends GraphQLTestContext = GraphQLTestContext>(
   {
     getApp,
     context,
     url = '/graphql'
-  }: GraphQlHooksOptions
+  }: GraphQlHooksOptions<Context>
 ) {
   return {
     beforeEach() {
