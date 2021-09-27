@@ -450,7 +450,14 @@ export async function waitForServicesToBeReady<Service extends keyof LocalStackS
   }));
 }
 
-export function localStackHooks <Services extends keyof LocalStackServices>({ versionTag, services }: Config<Services>) {
+export interface LocalStackHooks<Services extends keyof LocalStackServices> {
+  beforeAll(): Promise<LocalStackContext<Services>>;
+  afterAll(): Promise<void>;
+}
+
+export function localStackHooks <Services extends keyof LocalStackServices>(
+  { versionTag, services }: Config<Services>
+): LocalStackHooks<Services> {
   let cleanup: () => Promise<any> | undefined;
 
   async function beforeAll (): Promise<LocalStackContext<Services>> {

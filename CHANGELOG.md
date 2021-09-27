@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [15.0.0] - 2021-09-21
+### Update types, and remove context from invoke
+- There is no way to send the context to the LambCI instance.
+- Improve the hooks types for Typescript
+
 ## [14.1.0] - 2021-01-11
 ### Allow specifying the dynamodb docker image
 - DynamoDB Input option to specify the docker dynamodb image and version

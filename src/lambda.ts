@@ -6,8 +6,7 @@ import tmp from 'tmp-promise';
 import fs from 'fs-extra';
 import unzip from 'unzipper';
 import isObjectLike from 'lodash/isObjectLike';
-import { promisify } from 'util';
-import { Handler} from "aws-lambda";
+import { Context, Handler } from 'aws-lambda';
 import { AxiosRequestConfig } from "axios";
 import { TestInterface } from "ava";
 import flatten from 'lodash/flatten';
@@ -136,21 +135,33 @@ export interface AlphaClientConfig {
   handler: string;
 }
 
-export class AlphaClient extends Alpha {
-  public raw: Handler;
+export class AlphaClient<TEvent = any, TResult = any> extends Alpha {
+  readonly fn: Handler<TEvent, TResult | void>;
   constructor ({ container, environment, handler }: AlphaClientConfig) {
     const runner = new LambdaRunner(container, environment, handler);
 
-    const fn: Handler = async function handler (event, context, callback) {
+    const fn: Handler<TEvent, TResult | void> = async (event, context, callback): Promise<void> => {
       try {
-        callback(null, await runner.invoke(event));
+        const result: TResult = await runner.invoke(event);
+        callback(null, result);
       } catch (error) {
         callback(error);
       }
     };
 
-    super(fn as any);
-    this.raw = promisify(fn);
+    super(fn);
+    this.fn = fn;
+  }
+
+  async raw(event: TEvent): Promise<TResult> {
+    return new Promise((resolve, reject) => {
+      this.fn(event, {} as Context, (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+        return resolve(result as TResult);
+      });
+    });
   }
 
   graphql<T = any> (

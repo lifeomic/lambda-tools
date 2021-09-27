@@ -260,6 +260,13 @@ export async function getConnection (opts?: DynamoDBTestOptions): Promise<Connec
   return { connection, config };
 }
 
+export interface DynamoDBTestHooks<TableNames extends string[]> {
+  beforeAll(): Promise<void>;
+  beforeEach(): Promise<DynamoDBContext<TableNames>>;
+  afterEach(context: DynamoDBContext<TableNames>): Promise<void>;
+  afterAll(): Promise<void>;
+}
+
 /**
  * @param {boolean} useUniqueTables
  * @param {object} opts
@@ -269,7 +276,7 @@ export async function getConnection (opts?: DynamoDBTestOptions): Promise<Connec
 export function dynamoDBTestHooks <TableNames extends string[]>(
   useUniqueTables = false,
   opts?: DynamoDBTestOptions
-) {
+): DynamoDBTestHooks<TableNames> {
   let connection: AwsUtilsConnection | undefined;
   let config: ConfigurationOptions | undefined;
   const schemas: DynamoDB.CreateTableInput[] = opts?.tableSchemas || tableSchemas;
