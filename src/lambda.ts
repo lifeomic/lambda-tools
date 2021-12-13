@@ -1,4 +1,4 @@
-import Alpha from '@lifeomic/alpha';
+import Alpha, { AxiosResponse } from '@lifeomic/alpha';
 import assert from 'assert';
 import Docker from 'dockerode';
 import { v4 as uuid } from 'uuid';
@@ -52,7 +52,7 @@ const convertEvent = (event?: any) => {
   return `${event}`;
 };
 
-export async function destroyLambdaExecutionEnvironment (environment: ExecutionEnvironment) {
+export async function destroyLambdaExecutionEnvironment (environment: ExecutionEnvironment): Promise<void> {
   if (!environment) {
     return;
   }
@@ -95,7 +95,8 @@ export class LambdaRunner {
     this.environment.push('DOCKER_LAMBDA_USE_STDIN=1');
   }
 
-  async invoke (event?: any) {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  async invoke (event?: any): Promise<string> {
     const command = await this.buildCommand();
     const container = await this.getContainer();
     const environment = this.environment;
@@ -155,17 +156,17 @@ export class AlphaClient extends Alpha {
 
   graphql<T = any> (
     path: string,
-    query: any,
-    variables: any,
+    query: Record<string, any>,
+    variables?: Record<string, any>,
     config?: AxiosRequestConfig
-  ) {
+  ): Promise<AxiosResponse<T>> {
     return this.post<T>(path, { query, variables }, config);
   }
 }
 
 const globalOptions: LambdaConfigOptions = {};
 
-export const getGlobalOptions = () => Object.assign({}, globalOptions);
+export const getGlobalOptions = (): LambdaConfigOptions => Object.assign({}, globalOptions);
 
 export const build = webpack;
 
@@ -225,12 +226,12 @@ export const useNewContainer = (
       'image'
       >
     & { useComposeNetwork?: boolean}
-) => {
+): void => {
   const network = useComposeNetwork ? `${process.env.COMPOSE_PROJECT_NAME}_default` : undefined;
   Object.assign(globalOptions, { environment, handler, image, mountpoint, zipfile, mountpointParent, network });
 };
 
-export const useComposeContainer = ({ environment, service, handler }: Pick<LambdaConfigOptions, 'environment' | 'handler'> & {service: string}) => {
+export const useComposeContainer = ({ environment, service, handler }: Pick<LambdaConfigOptions, 'environment' | 'handler'> & {service: string}): void => {
   const container = `${process.env.COMPOSE_PROJECT_NAME}_${service}_1`;
   Object.assign(globalOptions, { container, environment, handler });
 };
@@ -329,7 +330,7 @@ export function useLambdaHooks (localOptions: LambdaConfigOptions): LambdaHooks 
 
   let executionEnvironment: ExecutionEnvironment = {};
 
-  const getOptions = (): FinalConfig => Object.assign<{}, LambdaConfigOptions, LambdaConfigOptions, LambdaConfigOptions>({}, globalOptions, impliedOptions, localOptions) as FinalConfig;
+  const getOptions = (): FinalConfig => Object.assign<Record<string, any>, LambdaConfigOptions, LambdaConfigOptions, LambdaConfigOptions>({}, globalOptions, impliedOptions, localOptions) as FinalConfig;
 
   async function beforeAll () {
     executionEnvironment = await createLambdaExecutionEnvironment(getOptions());
@@ -354,7 +355,7 @@ export interface LambdaTestContext {
   lambda: AlphaClient;
 }
 
-export const useLambda = (anyTest: TestInterface, localOptions: LambdaConfigOptions = {}) => {
+export const useLambda = (anyTest: TestInterface, localOptions: LambdaConfigOptions = {}): void => {
   // The base ava test doesn't have context, and has to be cast.
   // This allows clients to send in the default ava export, and they can cast later or before.
   const test = anyTest as TestInterface<LambdaTestContext>;

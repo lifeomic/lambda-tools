@@ -1,7 +1,8 @@
 import assert from 'assert';
-import fs from 'fs-extra';
+import { promises as fs } from 'fs';
 import get from 'lodash/get';
 import path from 'path';
+import { Plugin } from 'webpack';
 const WrapperPlugin = require('wrapper-webpack-plugin');
 
 const patches = {
@@ -18,7 +19,7 @@ const patches = {
   }
 };
 
-export const loadPatch = async (name: string) => {
+export const loadPatch = async (name: string): Promise<Plugin> => {
   const patch = get(patches, name);
   assert(patch, `No patch found for '${name}'`);
 

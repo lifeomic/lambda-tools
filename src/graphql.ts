@@ -39,7 +39,7 @@ let setupGraphQLFunc: SetupGraphQL = () => {
  *    message. If string, exact match. If function, apply test function to
  *    error message.
  */
-export const assertError = (response: GraphQlResponse, path: string | undefined, messageTest: (message: string) => boolean) => {
+export const assertError = (response: GraphQlResponse, path: string | undefined, messageTest: (message: string) => boolean): void => {
   assert(response.body.errors, 'Expected error but none found');
 
   // path isn't defined on schema type errors. Get first error in that case
@@ -68,7 +68,7 @@ export const assertError = (response: GraphQlResponse, path: string | undefined,
   }
 };
 
-export const assertSuccess = (response: GraphQlResponse) => {
+export const assertSuccess = (response: GraphQlResponse): void => {
   const status = response.statusCode;
   assert(status >= 200 && status < 300,
     `Did not succeed. HTTP status code was ${status}` +
@@ -84,7 +84,7 @@ export const assertSuccess = (response: GraphQlResponse) => {
     `${JSON.stringify(errors, null, 2)}`);
 };
 
-export const setupGraphQL = (func: SetupGraphQL) => {
+export const setupGraphQL = (func: SetupGraphQL): void => {
   setupGraphQLFunc = func;
 };
 
@@ -98,13 +98,17 @@ export interface GraphQlHooksOptions<Context extends GraphQLTestContext = GraphQ
   url?: string;
 }
 
+export interface GraphQLHooks {
+  beforeEach(): void;
+}
+
 export function graphqlHooks <Context extends GraphQLTestContext = GraphQLTestContext>(
   {
     getApp,
     context,
     url = '/graphql'
   }: GraphQlHooksOptions<Context>
-) {
+): GraphQLHooks {
   return {
     beforeEach() {
       const app = getApp(context);
@@ -133,7 +137,7 @@ export const useGraphQL = (
   {
     url = '/graphql'
   }: GraphQlOptions = {}
-) => {
+): void => {
   const test = anyTest as TestInterface<GraphQLTestContext>;
   test.serial.beforeEach((t) => {
     const app = setupGraphQLFunc(t);

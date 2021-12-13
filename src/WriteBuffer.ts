@@ -8,15 +8,15 @@ export class WriteBuffer extends Writable {
     super(options);
   }
 
-  reset () {
+  reset (): void {
     this._buffer = [];
   }
 
-  toString (encoding?: BufferEncoding) {
+  toString (encoding?: BufferEncoding): string {
     return this._buffer.map((chunk) => chunk.toString(encoding)).join('');
   }
 
-  _write (chunk: WriteParams[0], encoding: WriteParams[1], callback: WriteParams[2]) {
+  _write (chunk: WriteParams[0], encoding: WriteParams[1], callback: WriteParams[2]): void {
     this._buffer.push(Buffer.from(chunk, encoding as BufferEncoding));
     callback();
   }

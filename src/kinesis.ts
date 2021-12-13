@@ -2,7 +2,6 @@ import AWS from 'aws-sdk';
 import { v4 as uuid } from 'uuid';
 import Docker from 'dockerode';
 import cloneDeep from 'lodash/cloneDeep';
-import fromPairs from 'lodash/fromPairs';
 
 import * as tools from './utils/kinesisTools';
 
@@ -35,9 +34,17 @@ export interface KinesisTestContext<KeyArray extends string[]> {
 
 export interface UseKinesisContext {
   kinesis: AWS.Kinesis;
+  kinesisContext: KinesisContext<string[]>;
 }
 
-const kinesisStreams: { StreamName: string; ShardCount: number }[] = [];
+export interface KinesisStreamInfo<Name extends string = string> {
+  StreamName: Name;
+  ShardCount: number;
+}
+
+export type KinesisStreams<KeyArray extends string[] = string[]> = KinesisStreamInfo<KeyArray[number]>[];
+
+const kinesisStreams: KinesisStreams = [];
 
 export function streams (streams: string[]) {
   kinesisStreams.length = 0;
@@ -51,10 +58,14 @@ function getStreamName (streamName: string, uniqueIdentifier: string) {
   return uniqueIdentifier ? `${streamName}-${uniqueIdentifier}` : streamName;
 }
 
-export async function destroyStreams (kinesisClient: AWS.Kinesis, uniqueIdentifier: string): Promise<void> {
+export async function destroyStreams (
+  kinesisClient: AWS.Kinesis,
+  uniqueIdentifier: string,
+  streams: KinesisStreams = kinesisStreams,
+): Promise<void> {
   const failedDeletions: string[] = [];
   const { StreamNames } = await kinesisClient.listStreams().promise();
-  const streamNames = kinesisStreams
+  const streamNames = streams
     .map(({ StreamName }) => getStreamName(StreamName, uniqueIdentifier));
   const streamsToDestroy = StreamNames
     .filter(name => streamNames.includes(name));
@@ -77,10 +88,14 @@ export async function destroyStreams (kinesisClient: AWS.Kinesis, uniqueIdentifi
   }
 }
 
-export async function createStreams (kinesisClient: AWS.Kinesis, uniqueIdentifier: string): Promise<void> {
+export async function createStreams (
+  kinesisClient: AWS.Kinesis,
+  uniqueIdentifier: string,
+  streams: KinesisStreams = kinesisStreams,
+): Promise<void> {
   const failedProvisons: string[] = [];
   await pQueue.addAll(
-    kinesisStreams.map(stream => async () => {
+    streams.map(stream => async () => {
       const newStream = cloneDeep(stream);
       const StreamName = getStreamName(newStream.StreamName, uniqueIdentifier);
       newStream.StreamName = StreamName;
@@ -105,10 +120,14 @@ export async function createStreams (kinesisClient: AWS.Kinesis, uniqueIdentifie
   }
 }
 
-function buildStreamNameMapping (uniqueIdentifier: string) {
-  return fromPairs(kinesisStreams.map(({ StreamName }) => {
-    return [StreamName, getStreamName(StreamName, uniqueIdentifier)];
-  }));
+function buildStreamNameMapping<KeyArray extends string[]> (
+  uniqueIdentifier: string,
+  streams: KinesisStreams<KeyArray> = kinesisStreams,
+): MappedStreamNames<KeyArray> {
+  return streams.reduce<MappedStreamNames<KeyArray>>((acc, { StreamName }) => {
+    acc[StreamName] = getStreamName(StreamName, uniqueIdentifier);
+    return acc;
+  }, {} as MappedStreamNames<KeyArray>);
 }
 
 export async function getConnection () {
@@ -163,7 +182,17 @@ export async function getConnection () {
   return { connection, config };
 }
 
-export function kinesisTestHooks <KeyArray extends string[]>(useUniqueStreams?: boolean) {
+export interface KinesisTestHooks<KeyArray extends string[]> {
+  beforeAll(): Promise<void>;
+  beforeEach(): Promise<KinesisContext<KeyArray>>;
+  afterEach(context: KinesisContext<KeyArray>): Promise<void>;
+  afterAll(): Promise<void>;
+}
+
+export function kinesisTestHooks <KeyArray extends string[]>(
+  useUniqueStreams = false,
+  streams: KinesisStreams<KeyArray> = kinesisStreams
+): KinesisTestHooks<KeyArray> {
   let connection: AwsUtilsConnection;
   let config: ConfigurationOptions;
 
@@ -173,10 +202,10 @@ export function kinesisTestHooks <KeyArray extends string[]>(useUniqueStreams?: 
     config = result.config;
   }
 
-  async function beforeEach () {
+  async function beforeEach (): Promise<KinesisContext<KeyArray>> {
     const uniqueIdentifier = useUniqueStreams ? uuid() : '';
     const service = new AWS.Kinesis(config);
-    await createStreams(service, uniqueIdentifier);
+    await createStreams(service, uniqueIdentifier, streams);
     return {
       kinesisClient: service,
       config,
@@ -190,7 +219,7 @@ export function kinesisTestHooks <KeyArray extends string[]>(useUniqueStreams?: 
       return;
     }
     const { kinesisClient, uniqueIdentifier } = context;
-    await destroyStreams(kinesisClient, uniqueIdentifier);
+    await destroyStreams(kinesisClient, uniqueIdentifier, streams);
   }
 
   async function afterAll () {
@@ -206,7 +235,7 @@ export function kinesisTestHooks <KeyArray extends string[]>(useUniqueStreams?: 
   };
 }
 
-export function useKinesisDocker (anyTest: TestInterface, useUniqueStreams?: boolean) {
+export function useKinesisDocker (anyTest: TestInterface, useUniqueStreams?: boolean): void {
   const test = anyTest as TestInterface<KinesisTestContext<any>>;
   const testHooks = kinesisTestHooks(useUniqueStreams);
 
@@ -223,7 +252,7 @@ export function useKinesisDocker (anyTest: TestInterface, useUniqueStreams?: boo
   test.serial.after.always(testHooks.afterAll);
 }
 
-export function useKinesis (anyTest: TestInterface, streamName: string) {
+export function useKinesis (anyTest: TestInterface, streamName: string): void {
   // The base ava test doesn't have context, and has to be cast.
   // This allows clients to send in the default ava export, and they can cast later or before.
   const test = anyTest as TestInterface<UseKinesisContext>;

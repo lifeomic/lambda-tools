@@ -358,7 +358,16 @@ export async function localstackReady (container: Docker.Container): Promise<Loc
   });
 }
 
-export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.12.4', services }: Config<Service>) {
+export interface GetConnection {
+  mappedServices: any;
+  getOutput(): string;
+  clearOutput(): void;
+  cleanup(): Promise<any>;
+}
+
+export async function getConnection <Service extends keyof LocalStackServices>(
+  { versionTag = '0.12.4', services }: Config<Service>
+): Promise<GetConnection> {
   if (versionTag === 'latest') {
     throw new Error('We refuse to try to work with the latest tag');
   }
@@ -450,7 +459,14 @@ export async function waitForServicesToBeReady<Service extends keyof LocalStackS
   }));
 }
 
-export function localStackHooks <Services extends keyof LocalStackServices>({ versionTag, services }: Config<Services>) {
+export interface LocalStackHooks<Services extends keyof LocalStackServices> {
+  beforeAll(): Promise<LocalStackContext<Services>>;
+  afterAll(): Promise<void>;
+}
+
+export function localStackHooks <Services extends keyof LocalStackServices>(
+  { versionTag, services }: Config<Services>
+): LocalStackHooks<Services> {
   let cleanup: () => Promise<any> | undefined;
 
   async function beforeAll (): Promise<LocalStackContext<Services>> {
@@ -476,7 +492,9 @@ export function localStackHooks <Services extends keyof LocalStackServices>({ ve
   };
 }
 
-export function useLocalStack <Services extends keyof LocalStackServices>(anyTest: TestInterface, config: Config<Services>) {
+export function useLocalStack <Services extends keyof LocalStackServices>(
+  anyTest: TestInterface, config: Config<Services>
+): void {
   if (!config) {
     throw new Error('Config is required');
   }

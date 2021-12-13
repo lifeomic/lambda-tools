@@ -1,5 +1,5 @@
 import assert from 'assert';
-import Docker, { Exec, ExecCreateOptions } from 'dockerode';
+import Docker, { Exec, ExecCreateOptions, ExecInspectInfo } from 'dockerode';
 import os from 'os';
 import { WriteBuffer } from './WriteBuffer';
 import map from 'lodash/map';
@@ -24,7 +24,15 @@ type DockerExec = Exec & {
   output: EventEmitter & { end: (...args: any[]) => any };
 }
 
-export const executeContainerCommand = async ({ container, command, environment, stdin }: ExecuteCommandConfig) => {
+export interface ExecuteContainerCommand {
+  stderr: WriteBuffer;
+  stdout: WriteBuffer;
+  inspectOutput: ExecInspectInfo;
+}
+
+export const executeContainerCommand = async (
+  { container, command, environment, stdin }: ExecuteCommandConfig
+): Promise<ExecuteContainerCommand> => {
   const options: ExecCreateOptions = {
     AttachStderr: true,
     AttachStdout: true,
@@ -90,7 +98,7 @@ const buildAuthForDocker = () => {
   return {};
 }
 
-export const pullImage = async (docker: Docker, image: string) => {
+export const pullImage = async (docker: Docker, image: string): Promise<void> => {
   const stream = await docker.pull(image, buildAuthForDocker());
   await new Promise((resolve) => {
     docker.modem.followProgress(stream, resolve, (progress: {status: string; progress?: string}) => {
@@ -99,19 +107,19 @@ export const pullImage = async (docker: Docker, image: string) => {
   });
 };
 
-export const imageExists = async (docker: Docker, image: string) => {
+export const imageExists = async (docker: Docker, image: string): Promise<boolean> => {
   const images = await docker.listImages();
   const imageTags = flatten(map(images, 'RepoTags'));
   return imageTags.includes(image);
 };
 
-export const ensureImage = async (docker: Docker, image: string) => {
+export const ensureImage = async (docker: Docker, image: string): Promise<void> => {
   if (!await imageExists(docker, image)) {
     await pullImage(docker, image);
   }
 };
 
-export const getHostAddress = async () => {
+export const getHostAddress = async (): Promise<string> => {
   if (process.env.DOCKER_HOST_ADDR) {
     return process.env.DOCKER_HOST_ADDR;
   }
