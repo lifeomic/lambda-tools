@@ -3,7 +3,11 @@
   "version": "14.5.1",
   "description": "Common utilities for Lambda testing and development",
   "main": "src/index.js",
-  "types": "src/index.ts",
+  "types": "src/index.d.ts",
+  "files": [
+    "bin/**/*",
+    "src/**/*"
+  ],
   "bin": {
     "lambda-tools-build": "./bin/build.js",
     "lambda-tools-host-addr": "./bin/get-host-addr.js"
