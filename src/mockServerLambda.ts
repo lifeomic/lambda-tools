@@ -5,7 +5,7 @@ export async function mockInvocation(
   mockServerClient: MockServerClient,
   functionName: string,
   responseBody: Record<string, any>,
-  requestBody: Record<string, any>,
+  requestBody?: Record<string, any>,
   times?: number,
 ): Promise<void> {
   const httpRequest: HttpRequest = {
