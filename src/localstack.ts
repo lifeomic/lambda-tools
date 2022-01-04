@@ -1,5 +1,10 @@
 import AWS from 'aws-sdk';
-import Docker, {ContainerCreateOptions, ContainerInspectInfo} from 'dockerode';
+import Docker, {
+  ContainerCreateOptions,
+  ContainerInspectInfo,
+  DockerOptions,
+  Container,
+} from 'dockerode';
 import { Client as ElasticSearchClient } from '@elastic/elasticsearch';
 
 import Environment from './Environment';
@@ -92,7 +97,6 @@ export interface Config<Service extends keyof LocalStackServices> {
   versionTag?: string;
   services: Service[];
 }
-
 
 class LocalstackWriteBuffer extends Writable {
   private _buffer: string[];
@@ -351,12 +355,36 @@ function mapServices <Service extends keyof LocalStackServices>(
 }
 
 export async function localstackReady (container: Docker.Container): Promise<LocalstackWriteBuffer> {
-  const stream = await container.attach({ stream: true, stdout: true, stderr: true });
+  const stream = await container.attach({ stream: true, stdout: true, stderr: true, logs: true });
   return new Promise((resolve) => {
     const logs = new LocalstackWriteBuffer(resolve, container.id);
     container.modem.demuxStream(stream, logs, logs);
   });
 }
+
+export interface DockerLocalstackReady {
+  containerId?: string;
+  name?: string;
+  version?: string;
+}
+
+export const dockerLocalstackReady = async (options: DockerOptions = {}, { containerId, name, version = '0.12.20' }: DockerLocalstackReady) => {
+  const docker = new Docker(options);
+  let container: Container | undefined;
+  if (containerId) {
+    container = await docker.getContainer(containerId);
+  } else {
+    const [ info ] = await docker.listContainers({ filter: name ? `name=${name}` : `ancestor=${version}` });
+    if (info) {
+      container = await docker.getContainer(info.Id);
+    }
+  }
+  if (!container) {
+    logger.error(`Unable to find any matching docker containers with ${JSON.stringify({ containerId, name, version })}`);
+    return Promise.resolve();
+  }
+  return await localstackReady(container);
+};
 
 export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.12.4', services }: Config<Service>) {
   if (versionTag === 'latest') {

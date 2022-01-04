@@ -4,7 +4,7 @@ const { LOCALSTACK_SERVICES, getConnection, waitForServicesToBeReady } = require
 const services = Object.keys(LOCALSTACK_SERVICES);
 
 test.before(async t => {
-  const { mappedServices, cleanup } = await getConnection({ services, versionTag: '0.12.2' });
+  const { mappedServices, cleanup } = await getConnection({ services, versionTag: '0.12.20' });
   Object.assign(t.context, { mappedServices, cleanup });
 });
 
