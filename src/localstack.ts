@@ -378,7 +378,7 @@ export const dockerLocalstackReady = async (
   const containers: Container[] = [];
   if (containerId) {
     containers.push(await docker.getContainer(containerId));
-  } else if (name || version) {
+  } else {
     const containerInfos = await docker.listContainers({ filter: name ? `name=${name}` : `ancestor=${version}` });
     const matches = containerInfos.filter(({ Names, Image}) => (name && Names.includes(name)) || (version && Image.includes(version)));
     containers.push(...await Promise.all(matches.map((info) => docker.getContainer(info.Id))));
