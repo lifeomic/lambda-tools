@@ -362,28 +362,31 @@ export async function localstackReady (container: Docker.Container): Promise<Loc
   });
 }
 
-export interface DockerLocalstackReady {
-  containerId?: string;
-  name?: string;
-  version?: string;
-}
+export type DockerLocalstackReady =
+  | { containerId: string; name?: string; version?: string }
+  | { containerId?: string; name: string; version?: string }
+  | { containerId?: string; name?: string; version: string };
 
-export const dockerLocalstackReady = async (options: DockerOptions = {}, { containerId, name, version = '0.12.20' }: DockerLocalstackReady) => {
+export const dockerLocalstackReady = async (
+  { containerId, version, name }: DockerLocalstackReady,
+  options: DockerOptions = {},
+) => {
+  if (!(containerId || name || version)) {
+    throw new Error('\'containerId\', \'name\' or \'version\' is required');
+  }
   const docker = new Docker(options);
-  let container: Container | undefined;
+  const containers: Container[] = [];
   if (containerId) {
-    container = await docker.getContainer(containerId);
-  } else {
-    const [ info ] = await docker.listContainers({ filter: name ? `name=${name}` : `ancestor=${version}` });
-    if (info) {
-      container = await docker.getContainer(info.Id);
-    }
+    containers.push(await docker.getContainer(containerId));
+  } else if (name || version) {
+    const containerInfos = await docker.listContainers({ filter: name ? `name=${name}` : `ancestor=${version}` });
+    const matches = containerInfos.filter(({ Names, Image}) => (name && Names.includes(name)) || (version && Image.includes(version)));
+    containers.push(...await Promise.all(matches.map((info) => docker.getContainer(info.Id))));
   }
-  if (!container) {
+  if (containers.length === 0) {
     logger.error(`Unable to find any matching docker containers with ${JSON.stringify({ containerId, name, version })}`);
-    return Promise.resolve();
   }
-  return await localstackReady(container);
+  return await Promise.all(containers.map(localstackReady));
 };
 
 export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.12.4', services }: Config<Service>) {

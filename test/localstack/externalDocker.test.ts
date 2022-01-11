@@ -6,22 +6,23 @@ import { v4 as uuid } from 'uuid';
 
 const LOCALSTACK_IMAGE = 'localstack/localstack';
 
-[
+const versions = [
   '0.10.9',
   '0.11.6',
   '0.12.20',
   '0.13.2'
-].forEach((versionTag) => {
-  const docker = new Docker();
-  let container: Container;
-  let info: ContainerInspectInfo;
+] as const;
+const docker = new Docker();
 
-  test.before(async () => {
+const containers = {} as Record<typeof versions[number], { container: Container; info: ContainerInspectInfo }>;
+
+test.before(async () => {
+  await Promise.all(versions.map(async (versionTag) => {
     const image = `${LOCALSTACK_IMAGE}:${versionTag}`;
 
     await ensureImage(docker, image);
 
-    container = await docker.createContainer({
+    const container = await docker.createContainer({
       HostConfig: {
         AutoRemove: true,
         PublishAllPorts: true,
@@ -34,30 +35,44 @@ const LOCALSTACK_IMAGE = 'localstack/localstack';
     });
 
     await container.start();
-    info = await container.inspect();
-  });
 
-  test.after(async () => {
+    const info = await container.inspect();
+    containers[versionTag] = { info, container };
+  }));
+});
+
+test.after(async () => {
+  await Promise.all(versions.map(async (versionTag) => {
+    const { container } = containers[versionTag];
     if (container) {
       await container.stop();
-      // await container.remove();
     }
-  });
+  }));
+});
 
+versions.forEach((versionTag) => {
   test.serial(`dockerLocalstackReady ${versionTag} by containerId`, async (t) => {
-    await t.notThrowsAsync(dockerLocalstackReady(undefined, { containerId: container.id }));
+    const { container } = containers[versionTag];
+    await t.notThrowsAsync(dockerLocalstackReady({ containerId: container.id }));
   });
 
   test.serial(`dockerLocalstackReady ${versionTag} by name`, async (t) => {
-    await t.notThrowsAsync(dockerLocalstackReady(undefined, { name: info.Name }));
+    const { info } = containers[versionTag];
+    await t.notThrowsAsync(dockerLocalstackReady({ name: info.Name }));
   });
 
   test.serial(`dockerLocalstackReady ${versionTag} by image`, async (t) => {
-    await t.notThrowsAsync(dockerLocalstackReady(undefined, { version: versionTag }));
+    await t.notThrowsAsync(dockerLocalstackReady({ version: versionTag }));
   });
 });
 
 test.serial(`dockerLocalstackReady no matching images provided`, async (t) => {
-  await t.notThrowsAsync(dockerLocalstackReady(undefined, { name: uuid() }));
+  await t.notThrowsAsync(dockerLocalstackReady({ name: uuid() }));
 });
 
+test(`dockerLocalstackReady will throw an exception if missing parameters`, async (t) => {
+  // @ts-expect-error this is to satisfy plain javascript, where the compiler won't complain.
+  await t.throwsAsync(dockerLocalstackReady({}), {
+    message: '\'containerId\', \'name\' or \'version\' is required'
+  });
+});
