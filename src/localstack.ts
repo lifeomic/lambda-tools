@@ -1,5 +1,10 @@
 import AWS from 'aws-sdk';
-import Docker, {ContainerCreateOptions, ContainerInspectInfo} from 'dockerode';
+import Docker, {
+  ContainerCreateOptions,
+  ContainerInspectInfo,
+  DockerOptions,
+  Container,
+} from 'dockerode';
 import { Client as ElasticSearchClient } from '@elastic/elasticsearch';
 
 import Environment from './Environment';
@@ -92,7 +97,6 @@ export interface Config<Service extends keyof LocalStackServices> {
   versionTag?: string;
   services: Service[];
 }
-
 
 class LocalstackWriteBuffer extends Writable {
   private _buffer: string[];
@@ -351,12 +355,39 @@ function mapServices <Service extends keyof LocalStackServices>(
 }
 
 export async function localstackReady (container: Docker.Container): Promise<LocalstackWriteBuffer> {
-  const stream = await container.attach({ stream: true, stdout: true, stderr: true });
+  const stream = await container.attach({ stream: true, stdout: true, stderr: true, logs: true });
   return new Promise((resolve) => {
     const logs = new LocalstackWriteBuffer(resolve, container.id);
     container.modem.demuxStream(stream, logs, logs);
   });
 }
+
+export type DockerLocalstackReady =
+  | { containerId: string; name?: string; version?: string }
+  | { containerId?: string; name: string; version?: string }
+  | { containerId?: string; name?: string; version: string };
+
+export const dockerLocalstackReady = async (
+  { containerId, version, name }: DockerLocalstackReady,
+  options: DockerOptions = {},
+) => {
+  if (!(containerId || name || version)) {
+    throw new Error('\'containerId\', \'name\' or \'version\' is required');
+  }
+  const docker = new Docker(options);
+  const containers: Container[] = [];
+  if (containerId) {
+    containers.push(await docker.getContainer(containerId));
+  } else {
+    const containerInfos = await docker.listContainers({ filter: name ? `name=${name}` : `ancestor=${version}` });
+    const matches = containerInfos.filter(({ Names, Image}) => (name && Names.includes(name)) || (version && Image.includes(version)));
+    containers.push(...await Promise.all(matches.map((info) => docker.getContainer(info.Id))));
+  }
+  if (containers.length === 0) {
+    logger.error(`Unable to find any matching docker containers with ${JSON.stringify({ containerId, name, version })}`);
+  }
+  return await Promise.all(containers.map(localstackReady));
+};
 
 export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.12.4', services }: Config<Service>) {
   if (versionTag === 'latest') {
