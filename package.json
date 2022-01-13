@@ -1,6 +1,6 @@
 {
   "name": "@lifeomic/lambda-tools",
-  "version": "15.1.0",
+  "version": "15.1.1",
   "description": "Common utilities for Lambda testing and development",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -10,7 +10,8 @@
   ],
   "bin": {
     "lambda-tools-build": "./bin/build.js",
-    "lambda-tools-host-addr": "./bin/get-host-addr.js"
+    "lambda-tools-host-addr": "./bin/get-host-addr.js",
+    "lambda-tools-wait-for-localstack": "./bin/wait-for-localstack.js"
   },
   "scripts": {
     "prepublishOnly": "yarn tsc",
