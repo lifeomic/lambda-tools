@@ -8,3 +8,5 @@ coverage/
 src/lambda.js
 src/localstack.js
 src/dynamodb.js
+CertificateAuthorityCertificate.pem
+
