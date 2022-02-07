@@ -49,7 +49,7 @@ type LocalStackServiceClients = AWS.APIGateway |
   AWS.StepFunctions |
   AWS.STS;
 
-export interface LocalStackService<Client extends LocalStackServiceClients> {
+export interface LocalStackService<Client extends LocalStackServiceClients = LocalStackServiceClients> {
   readonly config: ServiceConfigurationOptions;
   readonly client: Client;
   isReady(client: Client): Promise<any>;
@@ -95,6 +95,7 @@ export interface LocalStackTestContext<Service extends keyof LocalStackServices>
 
 export interface Config<Service extends keyof LocalStackServices> {
   versionTag?: string;
+  nameTag?: 'full' | 'light';
   services: Service[];
 }
 
@@ -104,7 +105,9 @@ class LocalstackWriteBuffer extends Writable {
   private logger: Logger;
 
   constructor (
-    private resolve: (any: LocalstackWriteBuffer) => void,
+    private resolve: (buffer: LocalstackWriteBuffer) => void,
+    private printLogs: boolean = true,
+    public stream: NodeJS.ReadWriteStream,
     container: string,
   ) {
     super();
@@ -131,7 +134,7 @@ class LocalstackWriteBuffer extends Writable {
         this._isSetUp = true;
         this.resolve(this);
       }
-    } else {
+    } else if (this.printLogs) {
       this.logger.info(asString);
     }
     callback();
@@ -296,7 +299,7 @@ export function getService<Service extends keyof LocalStackServices>(service: Se
   }
 }
 
-export const LOCALSTACK_SERVICES = {
+export const LOCALSTACK_SERVICES: Record<keyof LocalStackServices, LocalStackBaseService<LocalStackServices[keyof LocalStackServices]['client']>> = {
   apigateway: getService('apigateway'),
   cloudformation: getService('cloudformation'),
   cloudwatch: getService('cloudwatch'),
@@ -321,7 +324,7 @@ export const LOCALSTACK_SERVICES = {
   ssm: getService('ssm'),
   stepfunctions: getService('stepfunctions'),
   sts: getService('sts'),
-}
+};
 
 const validServices = Object.keys(LOCALSTACK_SERVICES);
 
@@ -333,31 +336,38 @@ function getExposedPorts (): ContainerCreateOptions['ExposedPorts'] {
   return ports;
 }
 
-function mapServices <Service extends keyof LocalStackServices>(
+export type MappedServices<Service extends (keyof LocalStackServices)[] = (keyof LocalStackServices)[]> = {
+  [key in Service[number]]: LocalStackServices[key];
+};
+
+function mapServices <Services extends (keyof LocalStackServices)[]>(
   host: string,
   ports: ContainerInspectInfo['NetworkSettings']['Ports'],
-  services: Service[],
+  services: Services,
   localstackPort?: string
-): Pick<LocalStackServices, Service> {
-  return services.reduce<Partial<LocalStackServices>>((mappedServices, service) => {
+): MappedServices<Services> {
+  return services.reduce((mappedServices, service) => {
     const serviceDetails = getService(service);
     const port = ports[`${localstackPort || serviceDetails.port}/tcp`][0].HostPort;
     const url = `http://${host}:${port}`;
     const { config, connection } = buildConnectionAndConfig({ url });
-    mappedServices[service] = {
+    mappedServices[service as Services[number]] = {
       config,
       connection,
       client: serviceDetails.getClient({ config, connection }),
       isReady: serviceDetails.isReady
-    } as LocalStackServices[Service];
+    } as LocalStackServices[Services[number]];
     return mappedServices;
-  }, {}) as Pick<LocalStackServices, Service>
+  }, {} as MappedServices<Services>)
 }
 
-export async function localstackReady (container: Docker.Container): Promise<LocalstackWriteBuffer> {
+export async function localstackReady (
+  container: Docker.Container,
+  printLogs?: boolean,
+): Promise<LocalstackWriteBuffer> {
   const stream = await container.attach({ stream: true, stdout: true, stderr: true, logs: true });
   return new Promise((resolve) => {
-    const logs = new LocalstackWriteBuffer(resolve, container.id);
+    const logs = new LocalstackWriteBuffer(resolve, printLogs, stream, container.id);
     container.modem.demuxStream(stream, logs, logs);
   });
 }
@@ -370,7 +380,7 @@ export type DockerLocalstackReady =
 export const dockerLocalstackReady = async (
   { containerId, version, name }: DockerLocalstackReady,
   options: DockerOptions = {},
-) => {
+): Promise<void> => {
   if (!(containerId || name || version)) {
     throw new Error('\'containerId\', \'name\' or \'version\' is required');
   }
@@ -386,10 +396,14 @@ export const dockerLocalstackReady = async (
   if (containers.length === 0) {
     logger.error(`Unable to find any matching docker containers with ${JSON.stringify({ containerId, name, version })}`);
   }
-  return await Promise.all(containers.map(localstackReady));
+  await Promise.all(containers.map(
+    async (container) => {
+      const buffer = await localstackReady(container, false);
+      (buffer.stream as any).destroy();
+    }));
 };
 
-export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.12.4', services }: Config<Service>) {
+export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.12.4', services, nameTag }: Config<Service>) {
   if (versionTag === 'latest') {
     throw new Error('We refuse to try to work with the latest tag');
   }
@@ -414,7 +428,7 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     ExposedPorts[`${localStackPort}/tcp`] = {}
   }
 
-  const image = `${LOCALSTACK_IMAGE}:${versionTag}`;
+  const image = `${LOCALSTACK_IMAGE}${nameTag ? `-${nameTag}` : ''}:${versionTag}`;
   const docker = new Docker();
   const environment = new Environment();
 

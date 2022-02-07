@@ -10,7 +10,8 @@ const versions = [
   '0.10.9',
   '0.11.6',
   '0.12.20',
-  '0.13.2'
+  '0.13.2',
+  '0.14.0'
 ] as const;
 const docker = new Docker();
 
