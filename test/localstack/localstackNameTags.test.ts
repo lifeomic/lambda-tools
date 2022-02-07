@@ -13,9 +13,10 @@ test.afterEach(async (t) => {
   'light',
   'full',
   undefined,
-].forEach((nameTag) => {
+].forEach((nameExtension) => {
+  const nameTag = nameExtension as 'full' | 'light' | undefined;
   test.serial(`will use docker tag localstack/localstack${nameTag ? `-${nameTag}` : ''}:0.14.0`, async (t) => {
-    const { mappedServices, cleanup } = await getConnection({ services: ['s3'], versionTag: '0.14.0' });
+    const { mappedServices, cleanup } = await getConnection({ services: ['s3'], versionTag: '0.14.0', nameTag });
     const { isReady, client } = mappedServices.s3;
     t.context.cleanup = cleanup;
     await t.notThrowsAsync(isReady(client));
