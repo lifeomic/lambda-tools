@@ -9,7 +9,7 @@ const { createLambdaExecutionEnvironment, destroyLambdaExecutionEnvironment, Lam
 const { FIXTURES_DIRECTORY } = require('./helpers/lambda');
 const find = require('lodash/find');
 
-const SUPPORTED_NODE_VERSIONS = ['10.23.0', '12.20.0'];
+const SUPPORTED_NODE_VERSIONS = ['10.23.0', '12.20.0', '14.19.0', '16.14.0'];
 
 test.beforeEach((test) => {
   test.context.buildDirectory = path.join(FIXTURES_DIRECTORY, 'build', uuid());
@@ -23,7 +23,7 @@ test.afterEach.always(async (test) => {
   await fs.remove(test.context.buildDirectory);
 });
 
-test('Setting WEBPACK_MODE to development disables minification', async (test) => {
+test.only('Setting WEBPACK_MODE to development disables minification', async (test) => {
   const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');
   const bundle = path.join(test.context.buildDirectory, 'lambda_service.js');
 

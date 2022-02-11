@@ -3,10 +3,9 @@ import map from 'lodash/map';
 import isString from 'lodash/isString';
 import supertest, { Test } from 'supertest';
 import { ExecutionContext, TestInterface } from 'ava';
-import Koa from 'koa';
 
-export type SetupContextGraphQl<Context extends GraphQLTestContext = GraphQLTestContext> = (context: Context) => Koa;
-export type SetupGraphQL = <Context extends GraphQLTestContext = GraphQLTestContext>(test: ExecutionContext<Context>) => Koa;
+export type SetupContextGraphQl<Context extends GraphQLTestContext = GraphQLTestContext> = <T = any>(context: Context) => T;
+export type SetupGraphQL = <Context extends GraphQLTestContext = GraphQLTestContext, T = any>(test: ExecutionContext<Context>) => T;
 
 export interface GraphQLErrorLocation {
   line: number;

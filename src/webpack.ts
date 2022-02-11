@@ -2,8 +2,14 @@ const babelEnvDeps = require('webpack-babel-env-deps');
 import fs from 'fs-extra';
 import path from 'path';
 import TerserPlugin from 'terser-webpack-plugin';
-import webpack from 'webpack';
-const WebpackOptionsDefaulter = require('webpack/lib/WebpackOptionsDefaulter');
+import {
+  webpack,
+  Configuration,
+  NormalModuleReplacementPlugin,
+  DefinePlugin,
+  Stats,
+  config,
+} from 'webpack';
 import { zip } from './zip';
 import chalk from 'chalk';
 import { promisify } from 'util';
@@ -18,8 +24,10 @@ import { getLogger } from './utils/logging';
 const glob = promisify(rawGlob);
 const logger = getLogger('webpack');
 
-const WEBPACK_DEFAULTS = new WebpackOptionsDefaulter().process({});
-const run = promisify<webpack.Configuration, webpack.Stats>(webpack);
+const WEBPACK_DEFAULTS = config.getNormalizedWebpackOptions({});
+config.applyWebpackOptionsDefaults(WEBPACK_DEFAULTS);
+
+const run = promisify<Configuration, Stats | undefined>(webpack);
 
 const CALLER_NODE_MODULES = 'node_modules';
 const DEFAULT_NODE_VERSION = '12.20.0';
@@ -143,7 +151,7 @@ async function expandEntrypoints (entrypoints: Entrypoint[]) {
           const indexFile = await findIndexFile(directoryFileAbs);
 
           if (indexFile) {
-            // We found an index file in thie directory so use this
+            // We found an index file in the directory so use this
             // as an entrypoint.
             finalEntrypoints.push({
               file: indexFile,
@@ -177,7 +185,7 @@ export interface Config {
   tsconfig?: string;
   transpileOnly?: boolean;
   minify?: boolean;
-  configTransformer?: (config: webpack.Configuration) => webpack.Configuration;
+  configTransformer?: (config: Configuration) => Configuration;
   zip?: boolean;
 }
 
@@ -194,7 +202,7 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
   const entry = entrypoints.reduce<Record<string, string[]>>(
     (accumulator, entry) => {
       const { file, name } = entry;
-      const preloadModules = ['@babel/polyfill'];
+      const preloadModules = ['core-js/stable', 'regenerator-runtime/runtime'];
       if (options.enableRuntimeSourceMaps) {
         preloadModules.push('source-map-support/register');
       }
@@ -207,8 +215,8 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
   const nodeVersion = options.nodeVersion || DEFAULT_NODE_VERSION;
 
   const plugins = [
-    new webpack.NormalModuleReplacementPlugin(/^any-promise$/, 'core-js/fn/promise'),
-    new webpack.DefinePlugin({
+    new NormalModuleReplacementPlugin(/^any-promise$/, 'core-js/fn/promise'),
+    new DefinePlugin({
       'global.GENTLY': false,
       'process.env.LIFEOMIC_SERVICE_NAME': `'${serviceName}'`
     }),
@@ -268,14 +276,14 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
     };
 
   const optimization = options.minify
-    ? { minimizer: [new TerserPlugin({ terserOptions: { sourceMap: true } })] }
+    ? { minimize: true, minimizer: [new TerserPlugin({ terserOptions: { sourceMap: true } })] }
     : { minimize: false };
 
   const devtool = options.enableRuntimeSourceMaps
     ? 'source-map'
     : 'hidden-source-map';
 
-  const webpackConfig: webpack.Configuration = {
+  const webpackConfig: Configuration = {
     entry,
     output: {
       path: outputDir,
@@ -310,7 +318,7 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
       // relative to the caller or us. This cause our node modules to be
       // searched if a dependency can't be found in the caller's.
       modules: [ CALLER_NODE_MODULES, LAMBDA_TOOLS_NODE_MODULES ],
-      extensions: WEBPACK_DEFAULTS.resolve.extensions.concat(['.ts'])
+      extensions: WEBPACK_DEFAULTS.resolve.extensions!.concat(['.js', '.ts'])
     },
     resolveLoader: {
       // Since build is being called by other packages dependencies may be
@@ -336,8 +344,8 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
     }
   };
 
-  const transformer = options.configTransformer || function (config: webpack.Configuration) { return config; };
-  const transformedConfig: webpack.Configuration = await transformer(webpackConfig);
+  const transformer = options.configTransformer || function (config: Configuration) { return config; };
+  const transformedConfig: Configuration = await transformer(webpackConfig);
 
   const webpackResult = await run(transformedConfig);
 

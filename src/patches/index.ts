@@ -2,7 +2,7 @@ import assert from 'assert';
 import fs from 'fs-extra';
 import get from 'lodash/get';
 import path from 'path';
-const WrapperPlugin = require('wrapper-webpack-plugin');
+import { BannerPlugin } from 'webpack';
 
 const patches = {
   dns: {
@@ -22,9 +22,10 @@ export const loadPatch = async (name: string) => {
   const patch = get(patches, name);
   assert(patch, `No patch found for '${name}'`);
 
-  return new WrapperPlugin({
+  return new BannerPlugin({
     test: /\.js$/,
+    raw: true,
     // eslint-disable-next-line security/detect-non-literal-fs-filename
-    [patch.placement]: await fs.readFile(patch.file, { encoding: 'utf8' })
+    banner: await fs.readFile(patch.file, { encoding: 'utf8' })
   });
 };
