@@ -97,22 +97,47 @@ export interface Config<Service extends keyof LocalStackServices> {
   versionTag?: string;
   nameTag?: 'full' | 'light';
   services: Service[];
+  envVariables?: Record<string, string>;
 }
+
+const hasLogMessage = (
+  isReadyMessages: Record<string, boolean | undefined>,
+  logs: string[],
+) => {
+  const entries = Object.entries(isReadyMessages);
+  return entries.map(([key, value]) => {
+    const hasMessage = value || !!logs.find((next) => next.toLowerCase().includes(key.toLowerCase()));
+    isReadyMessages[key] = hasMessage;
+    return hasMessage;
+  }).filter((value) => value).length === entries.length;
+};
 
 class LocalstackWriteBuffer extends Writable {
   private _buffer: string[];
   private _isSetUp = false;
   private logger: Logger;
+  private isReadyMessages: Record<string, boolean | undefined> = { 'Ready.': undefined };
 
   constructor (
     private resolve: (buffer: LocalstackWriteBuffer) => void,
     private printLogs: boolean = true,
     public stream: NodeJS.ReadWriteStream,
-    container: string,
+    container: ContainerInspectInfo,
   ) {
     super();
     this._buffer = [];
-    this.logger = logger.child(container);
+    this.logger = logger.child(container.Id);
+
+    const [majorStr, minorStr] =  container.Config.Image.split(':')[1].split(/\./g);
+    const [, minor] = [Number.parseInt(majorStr, 10), Number.parseInt(minorStr, 10)];
+
+    if (minor === 12) {
+      this.isReadyMessages['Execution of "preload_services" took'] = false;
+    }
+
+    if ([13, 14].includes(minor)) {
+      this.isReadyMessages['Execution of "start_runtime_components" took'] = false;
+    }
   }
 
   reset () {
@@ -130,7 +155,7 @@ class LocalstackWriteBuffer extends Writable {
     this._buffer.push(...logs);
     if (!this._isSetUp) {
       this.logger.debug(asString);
-      if (logs.includes('Ready.')) {
+      if (hasLogMessage(this.isReadyMessages, logs)) {
         this._isSetUp = true;
         this.resolve(this);
       }
@@ -363,19 +388,23 @@ function mapServices <Services extends (keyof LocalStackServices)[]>(
 
 export async function localstackReady (
   container: Docker.Container,
+  containerInfo: Docker.ContainerInspectInfo,
   printLogs?: boolean,
 ): Promise<LocalstackWriteBuffer> {
   const stream = await container.attach({ stream: true, stdout: true, stderr: true, logs: true });
   return new Promise((resolve) => {
-    const logs = new LocalstackWriteBuffer(resolve, printLogs, stream, container.id);
+    const logs = new LocalstackWriteBuffer(resolve, printLogs, stream, containerInfo);
     container.modem.demuxStream(stream, logs, logs);
   });
 }
 
 export type DockerLocalstackReady =
-  | { containerId: string; name?: string; version?: string }
-  | { containerId?: string; name: string; version?: string }
-  | { containerId?: string; name?: string; version: string };
+  | { isReadyMessages?: Record<string, boolean | undefined> }
+  & (
+    | { containerId: string; name?: string; version?: string }
+    | { containerId?: string; name: string; version?: string }
+    | { containerId?: string; name?: string; version: string }
+  );
 
 export const dockerLocalstackReady = async (
   { containerId, version, name }: DockerLocalstackReady,
@@ -400,12 +429,12 @@ export const dockerLocalstackReady = async (
   }
   await Promise.all(containers.map(
     async (container) => {
-      const buffer = await localstackReady(container, false);
+      const buffer = await localstackReady(container, await container.inspect(), false);
       (buffer.stream as any).destroy();
     }));
 };
 
-export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.12.4', services, nameTag }: Config<Service>) {
+export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.12.4', services, nameTag, envVariables = {} }: Config<Service>) {
   if (versionTag === 'latest') {
     throw new Error('We refuse to try to work with the latest tag');
   }
@@ -436,6 +465,17 @@ export async function getConnection <Service extends keyof LocalStackServices>({
 
   await ensureImage(docker, image);
 
+  const env = {
+    SERVICES: `${services.join(',')}`,
+    DEBUG: '1',
+    LAMBDA_EXECUTOR: `${process.env.LAMBDA_EXECUTOR || /* istanbul ignore next */ 'docker'}`,
+    LAMBDA_REMOTE_DOCKER: `${process.env.LAMBDA_REMOTE_DOCKER || /* istanbul ignore next */ ''}`,
+    LAMBDA_DOCKER_NETWORK: `${process.env.LAMBDA_DOCKER_NETWORK || /* istanbul ignore next */ 'host'}`,
+    LAMBDA_TOOLS_LOCALSTACK_PORT: `${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || /* istanbul ignore next */ ''}`,
+    HOST_TMP_FOLDER: `${process.env.HOST_TMP_FOLDER || /* istanbul ignore next */ ''}`,
+    ...envVariables,
+  };
+
   const container = await docker.createContainer({
     HostConfig: {
       AutoRemove: true,
@@ -444,24 +484,16 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     },
     ExposedPorts,
     Image: image,
-    Env: [
-      `SERVICES=${services.join(',')}`,
-      'DEBUG=1',
-      `LAMBDA_EXECUTOR=${process.env.LAMBDA_EXECUTOR || /* istanbul ignore next */ 'docker'}`,
-      `LAMBDA_REMOTE_DOCKER=${process.env.LAMBDA_REMOTE_DOCKER || /* istanbul ignore next */ ''}`,
-      `LAMBDA_DOCKER_NETWORK=${process.env.LAMBDA_DOCKER_NETWORK || /* istanbul ignore next */ 'host'}`,
-      `LAMBDA_TOOLS_LOCALSTACK_PORT=${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || /* istanbul ignore next */ ''}`,
-      `HOST_TMP_FOLDER=${process.env.HOST_TMP_FOLDER || /* istanbul ignore next */ ''}`,
-    ],
+    Env: Object.values(env).map((value, key) => `${key}=${value}`),
   });
 
   await container.start();
-  const promise = localstackReady(container);
   environment.set('AWS_ACCESS_KEY_ID', 'bogus');
   environment.set('AWS_SECRET_ACCESS_KEY', 'bogus');
   environment.set('AWS_REGION', 'us-east-1');
 
   const containerData = await container.inspect();
+  const promise = localstackReady(container, containerData);
   const host = await getHostAddress();
   const mappedServices = mapServices(host, containerData.NetworkSettings.Ports, services, localStackPort);
 
