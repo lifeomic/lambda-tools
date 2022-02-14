@@ -136,9 +136,9 @@ export async function getConnection () {
   });
 
   await container.start();
-  const promise = localstackReady(container);
 
   const containerData = await container.inspect();
+  const promise = localstackReady(container, containerData);
   const host = await getHostAddress();
   const port = containerData.NetworkSettings.Ports[`${localstackPort}/tcp`][0].HostPort;
   const url = `http://${host}:${port}`;
