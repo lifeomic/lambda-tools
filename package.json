@@ -20,6 +20,9 @@
     "pretest": "yarn lint && tsc --noEmit",
     "test": "nyc ava"
   },
+  "engines": {
+    "node": ">10"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lifeomic/lambda-tools.git"
@@ -100,6 +103,7 @@
     "@babel/plugin-transform-async-to-generator": "^7.16.8",
     "@babel/preset-env": "^7.16.11",
     "@babel/preset-typescript": "^7.16.7",
+    "@babel/runtime-corejs3": "^7.17.2",
     "@elastic/elasticsearch": "^7.3.0",
     "@types/archiver": "^5.1.0",
     "@types/aws-lambda": "^8.10.64",
@@ -114,7 +118,6 @@
     "@types/tmp": "^0.2.0",
     "@types/unzipper": "^0.10.3",
     "@types/uuid": "^7.0.3",
-    "@types/webpack": "^5.28.0",
     "@types/yargs": "^15.0.11",
     "archiver": "^3.0.0",
     "ava": "^3.13.0",
