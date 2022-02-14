@@ -11,7 +11,7 @@ useLambda(test);
 
 useNewContainer({
   handler: 'bundled_service.handler',
-  zipfile: path.join(FIXTURES_DIRECTORY, 'bundled_service.zip')
+  zipfile: path.join(FIXTURES_DIRECTORY, 'bundled_service.zip'),
 });
 
 test('The helper client can create a new container', async (test) => {
@@ -20,7 +20,7 @@ test('The helper client can create a new container', async (test) => {
   test.is(response.data.service, 'lambda-test');
 });
 
-test('will use mountpointParent as the directory for unzipping if provided', async (test) => {
+test('will use mountpointParent as the directory for unzipping if provided', async () => {
   const tempWork = await tmp.dir({ dir: process.cwd(), prefix: '.mountpointParent-test-' });
   try {
     // Spy on unzipper to make sure the temp path is used
@@ -29,13 +29,13 @@ test('will use mountpointParent as the directory for unzipping if provided', asy
     const env = await createLambdaExecutionEnvironment({
       environment: { AWS_XRAY_CONTEXT_MISSING: null },
       zipfile: path.join(FIXTURES_DIRECTORY, 'bundled_service.zip'),
-      mountpointParent: tempWork.path
+      mountpointParent: tempWork.path,
     });
 
     await destroyLambdaExecutionEnvironment(env);
 
     sinon.assert.calledWith(extractSpy, sinon.match({
-      path: sinon.match((path) => path.startsWith(tempWork.path))
+      path: sinon.match((path) => path.startsWith(tempWork.path)),
     }));
   } finally {
     await tempWork.cleanup();

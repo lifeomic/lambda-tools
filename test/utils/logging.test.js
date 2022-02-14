@@ -15,14 +15,14 @@ function requireLogging (debugSetting = '') {
   return proxyquire('../../src/utils/logging', {});
 }
 
-test.serial('will default debug to disabled', t => {
+test.serial('will default debug to disabled', (t) => {
   const name = 'testLib';
   const { getLogger } = requireLogging();
   const logger = getLogger(name);
   validateLogLevelsEnabled(t, logger);
 });
 
-test.serial('Multiple calls will return the same object', t => {
+test.serial('Multiple calls will return the same object', (t) => {
   const name = 'testLib';
   const { getLogger } = requireLogging();
   const logger = getLogger(name);
@@ -30,14 +30,14 @@ test.serial('Multiple calls will return the same object', t => {
   t.is(getLogger(name), logger);
 });
 
-test.serial('can enable debug logs', t => {
+test.serial('can enable debug logs', (t) => {
   const name = 'testLib';
   const { getLogger } = requireLogging(`lambda-tools:${name}`);
   const logger = getLogger(name);
   validateLogLevelsEnabled(t, logger, true);
 });
 
-test.serial('can get child logger', t => {
+test.serial('can get child logger', (t) => {
   const name = 'testLib';
   const { getLogger } = requireLogging(`lambda-tools:${name}`);
   const logger = getLogger(name);
@@ -52,9 +52,9 @@ test.serial('can get child logger', t => {
 
 [
   'lambda-tools:*',
-  '*'
-].forEach(debugValue => {
-  test.serial(`can all log levels to debug using ${debugValue}`, t => {
+  '*',
+].forEach((debugValue) => {
+  test.serial(`can all log levels to debug using ${debugValue}`, (t) => {
     const name = 'testLib';
     const { getLogger } = requireLogging(debugValue);
     const logger = getLogger(name);

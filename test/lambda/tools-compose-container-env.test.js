@@ -4,8 +4,8 @@ const { useLambdaContainer } = require('../helpers/lambda');
 
 const containerConfig = {
   environment: {
-    TEST_PARAMETER: 'a test value'
-  }
+    TEST_PARAMETER: 'a test value',
+  },
 };
 
 const LAMBDA_IMAGE = 'lambci/lambda:nodejs12.x';

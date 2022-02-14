@@ -12,7 +12,7 @@ import * as kinesis from '../src/kinesis';
 import * as mockServerLambda from '../src/mockServerLambda';
 import WriteBuffer from '../src/WriteBuffer';
 
-test('exports match expected', t => {
+test('exports match expected', (t) => {
   t.deepEqual(index, {
     docker,
     dynamodb,
@@ -22,6 +22,6 @@ test('exports match expected', t => {
     localStack,
     kinesis,
     mockServerLambda,
-    WriteBuffer
+    WriteBuffer,
   });
-})
+});

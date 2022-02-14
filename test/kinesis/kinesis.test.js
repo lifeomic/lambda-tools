@@ -9,7 +9,7 @@ function throwTestError () {
   throw new Error('test');
 }
 
-test.before(async t => {
+test.before(async (t) => {
   Object.assign(t.context, await getConnection());
 });
 
@@ -24,7 +24,7 @@ test.afterEach(() => {
   streams([]);
 });
 
-test.after(async t => {
+test.after(async (t) => {
   const { connection } = t.context;
   await connection.cleanup();
 });
@@ -35,7 +35,7 @@ async function assertStreamsPresent (t, client, expected, message) {
   t.deepEqual(
     response.StreamNames,
     expected,
-    message
+    message,
   );
 }
 
@@ -47,11 +47,11 @@ test.serial('createStreams creates streams according to specified schemas', asyn
     t,
     kinesisClient,
     ['test-stream'],
-    'createStream should have added "test-stream"'
+    'createStream should have added "test-stream"',
   );
 });
 
-test.serial('throws when createStreams fails', async t => {
+test.serial('throws when createStreams fails', async (t) => {
   const { kinesisClient } = t.context;
 
   sinon.stub(kinesisClient, 'createStream').onFirstCall().callsFake(throwTestError);
@@ -59,12 +59,12 @@ test.serial('throws when createStreams fails', async t => {
   t.is(message, 'Failed to create streams: test-stream');
 });
 
-test.serial('deletes created streams when createStreams fails', async t => {
+test.serial('deletes created streams when createStreams fails', async (t) => {
   const { kinesisClient } = t.context;
 
   streams([
     'test-stream-not-created',
-    'test-stream-created'
+    'test-stream-created',
   ]);
 
   sinon.stub(kinesisClient, 'createStream')
@@ -80,14 +80,14 @@ test.serial('deletes created streams when createStreams fails', async t => {
   sinon.assert.calledWithExactly(deleteStream, { StreamName: 'test-stream-created' });
 });
 
-test.serial('throws when createStream fails, logs if destory fails', async t => {
+test.serial('throws when createStream fails, logs if destory fails', async (t) => {
   const { kinesisClient } = t.context;
 
   const StreamName = 'test-stream-2';
 
   streams([
     StreamName,
-    'test-stream'
+    'test-stream',
   ]);
 
   sinon.stub(kinesisClient, 'createStream')
@@ -106,13 +106,13 @@ test.serial('throws when createStream fails, logs if destory fails', async t => 
   await kinesisClient.deleteStream({ StreamName }).promise();
 });
 
-test.serial('throws when destroyStreams fails', async t => {
+test.serial('throws when destroyStreams fails', async (t) => {
   const { kinesisClient } = t.context;
 
   sinon.stub(kinesisClient, 'listStreams').onFirstCall().returns({
     promise: () => Promise.resolve({
-      StreamNames: ['test-stream']
-    })
+      StreamNames: ['test-stream'],
+    }),
   });
   sinon.stub(kinesisClient, 'deleteStream').onFirstCall().callsFake(throwTestError);
   const { message } = await t.throwsAsync(destroyStreams(kinesisClient));
@@ -131,7 +131,7 @@ async function destroyStreamTest (t, useUniqueStreams) {
     t,
     kinesisClient,
     [streamName],
-    `createStreams should have added "${streamName}"`
+    `createStreams should have added "${streamName}"`,
   );
 
   await destroyStreams(kinesisClient, uniqueIdentifier);
@@ -139,14 +139,14 @@ async function destroyStreamTest (t, useUniqueStreams) {
     t,
     kinesisClient,
     [],
-    `createStreams should have destroyed "${streamName}"`
+    `createStreams should have destroyed "${streamName}"`,
   );
 }
 
-test.serial('destroyStreams destroys created stream', async t => {
+test.serial('destroyStreams destroys created stream', async (t) => {
   await destroyStreamTest(t, false);
 });
 
-test.serial('destroyStreams destroys created stream when uniqueIdentifier is used', async t => {
+test.serial('destroyStreams destroys created stream when uniqueIdentifier is used', async (t) => {
   await destroyStreamTest(t, true);
 });

@@ -3,7 +3,8 @@
 import { getHostAddress } from '../src/docker';
 
 getHostAddress()
-  .then(console.log.bind(console))
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  .then((...args: any) => console.log(...args))
   .catch((error) => {
     console.error(error);
     process.exitCode = 1;

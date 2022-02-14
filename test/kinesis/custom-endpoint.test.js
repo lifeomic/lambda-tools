@@ -32,7 +32,7 @@ test.serial('When KINESIS_ENDPOINT is set configuration environment variables ar
   test.is(process.env.KINESIS_ENDPOINT, 'kinesis://localhost');
 });
 
-test.serial('When KINESIS_ENDPOINT is set configuration the Docker image is not started', (test) => {
+test.serial('When KINESIS_ENDPOINT is set configuration the Docker image is not started', () => {
   sinon.assert.notCalled(ensureImageSpy);
   docker.ensureImage.restore();
 });

@@ -20,7 +20,7 @@ test('The afterAll hook handles errors in the beforeAll hook gracefully', async 
   }
 });
 
-test('The afterEach hook will ignore a missing context', async t => {
+test('The afterEach hook will ignore a missing context', async (t) => {
   const { kinesisTestHooks } = require('../../src/kinesis');
   const { afterEach } = kinesisTestHooks(false);
   await t.notThrowsAsync(afterEach(undefined));

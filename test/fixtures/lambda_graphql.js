@@ -7,18 +7,18 @@ const app = new Koa();
 
 const graphql = new ApolloServer({
   context: ({ ctx }) => ({
-    header: ctx.request.get('test-header')
+    header: ctx.request.get('test-header'),
   }),
   resolvers: {
     Query: {
-      value: (obj, args, context, info) => args.prompt + ': ' + context.header
-    }
+      value: (obj, args, context) => args.prompt + ': ' + context.header,
+    },
   },
   typeDefs: gql`
     type Query {
       value (prompt: String!): String!
     }
-  `
+  `,
 });
 
 graphql.applyMiddleware({ app, path: '/' });

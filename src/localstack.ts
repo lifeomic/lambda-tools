@@ -14,14 +14,14 @@ import {
   buildConnectionAndConfig,
   BuildConnectionAndConfigOptions,
   ConnectionAndConfig,
-  waitForReady
+  waitForReady,
 } from './utils/awsUtils';
 import { pQueue } from './utils/config';
 
 import { Writable } from 'stream';
 import { getLogger, Logger } from './utils/logging';
-import { TestInterface } from "ava";
-import { ServiceConfigurationOptions } from "aws-sdk/lib/service";
+import { TestInterface } from 'ava';
+import { ServiceConfigurationOptions } from 'aws-sdk/lib/service';
 const logger = getLogger('localstack');
 
 type LocalStackServiceClients = AWS.APIGateway |
@@ -123,7 +123,7 @@ class LocalstackWriteBuffer extends Writable {
     return this._buffer.join('\n');
   }
 
-  _write (chunk: any, encoding: string, callback: (error?: Error | null) => void) {
+  _write (chunk: string, encoding: string, callback: (error?: Error | null) => void) {
     const asBuffer = Buffer.from(chunk, 'utf8');
     const asString = asBuffer.toString('utf8').replace(/\r/g, '').trim();
     const logs = asString.split('\n');
@@ -154,145 +154,145 @@ export function getService<Service extends keyof LocalStackServices>(service: Se
       return {
         port: '4567',
         getClient: ({ config }) => new AWS.APIGateway(config),
-        isReady: (client: AWS.APIGateway) => client.getApiKeys().promise()
+        isReady: (client: AWS.APIGateway) => client.getApiKeys().promise(),
       };
     case 'cloudformation':
       return {
         port: '4581',
         getClient: ({ config }) => new AWS.CloudFormation(config),
-        isReady: (client: AWS.CloudFormation) => client.listStacks().promise()
+        isReady: (client: AWS.CloudFormation) => client.listStacks().promise(),
       };
     case 'cloudwatch':
       return {
         port: '4582',
         getClient: ({ config }) => new AWS.CloudWatch(config),
-        isReady: (client: AWS.CloudWatch) => client.listDashboards().promise()
+        isReady: (client: AWS.CloudWatch) => client.listDashboards().promise(),
       };
     case 'cloudwatchlogs':
       return {
         port: '4586',
         getClient: ({ config }) => new AWS.CloudWatchLogs(config),
-        isReady: (client: AWS.CloudWatchLogs) => client.describeLogGroups().promise()
+        isReady: (client: AWS.CloudWatchLogs) => client.describeLogGroups().promise(),
       };
     case 'dynamodb':
       return {
         port: '4569',
         getClient: ({ config }) => new AWS.DynamoDB(config),
-        isReady: (client: AWS.DynamoDB) => client.listTables().promise()
+        isReady: (client: AWS.DynamoDB) => client.listTables().promise(),
       };
     case 'dynamodbstreams':
       return {
         port: '4570',
         getClient: ({ config }) => new AWS.DynamoDBStreams(config),
-        isReady: (client: AWS.DynamoDBStreams) => client.listStreams().promise()
+        isReady: (client: AWS.DynamoDBStreams) => client.listStreams().promise(),
       };
     case 'ec2':
       return {
         port: '4597',
         getClient: ({ config }) => new AWS.EC2(config),
-        isReady: (client: AWS.EC2) => client.describeInstances().promise()
+        isReady: (client: AWS.EC2) => client.describeInstances().promise(),
       };
     case 'es':
       return {
         port: '4578',
         getClient: ({ config }) => new AWS.ES(config),
-        isReady: (client: AWS.ES) => client.listDomainNames().promise()
+        isReady: (client: AWS.ES) => client.listDomainNames().promise(),
       };
     case 'elasticsearch':
       return {
         port: '4571',
         getClient: ({ connection: { url: node } }) => new ElasticSearchClient({ node }),
-        isReady: async (client: ElasticSearchClient) => client.ping()
+        isReady: async (client: ElasticSearchClient) => client.ping(),
       };
     case 'events':
       return {
         port: '4587',
-        getClient: ({config}) => new AWS.CloudWatchEvents(config),
-        isReady: (client: AWS.CloudWatchEvents) => client.listRules().promise()
+        getClient: ({ config }) => new AWS.CloudWatchEvents(config),
+        isReady: (client: AWS.CloudWatchEvents) => client.listRules().promise(),
       };
     case 'firehose':
       return {
         port: '4573',
         getClient: ({ config }) => new AWS.Firehose(config),
-        isReady: (client: AWS.Firehose) => client.listDeliveryStreams().promise()
+        isReady: (client: AWS.Firehose) => client.listDeliveryStreams().promise(),
       };
     case 'iam':
       return {
         port: '4593',
         getClient: ({ config }) => new AWS.IAM(config),
-        isReady: (client: AWS.IAM) => client.listAccountAliases().promise()
+        isReady: (client: AWS.IAM) => client.listAccountAliases().promise(),
       };
     case 'kinesis':
       return {
         port: '4568',
         getClient: ({ config }) => new AWS.Kinesis(config),
-        isReady: (client: AWS.Kinesis) => client.listStreams().promise()
+        isReady: (client: AWS.Kinesis) => client.listStreams().promise(),
       };
     case 'lambda':
       return {
         port: '4574',
         getClient: ({ config }) => new AWS.Lambda(config),
-        isReady: (client: AWS.Lambda) => client.listFunctions().promise()
+        isReady: (client: AWS.Lambda) => client.listFunctions().promise(),
       };
     case 'redshift':
       return {
         port: '4577',
         getClient: ({ config }) => new AWS.Redshift(config),
-        isReady: (client: AWS.Redshift) => client.describeTags().promise()
+        isReady: (client: AWS.Redshift) => client.describeTags().promise(),
       };
     case 'route53':
       return {
         port: '4580',
         getClient: ({ config }) => new AWS.Route53(config),
-        isReady: (client: AWS.Route53) => client.listHostedZones().promise()
+        isReady: (client: AWS.Route53) => client.listHostedZones().promise(),
       };
     case 's3':
       return {
         port: '4572',
         getClient: ({ config }) => new AWS.S3(config),
-        isReady: (client: AWS.S3) => client.listBuckets().promise()
+        isReady: (client: AWS.S3) => client.listBuckets().promise(),
       };
     case 'secretsmanager':
       return {
         port: '4584',
         getClient: ({ config }) => new AWS.SecretsManager(config),
-        isReady: (client: AWS.SecretsManager) => client.getRandomPassword().promise()
+        isReady: (client: AWS.SecretsManager) => client.getRandomPassword().promise(),
       };
     case 'ses':
       return {
         port: '4579',
         getClient: ({ config }) => new AWS.SES(config),
-        isReady: (client: AWS.SES) => client.getSendQuota().promise()
+        isReady: (client: AWS.SES) => client.getSendQuota().promise(),
       };
     case 'sns':
       return {
         port: '4575',
         getClient: ({ config }) => new AWS.SNS(config),
-        isReady: (client: AWS.SNS) => client.getSMSAttributes().promise()
+        isReady: (client: AWS.SNS) => client.getSMSAttributes().promise(),
       };
     case 'sqs':
       return {
         port: '4561',
         getClient: ({ config }) => new AWS.SQS(config),
-        isReady: (client: AWS.SQS) => client.listQueues().promise()
+        isReady: (client: AWS.SQS) => client.listQueues().promise(),
       };
     case 'ssm':
       return {
         port: '4583',
         getClient: ({ config }) => new AWS.SSM(config),
-        isReady: (client: AWS.SSM) => client.listCommands().promise()
+        isReady: (client: AWS.SSM) => client.listCommands().promise(),
       };
     case 'stepfunctions':
       return {
         port: '4585',
         getClient: ({ config }) => new AWS.StepFunctions(config),
-        isReady: (client: AWS.StepFunctions) => client.listActivities().promise()
+        isReady: (client: AWS.StepFunctions) => client.listActivities().promise(),
       };
     case 'sts':
       return {
         port: '4592',
         getClient: ({ config }) => new AWS.STS(config),
-        isReady: (client: AWS.STS) => client.getCallerIdentity().promise()
+        isReady: (client: AWS.STS) => client.getCallerIdentity().promise(),
       };
     default:
       throw new Error(`Unknown service ${service}`);
@@ -344,7 +344,7 @@ function mapServices <Services extends (keyof LocalStackServices)[]>(
   host: string,
   ports: ContainerInspectInfo['NetworkSettings']['Ports'],
   services: Services,
-  localstackPort?: string
+  localstackPort?: string,
 ): MappedServices<Services> {
   return services.reduce((mappedServices, service) => {
     const serviceDetails = getService(service);
@@ -355,10 +355,10 @@ function mapServices <Services extends (keyof LocalStackServices)[]>(
       config,
       connection,
       client: serviceDetails.getClient({ config, connection }),
-      isReady: serviceDetails.isReady
+      isReady: serviceDetails.isReady,
     } as LocalStackServices[Services[number]];
     return mappedServices;
-  }, {} as MappedServices<Services>)
+  }, {} as MappedServices<Services>);
 }
 
 export async function localstackReady (
@@ -387,10 +387,12 @@ export const dockerLocalstackReady = async (
   const docker = new Docker(options);
   const containers: Container[] = [];
   if (containerId) {
+    // getContainer does return a promise, the type is a lie
+    // eslint-disable-next-line @typescript-eslint/await-thenable
     containers.push(await docker.getContainer(containerId));
   } else {
-    const containerInfos = await docker.listContainers({ filter: name ? `name=${name}` : `ancestor=${version}` });
-    const matches = containerInfos.filter(({ Names, Image}) => (name && Names.includes(name)) || (version && Image.includes(version)));
+    const containerInfos = await docker.listContainers({ filter: name ? `name=${name}` : `ancestor=${version as string}` });
+    const matches = containerInfos.filter(({ Names, Image }) => (name && Names.includes(name)) || (version && Image.includes(version)));
     containers.push(...await Promise.all(matches.map((info) => docker.getContainer(info.Id))));
   }
   if (containers.length === 0) {
@@ -411,21 +413,21 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     throw new Error('No services provided');
   }
 
-  services.forEach(service => {
+  services.forEach((service) => {
     if (!validServices.includes(service)) {
-      throw new Error(`Unknown service ${service}`)
+      throw new Error(`Unknown service ${service}`);
     }
-  })
+  });
 
   const [majorStr, minorStr] =  versionTag.split(/\./g);
   const [major, minor] = [Number.parseInt(majorStr, 10), Number.parseInt(minorStr, 10)];
-  const ExposedPorts: ContainerCreateOptions['ExposedPorts'] = {}
+  const ExposedPorts: ContainerCreateOptions['ExposedPorts'] = {};
   let localStackPort: string | undefined;
   if (major < 1 && minor <= 10) {
     Object.assign(ExposedPorts, getExposedPorts());
   } else {
     localStackPort = `${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || 4566}`;
-    ExposedPorts[`${localStackPort}/tcp`] = {}
+    ExposedPorts[`${localStackPort}/tcp`] = {};
   }
 
   const image = `${LOCALSTACK_IMAGE}${nameTag ? `-${nameTag}` : ''}:${versionTag}`;
@@ -438,7 +440,7 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     HostConfig: {
       AutoRemove: true,
       PublishAllPorts: true,
-      Binds: ['/var/run/docker.sock:/var/run/docker.sock']
+      Binds: ['/var/run/docker.sock:/var/run/docker.sock'],
     },
     ExposedPorts,
     Image: image,
@@ -449,8 +451,8 @@ export async function getConnection <Service extends keyof LocalStackServices>({
       `LAMBDA_REMOTE_DOCKER=${process.env.LAMBDA_REMOTE_DOCKER || /* istanbul ignore next */ ''}`,
       `LAMBDA_DOCKER_NETWORK=${process.env.LAMBDA_DOCKER_NETWORK || /* istanbul ignore next */ 'host'}`,
       `LAMBDA_TOOLS_LOCALSTACK_PORT=${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || /* istanbul ignore next */ ''}`,
-      `HOST_TMP_FOLDER=${process.env.HOST_TMP_FOLDER || /* istanbul ignore next */ ''}`
-    ]
+      `HOST_TMP_FOLDER=${process.env.HOST_TMP_FOLDER || /* istanbul ignore next */ ''}`,
+    ],
   });
 
   await container.start();
@@ -465,9 +467,9 @@ export async function getConnection <Service extends keyof LocalStackServices>({
 
   const output = await promise;
 
-  await pQueue.addAll(services.map(serviceName => async () => {
-    const service = mappedServices[serviceName];
-    await waitForReady(serviceName, () => service.isReady(service.client as any));
+  await pQueue.addAll(services.map((serviceName) => async () => {
+    const service = mappedServices[serviceName] as LocalStackService;
+    await waitForReady(serviceName, () => service.isReady(service.client));
   }));
 
   return {
@@ -477,7 +479,7 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     cleanup: async () => {
       environment.restore();
       return await container.stop();
-    }
+    },
   };
 }
 
@@ -486,7 +488,7 @@ export type ServicesAndConfigs<Service extends keyof LocalStackServices> = Recor
 export async function waitForServicesToBeReady<Service extends keyof LocalStackServices> (
   services: ServicesAndConfigs<Service>,
 ): Promise<void> {
-  await pQueue.addAll(Object.keys(services).map(serviceNameString => async () => {
+  await pQueue.addAll(Object.keys(services).map((serviceNameString) => async () => {
     const serviceName = serviceNameString as Service;
     const connectionAndConfig = buildConnectionAndConfig(services[serviceName]);
     const { getClient, isReady } = getService(serviceName);
@@ -504,7 +506,7 @@ export function localStackHooks <Services extends keyof LocalStackServices>({ ve
     return {
       services: result.mappedServices,
       getOutput: result.getOutput,
-      clearOutput: result.clearOutput
+      clearOutput: result.clearOutput,
     };
   }
 
@@ -517,7 +519,7 @@ export function localStackHooks <Services extends keyof LocalStackServices>({ ve
   }
 
   return {
-    beforeAll, afterAll
+    beforeAll, afterAll,
   };
 }
 
@@ -528,9 +530,9 @@ export function useLocalStack <Services extends keyof LocalStackServices>(anyTes
   const testHooks = localStackHooks(config);
   // The base ava test doesn't have context, and has to be cast.
   // This allows clients to send in the default ava export, and they can cast later or before.
-  const test = anyTest as TestInterface<LocalStackTestContext<Services>>
+  const test = anyTest as TestInterface<LocalStackTestContext<Services>>;
 
-  test.serial.before(async t => {
+  test.serial.before(async (t) => {
     t.context.localStack = await testHooks.beforeAll();
   });
 

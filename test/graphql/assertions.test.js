@@ -8,16 +8,16 @@ const { ApolloServer, gql } = require('apollo-server-koa');
 const graphql = new ApolloServer({
   resolvers: {
     Query: {
-      error: (obj, args, context, info) => { throw new Error('boom!'); },
-      success: (obj, args, context, info) => 'success!'
-    }
+      error: () => { throw new Error('boom!'); },
+      success: () => 'success!',
+    },
   },
   typeDefs: gql`
     type Query {
       error: String!
       success: String!
     }
-  `
+  `,
 });
 
 useGraphQL(test);
@@ -76,7 +76,7 @@ test('assertError does not throw on a failed response', async (test) => {
 test('assertError throws if no error matches the path', async (test) => {
   const query = '{ error }';
   const response = await test.context.graphql(query);
-  test.throws(() => assertError(response, 'some.other.path', 'boom!'), { message: `No error found with path 'some.other.path'. The paths with errors were: error` });
+  test.throws(() => assertError(response, 'some.other.path', 'boom!'), { message: 'No error found with path \'some.other.path\'. The paths with errors were: error' });
 });
 
 test('assertError throws if the error does not match the message', async (test) => {
@@ -96,23 +96,23 @@ test('assertError throws if the error does not match the message', async (test) 
   test.throws(() => assertError(response, 'error', 'some other message'), { message: expectedMessage });
 });
 
-test('assertError throws if the path is undefined and no error has undefined path', test => {
+test('assertError throws if the path is undefined and no error has undefined path', (test) => {
   const response = {
     body: {
-      errors: [{ message: 'foo', path: ['some', 'path'] }]
-    }
+      errors: [{ message: 'foo', path: ['some', 'path'] }],
+    },
   };
-  test.throws(() => assertError(response, undefined, 'something'), { message: `No error found with path 'undefined'. The paths with errors were: some.path` });
+  test.throws(() => assertError(response, undefined, 'something'), { message: 'No error found with path \'undefined\'. The paths with errors were: some.path' });
 });
 
-test('assertError doesn\'t throw on mixed path/no-path errors', test => {
+test('assertError doesn\'t throw on mixed path/no-path errors', () => {
   const response = {
     body: {
       errors: [
         { message: 'bar', path: undefined },
-        { message: 'foo', path: ['some', 'path'] }
-      ]
-    }
+        { message: 'foo', path: ['some', 'path'] },
+      ],
+    },
   };
   assertError(response, 'some.path', 'foo');
 });

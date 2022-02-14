@@ -15,34 +15,34 @@ const TEST_TABLE_SCHEMA = {
   AttributeDefinitions: [
     {
       AttributeName: 'hashKey',
-      AttributeType: 'S'
+      AttributeType: 'S',
     },
     {
       AttributeName: 'rangeKey',
-      AttributeType: 'S'
+      AttributeType: 'S',
     },
     {
       AttributeName: 'gsiHashKey',
-      AttributeType: 'S'
+      AttributeType: 'S',
     },
     {
       AttributeName: 'lsiRangeKey',
-      AttributeType: 'S'
-    }
+      AttributeType: 'S',
+    },
   ],
   KeySchema: [
     {
       AttributeName: 'hashKey',
-      KeyType: 'HASH'
+      KeyType: 'HASH',
     },
     {
       AttributeName: 'rangeKey',
-      KeyType: 'RANGE'
-    }
+      KeyType: 'RANGE',
+    },
   ],
   ProvisionedThroughput: {
     ReadCapacityUnits: 10,
-    WriteCapacityUnits: 10
+    WriteCapacityUnits: 10,
   },
   GlobalSecondaryIndexes: [
     {
@@ -50,21 +50,21 @@ const TEST_TABLE_SCHEMA = {
       KeySchema: [
         {
           AttributeName: 'gsiHashKey',
-          KeyType: 'HASH'
+          KeyType: 'HASH',
         },
         {
           AttributeName: 'rangeKey',
-          KeyType: 'RANGE'
-        }
+          KeyType: 'RANGE',
+        },
       ],
       ProvisionedThroughput: {
         ReadCapacityUnits: 10,
-        WriteCapacityUnits: 10
+        WriteCapacityUnits: 10,
       },
       Projection: {
-        ProjectionType: 'ALL'
-      }
-    }
+        ProjectionType: 'ALL',
+      },
+    },
   ],
   LocalSecondaryIndexes: [
     {
@@ -72,23 +72,23 @@ const TEST_TABLE_SCHEMA = {
       KeySchema: [
         {
           AttributeName: 'hashKey',
-          KeyType: 'HASH'
+          KeyType: 'HASH',
         },
         {
           AttributeName: 'lsiRangeKey',
-          KeyType: 'RANGE'
-        }
+          KeyType: 'RANGE',
+        },
       ],
       Projection: {
-        ProjectionType: 'ALL'
-      }
-    }
-  ]
+        ProjectionType: 'ALL',
+      },
+    },
+  ],
 };
 
 test.beforeEach(() => {
   tableSchema([
-    TEST_TABLE_SCHEMA
+    TEST_TABLE_SCHEMA,
   ]);
 });
 
@@ -101,7 +101,7 @@ async function assertTablesPresent (t, client, expected, message) {
   t.deepEqual(
     tables.TableNames,
     expected,
-    message
+    message,
   );
 }
 
@@ -109,7 +109,7 @@ function stubTableChangeFailure (t, client, functionName, errorCode) {
   let retryHook;
   sinon.stub(client, functionName).returns({
     on: (_, func) => { retryHook = func; },
-    promise: async () => {
+    promise: () => {
       const error = new Error();
       error.code = errorCode;
       error.retryable = true;
@@ -118,7 +118,7 @@ function stubTableChangeFailure (t, client, functionName, errorCode) {
         t.is(error.retryable, errorCode === 'InternalFailure', JSON.stringify({ functionName, errorCode }));
       }
       throw error;
-    }
+    },
   });
 }
 
@@ -132,14 +132,14 @@ test.serial('createTables creates tables according to specified schemas', async 
       t,
       client,
       ['test-table'],
-      'createTables should have added "test-table"'
+      'createTables should have added "test-table"',
     );
   } finally {
     await connection.cleanup();
   }
 });
 
-test.serial('throws when createTables fails', async t => {
+test.serial('throws when createTables fails', async (t) => {
   const { connection, config } = await getConnection();
 
   try {
@@ -154,7 +154,7 @@ test.serial('throws when createTables fails', async t => {
   }
 });
 
-test.serial('does not stub when InternalFailure', async t => {
+test.serial('does not stub when InternalFailure', async (t) => {
   const { connection, config } = await getConnection();
 
   try {
@@ -169,7 +169,7 @@ test.serial('does not stub when InternalFailure', async t => {
   }
 });
 
-test.serial('waits for the table to exist when a timeout happens on create', async t => {
+test.serial('waits for the table to exist when a timeout happens on create', async (t) => {
   const { connection, config } = await getConnection();
 
   try {
@@ -179,14 +179,14 @@ test.serial('waits for the table to exist when a timeout happens on create', asy
 
     const describeTable = sinon.stub(client, 'describeTable')
       .onFirstCall().returns({
-        promise: async () => {
+        promise: () => {
           const timeoutError = new Error();
           timeoutError.code = 'ResourceNotFoundException';
           throw timeoutError;
-        }
+        },
       })
       .onSecondCall().returns({
-        promise: async () => {}
+        promise: async () => {},
       });
 
     await createTables(client);
@@ -198,12 +198,12 @@ test.serial('waits for the table to exist when a timeout happens on create', asy
   }
 });
 
-test.serial('deletes created tables when createTables fails', async t => {
+test.serial('deletes created tables when createTables fails', async (t) => {
   const { connection, config } = await getConnection();
 
   tableSchema([
     Object.assign({}, TEST_TABLE_SCHEMA, { TableName: 'test-table-not-created' }),
-    Object.assign({}, TEST_TABLE_SCHEMA, { TableName: 'test-table-created' })
+    Object.assign({}, TEST_TABLE_SCHEMA, { TableName: 'test-table-created' }),
   ]);
 
   try {
@@ -224,14 +224,14 @@ test.serial('deletes created tables when createTables fails', async t => {
   }
 });
 
-test.serial('throws when createTables fails, logs if destory fails', async t => {
+test.serial('throws when createTables fails, logs if destory fails', async (t) => {
   const { connection, config } = await getConnection();
 
   const TableName = 'test-table-2';
 
   tableSchema([
     Object.assign({}, TEST_TABLE_SCHEMA, { TableName }),
-    TEST_TABLE_SCHEMA
+    TEST_TABLE_SCHEMA,
   ]);
 
   try {
@@ -251,15 +251,15 @@ test.serial('throws when createTables fails, logs if destory fails', async t => 
   }
 });
 
-test.serial('throws when destroyTables fails', async t => {
+test.serial('throws when destroyTables fails', async (t) => {
   const { connection, config } = await getConnection();
 
   try {
     const client = new AWS.DynamoDB(config);
     sinon.stub(client, 'listTables').onFirstCall().returns({
       promise: () => Promise.resolve({
-        TableNames: ['test-table']
-      })
+        TableNames: ['test-table'],
+      }),
     });
 
     stubTableChangeFailure(t, client, 'deleteTable', 'SomeUnknownError');
@@ -270,15 +270,15 @@ test.serial('throws when destroyTables fails', async t => {
   }
 });
 
-test.serial('records when we could not find out the tables status', async t => {
+test.serial('records when we could not find out the tables status', async (t) => {
   const { connection, config } = await getConnection();
 
   try {
     const client = new AWS.DynamoDB(config);
     sinon.stub(client, 'listTables').onFirstCall().returns({
       promise: () => Promise.resolve({
-        TableNames: ['test-table']
-      })
+        TableNames: ['test-table'],
+      }),
     });
 
     stubTableChangeFailure(t, client, 'describeTable', 'SomeUnknownError');
@@ -304,7 +304,7 @@ async function destroyTableTest (t, useUniqueTables) {
       t,
       client,
       [tableName],
-      `createTables should have added "${tableName}"`
+      `createTables should have added "${tableName}"`,
     );
 
     await destroyTables(client, uniqueIdentifier);
@@ -312,18 +312,18 @@ async function destroyTableTest (t, useUniqueTables) {
       t,
       client,
       [],
-      `destroyTables should have destroyed "${tableName}"`
+      `destroyTables should have destroyed "${tableName}"`,
     );
   } finally {
     await connection.cleanup();
   }
 }
 
-test.serial('destroyTables destroys created tables', async t => {
+test.serial('destroyTables destroys created tables', async (t) => {
   await destroyTableTest(t, false);
 });
 
-test.serial('destroyTables waits for the table to not exist when a timeout happens on delete', async t => {
+test.serial('destroyTables waits for the table to not exist when a timeout happens on delete', async (t) => {
   const { connection, config } = await getConnection();
 
   try {
@@ -332,22 +332,22 @@ test.serial('destroyTables waits for the table to not exist when a timeout happe
     // Make the delete code think that the table already exists
     sinon.stub(client, 'listTables').onFirstCall().returns({
       promise: () => Promise.resolve({
-        TableNames: [TEST_TABLE_SCHEMA.TableName]
-      })
+        TableNames: [TEST_TABLE_SCHEMA.TableName],
+      }),
     });
 
     stubTableChangeFailure(t, client, 'deleteTable', 'TimeoutError');
 
     const describeTable = sinon.stub(client, 'describeTable')
       .onFirstCall().returns({
-        promise: async () => {}
+        promise: async () => {},
       })
       .onSecondCall().returns({
-        promise: async () => {
+        promise: () => {
           const error = new Error();
           error.code = 'ResourceNotFoundException';
           throw error;
-        }
+        },
       });
 
     await destroyTables(client);
@@ -359,11 +359,11 @@ test.serial('destroyTables waits for the table to not exist when a timeout happe
   }
 });
 
-test.serial('destroyTables destroys created tables when uniqueIdentifier is used', async t => {
+test.serial('destroyTables destroys created tables when uniqueIdentifier is used', async (t) => {
   await destroyTableTest(t, true);
 });
 
-test('Setting inMemory to true runs the container in in-memory mode', async t => {
+test('Setting inMemory to true runs the container in in-memory mode', async () => {
   const docker = sinon.stub(new Docker());
   docker.listImages.returns([{ RepoTags: ['cnadiminti/dynamodb-local:2020-09-11'] }]);
   const container = sinon.stub({ start: () => null, inspect: () => null });
@@ -372,17 +372,17 @@ test('Setting inMemory to true runs the container in in-memory mode', async t =>
     NetworkSettings: {
       Ports: {
         '8000/tcp': [
-          { HostPort: 1337 }
-        ]
-      }
-    }
+          { HostPort: 1337 },
+        ],
+      },
+    },
   });
   docker.createContainer.returns(container);
   await launchDynamoContainer({ docker, inMemory: true });
   sinon.assert.calledWith(docker.createContainer, sinon.match({ Cmd: ['-inMemory', '-sharedDb'] }));
 });
 
-test('Setting inMemory to false runs the container in persistent mode', async t => {
+test('Setting inMemory to false runs the container in persistent mode', async () => {
   const docker = sinon.stub(new Docker());
   docker.listImages.returns([{ RepoTags: ['cnadiminti/dynamodb-local:2020-09-11'] }]);
   const container = sinon.stub({ start: () => null, inspect: () => null });
@@ -391,23 +391,23 @@ test('Setting inMemory to false runs the container in persistent mode', async t 
     NetworkSettings: {
       Ports: {
         '8000/tcp': [
-          { HostPort: 1337 }
-        ]
-      }
-    }
+          { HostPort: 1337 },
+        ],
+      },
+    },
   });
   docker.createContainer.returns(container);
   await launchDynamoContainer({ docker });
   sinon.assert.neverCalledWith(docker.createContainer, sinon.match({ Cmd: ['-inMemory', '-sharedDb'] }));
 });
 
-test('launchDynamoContanier works with its default parameters', async t => {
+test('launchDynamoContanier works with its default parameters', async (t) => {
   const { url, stopContainer } = await launchDynamoContainer();
   await stopContainer();
   t.truthy(url.match(/http:\/\/.*:\d+/));
 });
 
-test('launchDynamoContainer works without docker stubbed', async t => {
+test('launchDynamoContainer works without docker stubbed', async (t) => {
   const { url, stopContainer } = await launchDynamoContainer({ inMemory: true });
   await stopContainer();
   t.truthy(url.match(/http:\/\/.*:\d+/));

@@ -1,8 +1,10 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const babelEnvDeps = require('webpack-babel-env-deps');
 import fs from 'fs-extra';
 import path from 'path';
 import TerserPlugin from 'terser-webpack-plugin';
 import webpack from 'webpack';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const WebpackOptionsDefaulter = require('webpack/lib/WebpackOptionsDefaulter');
 import { zip } from './zip';
 import chalk from 'chalk';
@@ -19,7 +21,6 @@ const glob = promisify(rawGlob);
 const logger = getLogger('webpack');
 
 const WEBPACK_DEFAULTS = new WebpackOptionsDefaulter().process({});
-const run = promisify<webpack.Configuration, webpack.Stats>(webpack);
 
 const CALLER_NODE_MODULES = 'node_modules';
 const DEFAULT_NODE_VERSION = '12.20.0';
@@ -30,11 +31,11 @@ type Mode = 'development' | 'production' | 'none';
 const getNormalizedFileName = (file: string) => path.basename(file).replace(/.ts$/, '.js');
 
 const parseEntrypoint = (entrypoint: string): Entrypoint => {
-  const [ file, name ] = entrypoint.split(':');
+  const [file, name] = entrypoint.split(':');
 
   return {
     file: path.resolve(file),
-    name: name || getNormalizedFileName(file)
+    name: name || getNormalizedFileName(file),
   };
 };
 
@@ -63,11 +64,11 @@ async function zipOutputFiles (outputDir: string, entryNames: string[]) {
     const entriesForZipFile = (await glob(`${entryName}*`, {
       cwd: outputDir,
       // ignore previously output zip file for repeatability
-      ignore: outputZipBasename
+      ignore: outputZipBasename,
     })).map((file) => {
       return {
         name: (dirname === '.') ? file : file.substring(dirname.length + 1),
-        file: path.join(outputDir, file)
+        file: path.join(outputDir, file),
       };
     });
 
@@ -88,21 +89,20 @@ async function findIndexFile (dir: string) {
   for (const indexFile of INDEX_FILES) {
     const candidateFile = path.join(dir, indexFile);
     try {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       const stats = await fs.stat(candidateFile);
       if (!stats.isDirectory()) {
         return candidateFile;
       }
     } catch (err) {
       if (err.code !== 'ENOENT') {
-        logger.warn(chalk.yellow(`Unable to read possible index file ` +
+        logger.warn(chalk.yellow('Unable to read possible index file ' +
           `${chalk.bold(candidateFile)}. ` +
           `Skipping! ${chalk.red(err.toString())}`));
       }
     }
   }
 
-  logger.warn(chalk.yellow(`No index file for entrypoint in ` +
+  logger.warn(chalk.yellow('No index file for entrypoint in ' +
     `${chalk.bold(makeFilePathRelativeToCwd(dir))} directory. ` +
     `Searched for: ${INDEX_FILES.join(', ')}`));
 
@@ -120,20 +120,17 @@ async function expandEntrypoints (entrypoints: Entrypoint[]) {
   const finalEntrypoints = [] as Entrypoint[];
 
   for (const entrypoint of entrypoints) {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const stats = await fs.stat(entrypoint.file);
 
     // Is the entrypoint a directory?
     if (stats.isDirectory()) {
       // The entrypoint is a directory so let's get the contents
       // of this directory
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
       const directoryFiles = await fs.readdir(entrypoint.file);
 
       // Iterate through the files within this directory
       for (const directoryFile of directoryFiles) {
         const directoryFileAbs = path.join(entrypoint.file, directoryFile);
-        // eslint-disable-next-line security/detect-non-literal-fs-filename
         const directoryFileStats = await fs.stat(directoryFileAbs);
 
         if (directoryFileStats.isDirectory()) {
@@ -147,7 +144,7 @@ async function expandEntrypoints (entrypoints: Entrypoint[]) {
             // as an entrypoint.
             finalEntrypoints.push({
               file: indexFile,
-              name: `${directoryFile}.js`
+              name: `${directoryFile}.js`,
             });
           }
         } else {
@@ -201,7 +198,7 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
       accumulator[name] = [...preloadModules, file];
       return accumulator;
     },
-    {}
+    {},
   );
 
   const nodeVersion = options.nodeVersion || DEFAULT_NODE_VERSION;
@@ -210,9 +207,9 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
     new webpack.NormalModuleReplacementPlugin(/^any-promise$/, 'core-js/fn/promise'),
     new webpack.DefinePlugin({
       'global.GENTLY': false,
-      'process.env.LIFEOMIC_SERVICE_NAME': `'${serviceName}'`
+      'process.env.LIFEOMIC_SERVICE_NAME': `'${serviceName}'`,
     }),
-    await loadPatch('lambda')
+    await loadPatch('lambda'),
   ];
 
   if (options.enableDnsRetry) {
@@ -223,14 +220,14 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
     '@babel/preset-env',
     {
       targets: {
-        node: nodeVersion
-      }
-    }
+        node: nodeVersion,
+      },
+    },
   ];
 
   const babelLoaderConfig = {
-    exclude: [ babelEnvDeps.exclude({ engines: { node: '>=' + nodeVersion } }) ],
-    loader: 'babel-loader'
+    exclude: [babelEnvDeps.exclude({ engines: { node: '>=' + nodeVersion } })],
+    loader: 'babel-loader',
   };
 
   const outputDir = path.resolve(options.outputPath || process.cwd());
@@ -239,9 +236,9 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
     loader: 'babel-loader',
     options: {
       cacheDirectory: options.cacheDirectory,
-      presets: [ babelEnvConfig ],
-      plugins: []
-    }
+      presets: [babelEnvConfig],
+      plugins: [],
+    },
   };
 
   const tsRule = options.tsconfig
@@ -252,19 +249,20 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
           loader: 'ts-loader',
           options: {
             configFile: options.tsconfig,
-            transpileOnly: options.transpileOnly
-          }
-        }
-      ]
+            transpileOnly: options.transpileOnly,
+          },
+        },
+      ],
     } : {
       ...babelLoaderConfig,
       options: {
         cacheDirectory: options.cacheDirectory,
         presets: [
           babelEnvConfig,
-          require('@babel/preset-typescript')
-        ]
-      }
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          require('@babel/preset-typescript'),
+        ],
+      },
     };
 
   const optimization = options.minify
@@ -281,7 +279,7 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
       path: outputDir,
       libraryTarget: 'commonjs',
       // Zipped bundles use explicit output names to determine the archive name
-      filename: '[name]'
+      filename: '[name]',
     },
     devtool,
     plugins,
@@ -291,17 +289,17 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
         {
           type: 'javascript/auto',
           test: /\.mjs$/,
-          use: []
+          use: [],
         },
         {
           test: /\.js$/,
-          ...babelLoader
+          ...babelLoader,
         },
         {
           test: /\.ts$/,
-          ...tsRule
-        }
-      ]
+          ...tsRule,
+        },
+      ],
     },
     mode: (process.env.WEBPACK_MODE || 'production') as Mode,
     optimization,
@@ -309,21 +307,21 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
       // Since build is being called by other packages dependencies may be
       // relative to the caller or us. This cause our node modules to be
       // searched if a dependency can't be found in the caller's.
-      modules: [ CALLER_NODE_MODULES, LAMBDA_TOOLS_NODE_MODULES ],
-      extensions: WEBPACK_DEFAULTS.resolve.extensions.concat(['.ts'])
+      modules: [CALLER_NODE_MODULES, LAMBDA_TOOLS_NODE_MODULES],
+      extensions: WEBPACK_DEFAULTS.resolve.extensions.concat(['.ts']),
     },
     resolveLoader: {
       // Since build is being called by other packages dependencies may be
       // relative to the caller or us. This puts our node_modules on the
       // resolver path before trying to use the caller's.
-      modules: [ LAMBDA_TOOLS_NODE_MODULES, CALLER_NODE_MODULES ]
+      modules: [LAMBDA_TOOLS_NODE_MODULES, CALLER_NODE_MODULES],
     },
     target: 'node',
     // Don't overrite __dirname and __filename, leave them as is
     // https://github.com/webpack/webpack/issues/1599
     node: {
       __dirname: false,
-      __filename: false
+      __filename: false,
     },
     externals: {
       'aws-sdk': 'aws-sdk',
@@ -332,14 +330,16 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
       // causes native crypto to be used instead.
       'crypto-browserify': 'crypto',
       'dtrace-provider': 'dtrace-provider',
-      'vertx': 'vertx'
-    }
+      'vertx': 'vertx',
+    },
   };
 
   const transformer = options.configTransformer || function (config: webpack.Configuration) { return config; };
-  const transformedConfig: webpack.Configuration = await transformer(webpackConfig);
+  const transformedConfig: webpack.Configuration = transformer(webpackConfig);
 
-  const webpackResult = await run(transformedConfig);
+  const compiler = webpack(transformedConfig);
+
+  const webpackResult = await (promisify(compiler.run)());
 
   handleWebpackResults(webpackResult);
 

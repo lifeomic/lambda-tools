@@ -19,7 +19,7 @@ async function buildLambda (bundlePath, handlerName, options) {
     entrypoint: path.join(FIXTURES_DIRECTORY, `${handlerName}`),
     outputPath: bundlePath,
     serviceName: `test-service-${handlerName}`,
-    ...options
+    ...options,
   });
 
   if (buildResults.hasErrors()) {
@@ -47,7 +47,7 @@ function useLambdaContainer (test, imageName, options = {}) {
     useComposeContainer({ ...containerConfig, service: containerName, handler: `${handlerName}.handler` });
   });
 
-  test.beforeEach(function (t) {
+  test.beforeEach((t) => {
     t.context.container = container;
   });
 
@@ -81,15 +81,15 @@ async function createContainer (image, name, mountpoint) {
     HostConfig: {
       AutoRemove: true,
       Binds: [
-        `${mountpoint}:/var/task`
-      ]
+        `${mountpoint}:/var/task`,
+      ],
     },
     Image: image,
     name,
     OpenStdin: true,
     Volumes: {
-      '/var/task': {}
-    }
+      '/var/task': {},
+    },
   });
 
   await container.start();
@@ -101,5 +101,5 @@ module.exports = {
   createContainer,
   useLambdaContainer,
   FIXTURES_DIRECTORY,
-  buildLambda
+  buildLambda,
 };

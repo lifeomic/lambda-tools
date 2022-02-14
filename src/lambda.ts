@@ -6,10 +6,9 @@ import tmp from 'tmp-promise';
 import fs from 'fs-extra';
 import unzip from 'unzipper';
 import isObjectLike from 'lodash/isObjectLike';
-import { promisify } from 'util';
-import { Handler} from "aws-lambda";
-import { AxiosRequestConfig } from "axios";
-import { TestInterface } from "ava";
+import { Handler } from 'aws-lambda';
+import { AxiosRequestConfig } from 'axios';
+import { TestInterface } from 'ava';
 import flatten from 'lodash/flatten';
 
 import { executeContainerCommand, ensureImage } from './docker';
@@ -43,13 +42,13 @@ export type LambdaConfigOptions = Partial<FinalConfig>;
 
 // null or undefined value means 'delete this variable'. Docker deletes variables that only have the key, without '=value'
 const createEnvironmentVariables = (environment: Environment) => Object.entries(environment)
-  .map(([ key, value ]) => value === null || value === undefined ? key : `${key}=${value}`);
+  .map(([key, value]) => value === null || value === undefined ? key : `${key}=${value}`);
 
 const convertEvent = (event?: any) => {
   if (isObjectLike(event)) {
     return JSON.stringify(event);
   }
-  return `${event}`;
+  return `${event as string}`;
 };
 
 export async function destroyLambdaExecutionEnvironment (environment: ExecutionEnvironment) {
@@ -74,15 +73,16 @@ export async function destroyLambdaExecutionEnvironment (environment: ExecutionE
 }
 
 async function getEntrypoint (docker: Docker, imageName: string): Promise<string[]> {
+  // eslint-disable-next-line @typescript-eslint/await-thenable
   const image = await (await docker.getImage(imageName)).inspect();
 
   if (image.ContainerConfig.Entrypoint) {
     return flatten([image.ContainerConfig.Entrypoint]);
-  } else {
-    const parentImageName = image.Parent;
-    assert(parentImageName, `The image ${imageName} has no entrypoint and no parent image`);
-    return getEntrypoint(docker, parentImageName);
   }
+  const parentImageName = image.Parent;
+  assert(parentImageName, `The image ${imageName} has no entrypoint and no parent image`);
+  return getEntrypoint(docker, parentImageName);
+
 }
 
 export class LambdaRunner {
@@ -97,6 +97,7 @@ export class LambdaRunner {
 
   async invoke (event?: any) {
     const command = await this.buildCommand();
+    // eslint-disable-next-line @typescript-eslint/await-thenable
     const container = await this.getContainer();
     const environment = this.environment;
 
@@ -115,16 +116,17 @@ export class LambdaRunner {
   }
 
   private async buildCommand (): Promise<string[]> {
+    // eslint-disable-next-line @typescript-eslint/await-thenable
     const container = await this.getContainer();
     const description = await container.inspect();
     const entrypoint = await getEntrypoint(this.docker, description.Image);
 
     return entrypoint.slice().concat(
-      this.handler
+      this.handler,
     );
   }
 
-  private async getContainer () {
+  private getContainer () {
     return this.docker.getContainer(this.container);
   }
 }
@@ -143,21 +145,28 @@ export class AlphaClient extends Alpha {
 
     const fn: Handler = async function handler (event, context, callback) {
       try {
-        callback(null, await runner.invoke(event));
-      } catch (error) {
-        callback(error);
+        const result = await runner.invoke(event);
+        if (callback) {
+          callback(undefined, result);
+        }
+      } catch (error: any | Error) {
+        if (callback) {
+          callback(error as Error);
+        } else {
+          throw error;
+        }
       }
     };
 
-    super(fn as any);
-    this.raw = promisify(fn);
+    super(fn);
+    this.raw = fn;
   }
 
   graphql<T = any> (
     path: string,
     query: any,
     variables: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ) {
     return this.post<T>(path, { query, variables }, config);
   }
@@ -183,10 +192,9 @@ async function buildMountpointFromZipfile (zipfile: string, mountpointParent?: s
   };
 
   try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const fsStream = fs.createReadStream(zipfile);
     const unzipper = fsStream.pipe(unzip.Extract({
-      path: tempDirName
+      path: tempDirName,
     }));
 
     await new Promise((resolve, reject) => {
@@ -198,7 +206,7 @@ async function buildMountpointFromZipfile (zipfile: string, mountpointParent?: s
 
     return {
       mountpoint: tempDirName,
-      cleanup
+      cleanup,
     };
   } catch (e) {
     await cleanup();
@@ -214,7 +222,7 @@ export const useNewContainer = (
     mountpointParent,
     handler,
     image,
-    useComposeNetwork
+    useComposeNetwork,
   }:
     Pick<LambdaConfigOptions,
       'environment' |
@@ -224,13 +232,15 @@ export const useNewContainer = (
       'handler' |
       'image'
       >
-    & { useComposeNetwork?: boolean}
+    & { useComposeNetwork?: boolean},
 ) => {
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   const network = useComposeNetwork ? `${process.env.COMPOSE_PROJECT_NAME}_default` : undefined;
   Object.assign(globalOptions, { environment, handler, image, mountpoint, zipfile, mountpointParent, network });
 };
 
 export const useComposeContainer = ({ environment, service, handler }: Pick<LambdaConfigOptions, 'environment' | 'handler'> & {service: string}) => {
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   const container = `${process.env.COMPOSE_PROJECT_NAME}_${service}_1`;
   Object.assign(globalOptions, { container, environment, handler });
 };
@@ -272,9 +282,9 @@ export async function createLambdaExecutionEnvironment (options: FinalConfig): P
       if (!networkId) {
         executionEnvironment.network = await docker.createNetwork({
           Internal: true,
-          Name: uuid()
+          Name: uuid(),
         });
-        logger.debug(`Created network ${executionEnvironment.network!.id}`)
+        logger.debug(`Created network ${executionEnvironment.network!.id}`);
       }
     } catch (error) {
       logger.error('Unable to create network', JSON.stringify({ error }, null, 2));
@@ -299,7 +309,7 @@ export async function createLambdaExecutionEnvironment (options: FinalConfig): P
           '/var/task': {},
         },
       });
-      logger.debug(`Created container ${executionEnvironment.container.id}`)
+      logger.debug(`Created container ${executionEnvironment.container.id}`);
     } catch (error) {
       logger.error('Unable to create container', JSON.stringify({ error }, null, 2));
       await destroyLambdaExecutionEnvironment(executionEnvironment);
@@ -320,7 +330,7 @@ export async function createLambdaExecutionEnvironment (options: FinalConfig): P
 
 export interface LambdaHooks {
   beforeAll(): Promise<void>;
-  beforeEach(): Promise<AlphaClient>;
+  beforeEach(): AlphaClient;
   afterAll(): Promise<void>;
 }
 
@@ -342,7 +352,7 @@ export function useLambdaHooks (localOptions: LambdaConfigOptions): LambdaHooks 
     await destroyLambdaExecutionEnvironment(executionEnvironment);
   }
 
-  async function beforeEach () {
+  function beforeEach () {
     const { container, environment, handler } = getOptions();
     return new AlphaClient({ container, environment, handler });
   }
@@ -368,7 +378,7 @@ export const useLambda = (anyTest: TestInterface, localOptions: LambdaConfigOpti
     await hooks.afterAll();
   });
 
-  test.serial.beforeEach(async (test) => {
-    test.context.lambda = await hooks.beforeEach();
+  test.serial.beforeEach((test) => {
+    test.context.lambda = hooks.beforeEach();
   });
 };

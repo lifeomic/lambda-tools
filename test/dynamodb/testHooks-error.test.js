@@ -44,7 +44,7 @@ test.serial('the beforeEach hook does not create clients when beforeAll fails', 
   }
 });
 
-test('The afterEach hook will ignore a missing context', async t => {
+test('The afterEach hook will ignore a missing context', async (t) => {
   const { dynamoDBTestHooks } = require('../../src/dynamodb');
   const { afterEach } = dynamoDBTestHooks(false);
   await t.notThrowsAsync(afterEach(undefined));

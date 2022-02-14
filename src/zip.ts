@@ -11,10 +11,9 @@ export async function zip(zipFile: string, entries: Entry[]) {
   await fs.mkdirp(path.dirname(zipFile));
 
   return new Promise((resolve, reject) => {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const outStream = fs.createWriteStream(zipFile);
     const archive = archiver('zip', {
-      zlib: { level: 9 } // Sets the compression level.
+      zlib: { level: 9 }, // Sets the compression level.
     });
 
     outStream.on('finish', resolve);
@@ -30,6 +29,6 @@ export async function zip(zipFile: string, entries: Entry[]) {
     // pipe archive data to the file
     archive.pipe(outStream);
 
-    archive.finalize();
+    void archive.finalize();
   });
 }

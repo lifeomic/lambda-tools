@@ -9,18 +9,18 @@ const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 const prefix = process.env.COMPOSE_PROJECT_NAME = uuid();
 const networkName = `${prefix}_default`;
 
-test.serial.before(async t => {
+test.serial.before(async (t) => {
   const docker = new Docker();
 
   const createContainer = sinon.spy(Docker.prototype, 'createContainer');
 
   const network = await docker.createNetwork({
     Internal: true,
-    Name: networkName
+    Name: networkName,
   });
   Object.assign(t.context, {
     createContainer,
-    network
+    network,
   });
 });
 
@@ -29,7 +29,7 @@ useLambda(test);
 useNewContainer({
   handler: 'bundled_service.handler',
   mountpoint: FIXTURES_DIRECTORY,
-  useComposeNetwork: true
+  useComposeNetwork: true,
 });
 
 test.serial.after.always(async (test) => {
@@ -52,8 +52,8 @@ test('Managed containers can use a compose network', async (test) => {
     createContainer,
     sinon.match({
       HostConfig: sinon.match({
-        NetworkMode: networkName
-      })
-    })
+        NetworkMode: networkName,
+      }),
+    }),
   );
 });

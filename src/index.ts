@@ -17,5 +17,5 @@ export {
   localStack,
   kinesis,
   mockServerLambda,
-  WriteBuffer
+  WriteBuffer,
 };

@@ -26,40 +26,40 @@ test.serial('The helper provides kinesis clients and streams', async (test) => {
 
   const item = {
     id: 'test',
-    message: 'hello'
+    message: 'hello',
   };
 
   await kinesisClient.putRecord({
     Data: JSON.stringify(item),
     StreamName: streamName,
-    PartitionKey: uuid()
+    PartitionKey: uuid(),
   }).promise();
 
   const describeStream = await kinesisClient.describeStream({
-    StreamName: streamName
+    StreamName: streamName,
   }).promise();
 
   const iterator = await kinesisClient.getShardIterator({
     ShardId: describeStream.StreamDescription.Shards[0].ShardId,
     ShardIteratorType: 'TRIM_HORIZON',
     StreamName: streamName,
-    Timestamp: Date.now()
+    Timestamp: Date.now(),
   }).promise();
 
   const results = await kinesisClient.getRecords({
     ShardIterator: iterator.ShardIterator,
-    Limit: 10e3
+    Limit: 10e3,
   }).promise();
 
   test.is(results.Records.length, 1);
   const payload = Buffer.from(results.Records[0].Data, 'base64').toString(
-    'utf8'
+    'utf8',
   );
 
   test.deepEqual(JSON.parse(payload), item);
 });
 
-test.serial('The helper does not include a unique identifier in the stream names', async (test) => {
+test.serial('The helper does not include a unique identifier in the stream names', (test) => {
   const { streamNames, uniqueIdentifier } = test.context.kinesis;
   const streamName = streamNames['test-stream'];
 

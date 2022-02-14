@@ -8,7 +8,7 @@ const router = new Router();
 router.get('/', async (context, next) => {
   context.response.body = {
     service: 'lambda-test',
-    parameter: process.env.TEST_PARAMETER
+    parameter: process.env.TEST_PARAMETER,
   };
   await next();
 });

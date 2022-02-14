@@ -17,10 +17,10 @@ const TEST_STREAM_NAME = 'stream-name';
 
 useKinesis(test, TEST_STREAM_NAME);
 
-test.after(function () {
+test.after(() => {
   sinon.assert.calledOnce(deleteStreamStub);
   sinon.assert.calledWith(deleteStreamStub, {
-    StreamName: TEST_STREAM_NAME
+    StreamName: TEST_STREAM_NAME,
   });
 });
 
@@ -29,10 +29,10 @@ test('provides a kinesis client to the tests', (test) => {
   test.is(typeof test.context.kinesis.putRecord, 'function');
 });
 
-test('calls createStream to create the stream', (test) => {
+test('calls createStream to create the stream', () => {
   sinon.assert.calledOnce(createStreamStub);
   sinon.assert.calledWith(createStreamStub, {
     StreamName: TEST_STREAM_NAME,
-    ShardCount: 1
+    ShardCount: 1,
   });
 });

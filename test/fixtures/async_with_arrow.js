@@ -1,5 +1,5 @@
 class Foo {
-  async foo (bar) {
+  foo () {
     (() => {
       this.bar = 'baz';
     })();

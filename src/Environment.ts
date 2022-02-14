@@ -1,8 +1,8 @@
 export class Environment {
-  private _backup: Record<string, any> = {}
+  private _backup: Record<string, any> = {};
 
   restore () {
-    for (const [ name, value ] of Object.entries(this._backup)) {
+    for (const [name, value] of Object.entries(this._backup)) {
       if (value === undefined) {
         delete process.env[name];
       } else {

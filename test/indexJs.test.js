@@ -11,7 +11,7 @@ const kinesis = require('../src/kinesis');
 const mockServerLambda = require('../src/mockServerLambda');
 const WriteBuffer = require('../src/WriteBuffer').default;
 
-test('exports match expected', t => {
+test('exports match expected', (t) => {
   t.deepEqual(index, {
     docker,
     dynamodb,
@@ -21,6 +21,6 @@ test('exports match expected', t => {
     localStack,
     kinesis,
     mockServerLambda,
-    WriteBuffer
+    WriteBuffer,
   });
 });

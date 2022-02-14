@@ -37,7 +37,7 @@ function createChildLogger (name: string, root: Debugger): Logger {
       const child = root.extend(name);
       child.enabled = root.enabled;
       return createChildLogger(name, child);
-    }
+    },
   };
 }
 

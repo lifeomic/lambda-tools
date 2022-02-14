@@ -33,9 +33,10 @@ let setupGraphQLFunc: SetupGraphQL = () => {
 
 /**
  *  Assert response contains error path/message
- *  @param {Object} response http graphql response object
- *  @param {String} path '.' deliminated path to graphql resolver
- *  @param {String|Function} messageTest test to be applied to error
+ *
+ * @param {Object} response http graphql response object
+ * @param {String} path '.' deliminated path to graphql resolver
+ * @param {String|Function} messageTest test to be applied to error
  *    message. If string, exact match. If function, apply test function to
  *    error message.
  */
@@ -52,15 +53,15 @@ export const assertError = (response: GraphQlResponse, path: string | undefined,
       error.path === undefined);
   }
 
-  const errorPaths = map(response.body.errors, function (error) {
+  const errorPaths = map(response.body.errors, (error) => {
     if (error.path) {
       return error.path.join('.');
-    } else {
-      return '<root>';
     }
+    return '<root>';
+
   });
 
-  assert(error, `No error found with path '${path}'. The paths with errors were: ${errorPaths.join(',')}`);
+  assert(error, `No error found with path '${path as string}'. The paths with errors were: ${errorPaths.join(',')}`);
   if (isString(messageTest)) {
     assert.strictEqual(error!.message, messageTest);
   } else {
@@ -74,10 +75,10 @@ export const assertSuccess = (response: GraphQlResponse) => {
     `Did not succeed. HTTP status code was ${status}` +
     ` and error was ${JSON.stringify(response.error, null, 2)}`);
 
-  const errors = map(response.body.errors, err => {
+  const errors = map(response.body.errors, (err) => {
     return {
       message: err.message,
-      path: err.path && err.path.join('.')
+      path: err.path && err.path.join('.'),
     };
   });
   assert(!response.body.errors, 'Did not succeed. Errors were ' +
@@ -102,8 +103,8 @@ export function graphqlHooks <Context extends GraphQLTestContext = GraphQLTestCo
   {
     getApp,
     context,
-    url = '/graphql'
-  }: GraphQlHooksOptions<Context>
+    url = '/graphql',
+  }: GraphQlHooksOptions<Context>,
 ) {
   return {
     beforeEach() {
@@ -119,8 +120,8 @@ export function graphqlHooks <Context extends GraphQLTestContext = GraphQLTestCo
         return request.post(url)
           .send({ query, variables });
       };
-    }
-  }
+    },
+  };
 }
 
 
@@ -131,8 +132,8 @@ export interface GraphQlOptions {
 export const useGraphQL = (
   anyTest: TestInterface,
   {
-    url = '/graphql'
-  }: GraphQlOptions = {}
+    url = '/graphql',
+  }: GraphQlOptions = {},
 ) => {
   const test = anyTest as TestInterface<GraphQLTestContext>;
   test.serial.beforeEach((t) => {

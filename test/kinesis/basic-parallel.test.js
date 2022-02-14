@@ -24,40 +24,40 @@ test('The helper provides kinesis client and streams', async (test) => {
 
   const item = {
     id: 'test',
-    message: 'hello'
+    message: 'hello',
   };
 
   await kinesisClient.putRecord({
     Data: JSON.stringify(item),
     StreamName: streamName,
-    PartitionKey: uuid()
+    PartitionKey: uuid(),
   }).promise();
 
   const describeStream = await kinesisClient.describeStream({
-    StreamName: streamName
+    StreamName: streamName,
   }).promise();
 
   const iterator = await kinesisClient.getShardIterator({
     ShardId: describeStream.StreamDescription.Shards[0].ShardId,
     ShardIteratorType: 'TRIM_HORIZON',
     StreamName: streamName,
-    Timestamp: Date.now()
+    Timestamp: Date.now(),
   }).promise();
 
   const results = await kinesisClient.getRecords({
     ShardIterator: iterator.ShardIterator,
-    Limit: 10e3
+    Limit: 10e3,
   }).promise();
 
   test.is(results.Records.length, 1);
   const payload = Buffer.from(results.Records[0].Data, 'base64').toString(
-    'utf8'
+    'utf8',
   );
 
   test.deepEqual(JSON.parse(payload), item);
 });
 
-test('The helper includes a unique identifier in the stream names', async (test) => {
+test('The helper includes a unique identifier in the stream names', (test) => {
   const { streamNames, uniqueIdentifier } = test.context.kinesis;
   const streamName = streamNames['test-stream'];
 
@@ -66,14 +66,14 @@ test('The helper includes a unique identifier in the stream names', async (test)
   test.is(streamName, `test-stream-${uniqueIdentifier}`);
 });
 
-test('The helper sets default configuration environment variables', async (test) => {
+test('The helper sets default configuration environment variables', (test) => {
   test.truthy(process.env.AWS_ACCESS_KEY_ID);
   test.truthy(process.env.AWS_SECRET_ACCESS_KEY);
   test.truthy(process.env.AWS_REGION);
   test.truthy(process.env.KINESIS_ENDPOINT);
 });
 
-test('The helper provides a config object', async (test) => {
+test('The helper provides a config object', (test) => {
   const { config } = test.context.kinesis;
 
   test.true(config.credentials instanceof AWS.Credentials);

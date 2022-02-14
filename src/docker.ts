@@ -5,7 +5,8 @@ import { WriteBuffer } from './WriteBuffer';
 import map from 'lodash/map';
 import flatten from 'lodash/flatten';
 import { getLogger } from './utils/logging';
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'events';
+import { IncomingMessage } from 'http';
 
 const DEFAULT_IMAGE = 'alpine:3.6';
 const DEFAULT_ROUTE_PATTERN = /^default\b.*$/m;
@@ -28,7 +29,7 @@ export const executeContainerCommand = async ({ container, command, environment,
   const options: ExecCreateOptions = {
     AttachStderr: true,
     AttachStdout: true,
-    Cmd: command
+    Cmd: command,
   };
 
   const usingStdin = stdin !== undefined;
@@ -82,19 +83,25 @@ const buildAuthForDocker = () => {
       authconfig: {
         username: dockerUser,
         password: dockerPass,
-      }
-    }
+      },
+    };
   }
 
   logger.debug('Pulling image as anon');
   return {};
-}
+};
 
 export const pullImage = async (docker: Docker, image: string) => {
-  const stream = await docker.pull(image, buildAuthForDocker());
-  await new Promise((resolve) => {
-    docker.modem.followProgress(stream, resolve, (progress: {status: string; progress?: string}) => {
-      logger.debug(`${image}: ${progress.status}${progress.progress ? ` ${progress.progress}` : ''}`);
+  const stream = (await docker.pull(image, buildAuthForDocker())) as IncomingMessage;
+  await new Promise((resolve, reject) => {
+    docker.modem.followProgress(stream, resolve, (progress: {status: string; progress?: string, error?: string}) => {
+      if (progress.error) {
+        const error = `${image}: ${progress.error}`;
+        logger.info(error);
+        reject(new Error(error));
+      } else {
+        logger.debug(`${image}: ${progress.status}${progress.progress ? ` ${progress.progress}` : ''}`);
+      }
     });
   });
 };
@@ -130,7 +137,7 @@ export const getHostAddress = async () => {
     HostConfig: {
       AutoRemove: true,
       NetworkMode: 'host',
-      UsernsMode: 'host'
+      UsernsMode: 'host',
     },
     Image: DEFAULT_IMAGE,
     OpenStdin: true,

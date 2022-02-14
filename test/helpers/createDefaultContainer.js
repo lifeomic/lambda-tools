@@ -11,13 +11,13 @@ async function createDefaultContainer () {
     HostConfig: {
       AutoRemove: true,
       NetworkMode: 'host',
-      UsernsMode: 'host'
+      UsernsMode: 'host',
     },
     Image: DEFAULT_IMAGE,
-    OpenStdin: true
+    OpenStdin: true,
   });
 }
 
 module.exports = {
-  createDefaultContainer
+  createDefaultContainer,
 };

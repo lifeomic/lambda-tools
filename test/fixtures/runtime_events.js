@@ -1,6 +1,6 @@
 const assert = require('assert');
 
-exports.handler = (event, context, callback) => {
+exports.handler = () => {
   const listeners = process.listeners('beforeExit');
   assert(listeners.length === 2, `unexpected number of listeners ${listeners.length}`);
 

@@ -19,23 +19,23 @@ function createTableSchema(): DynamoDB.CreateTableInput {
     ProvisionedThroughput: {
       WriteCapacityUnits: 1,
       ReadCapacityUnits: 1,
-    }
+    },
   };
 }
 
-test('can define tables in config', async t => {
+test('can define tables in config', async (t) => {
   const badSchema = createTableSchema();
   const expectedSchema = createTableSchema();
   tableSchema([badSchema]);
   const { beforeAll, afterEach, beforeEach, afterAll } = dynamoDBTestHooks<['testTable']>(false, {
-    tableSchemas: [expectedSchema]
+    tableSchemas: [expectedSchema],
   });
   await beforeAll();
   let context;
   try {
     context = await beforeEach();
     try {
-      const {TableNames} = await context.dynamoClient.listTables().promise();
+      const { TableNames } = await context.dynamoClient.listTables().promise();
       t.deepEqual(TableNames, [expectedSchema.TableName]);
     } finally {
       await afterEach(context);

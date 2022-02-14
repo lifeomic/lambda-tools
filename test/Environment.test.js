@@ -1,7 +1,7 @@
 const { Environment } = require('../src/Environment');
 const test = require('ava');
 
-test.serial('Setting an environment variable modifies the process state', async (test) => {
+test.serial('Setting an environment variable modifies the process state', (test) => {
   const environment = new Environment();
   environment.set('foo', 'bar');
 
@@ -12,7 +12,7 @@ test.serial('Setting an environment variable modifies the process state', async 
   }
 });
 
-test.serial('Restoring a new environment variable unsets the variable', async (test) => {
+test.serial('Restoring a new environment variable unsets the variable', (test) => {
   const environment = new Environment();
   environment.set('foo', 'bar');
 
@@ -24,7 +24,7 @@ test.serial('Restoring a new environment variable unsets the variable', async (t
   }
 });
 
-test.serial('Restoring an existing variable resets the variable', async (test) => {
+test.serial('Restoring an existing variable resets the variable', (test) => {
   const environment = new Environment();
   process.env.foo = 'bar';
 

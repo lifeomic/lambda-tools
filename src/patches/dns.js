@@ -24,7 +24,7 @@
         console.error(`DNS lookup of ${hostname} failed and will be retried ${remaining} more times`);
         setTimeout(
           () => dns._raw.lookup(hostname, options, dnsLookupWrapperResponse),
-          DELAY
+          DELAY,
         );
         return;
       }

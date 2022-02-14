@@ -16,7 +16,7 @@ test.serial.before(async () => {
   const buildResults = await build({
     entrypoint: path.join(FIXTURES_DIRECTORY, 'runtime_callbacks.js'),
     outputPath: BUILD_DIRECTORY,
-    serviceName: 'runtime-callbacks'
+    serviceName: 'runtime-callbacks',
   });
 
   if (buildResults.hasErrors()) {
@@ -27,15 +27,15 @@ test.serial.before(async () => {
   useNewContainer({
     handler: 'runtime_callbacks.handler',
     image: 'lambci/lambda:nodejs12.x',
-    mountpoint: BUILD_DIRECTORY
+    mountpoint: BUILD_DIRECTORY,
   });
 });
 
 useLambda(test);
 
-test.after.always(async (test) => fs.remove(BUILD_DIRECTORY));
+test.after.always(() => fs.remove(BUILD_DIRECTORY));
 
-test.serial(`The lambda function logs multiple callback invocations`, async (test) => {
+test.serial('The lambda function logs multiple callback invocations', async (test) => {
   const write = process.stdout.write;
   const buffer = new WriteBuffer();
   process.stdout.write = buffer.write.bind(buffer);

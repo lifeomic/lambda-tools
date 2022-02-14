@@ -18,7 +18,7 @@ test.serial.before(async () => {
   const buildResults = await build({
     entrypoint: path.join(FIXTURES_DIRECTORY, 'runtime_events.js'),
     outputPath: BUILD_DIRECTORY,
-    serviceName: 'runtime-events'
+    serviceName: 'runtime-events',
   });
 
   if (buildResults.hasErrors()) {
@@ -29,13 +29,13 @@ test.serial.before(async () => {
   useNewContainer({
     handler: 'runtime_events.handler',
     image: 'lambci/lambda:nodejs12.x',
-    mountpoint: BUILD_DIRECTORY
+    mountpoint: BUILD_DIRECTORY,
   });
 });
 
 useLambda(test);
 
-test.after.always(async (test) => fs.remove(BUILD_DIRECTORY));
+test.after.always(() => fs.remove(BUILD_DIRECTORY));
 
 async function testEventExecution (test, event) {
   const write = process.stdout.write;
@@ -55,15 +55,15 @@ async function testEventExecution (test, event) {
   test.regex(buffer.toString(), /'beforeExit'/);
 }
 
-test.serial(`The lambda function logs process events`, async (test) => {
+test.serial('The lambda function logs process events', async (test) => {
   await testEventExecution(test, {});
 });
 
-test.serial(`The lambda function logs process string events`, async (test) => {
+test.serial('The lambda function logs process string events', async (test) => {
   await testEventExecution(test, '{}');
 });
 
-test.serial(`Returns results when event is undefined`, async (test) => {
+test.serial('Returns results when event is undefined', async (test) => {
   const write = process.stdout.write;
   const buffer = new WriteBuffer();
   process.stdout.write = buffer.write.bind(buffer);
@@ -81,14 +81,14 @@ test.serial(`Returns results when event is undefined`, async (test) => {
   test.regex(buffer.toString(), /Unexpected token/);
 });
 
-test.serial(`The lambda function can be invoked with a large event`, async test => {
+test.serial('The lambda function can be invoked with a large event', async (test) => {
   const write = process.stdout.write;
   const buffer = new WriteBuffer();
   process.stdout.write = buffer.write.bind(buffer);
 
   const context = {};
   const event = {
-    someLargeValue: crypto.randomBytes(12584038).toString('base64') // 12584038 * 1.333 = 16777216 which is the max size. trying to send message larger than max (16780812 vs. 16777216)
+    someLargeValue: crypto.randomBytes(12584038).toString('base64'), // 12584038 * 1.333 = 16777216 which is the max size. trying to send message larger than max (16780812 vs. 16777216)
   };
   debug.enable('lambda-tools:*');
 

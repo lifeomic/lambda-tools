@@ -1,7 +1,7 @@
 const test = require('ava');
 const sinon = require('sinon');
 
-test('The afterAll hook handles errors in the beforeAll hook gracefully', async t => {
+test('The afterAll hook handles errors in the beforeAll hook gracefully', async (t) => {
   // Stub the docker module to throw errors when fetching images.
   // This needs to happen before the localstack helper module is imported
   const docker = require('../../src/docker');
@@ -20,7 +20,7 @@ test('The afterAll hook handles errors in the beforeAll hook gracefully', async 
   }
 });
 
-test('localStackHooks throws when missing services', t => {
+test('localStackHooks throws when missing services', (t) => {
   const { localStackHooks } = require('../../src/localstack');
   t.throws(localStackHooks);
 });

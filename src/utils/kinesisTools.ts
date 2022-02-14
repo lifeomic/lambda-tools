@@ -1,11 +1,11 @@
 import assert from 'assert';
-import Kinesis from "aws-sdk/clients/kinesis";
+import Kinesis from 'aws-sdk/clients/kinesis';
 import {
   Callback,
   Context,
   KinesisStreamHandler,
-  KinesisStreamRecord
-} from "aws-lambda";
+  KinesisStreamRecord,
+} from 'aws-lambda';
 
 export interface BasicKinesisConfig {
   kinesisClient: Kinesis;
@@ -36,7 +36,7 @@ export class KinesisIterator {
     {
       kinesisClient,
       streamName,
-    }: BasicKinesisConfig
+    }: BasicKinesisConfig,
   ) {
     assert.ok(kinesisClient, 'kinesisClient client needs to be provided');
     assert.ok(!!kinesisClient.getRecords && !!kinesisClient.describeStream && !!kinesisClient.getShardIterator, 'kinesisClient client needs to be of type AWS.Kinesis');
@@ -48,13 +48,13 @@ export class KinesisIterator {
 
   async init (): Promise<this> {
     const describeStreamResult = await this._kinesis.describeStream({
-      StreamName: this._streamName
+      StreamName: this._streamName,
     }).promise();
 
     const getShardIteratorResult = await this._kinesis.getShardIterator({
       ShardId: describeStreamResult.StreamDescription.Shards[0].ShardId,
       ShardIteratorType: 'TRIM_HORIZON',
-      StreamName: this._streamName
+      StreamName: this._streamName,
     }).promise();
 
     this._shardIterator = getShardIteratorResult.ShardIterator;
@@ -62,14 +62,14 @@ export class KinesisIterator {
   }
 
   async next (
-    Limit?: Kinesis.GetRecordsInputLimit
+    Limit?: Kinesis.GetRecordsInputLimit,
   ): Promise<this> {
     if (!this._shardIterator) {
       await this.init();
     }
     this._getRecordsResponse = await this._kinesis.getRecords({
       ShardIterator: this._shardIterator!,
-      Limit
+      Limit,
     }).promise();
     this._shardIterator = this._getRecordsResponse.NextShardIterator;
     return this;
@@ -91,7 +91,7 @@ export async function getStreamRecords (config: BasicKinesisConfig): Promise<Kin
 }
 
 export function createLambdaEvent (records: Kinesis.RecordList): KinesisStreamRecord[] {
-  return records.map(record => ({
+  return records.map((record) => ({
     eventID: `shardId-000000000000:${record.SequenceNumber}`,
     eventVersion: '1.0',
     kinesis: {
@@ -99,13 +99,13 @@ export function createLambdaEvent (records: Kinesis.RecordList): KinesisStreamRe
       partitionKey: record.PartitionKey,
       data: record.Data.toString('base64'),
       kinesisSchemaVersion: '1.0',
-      sequenceNumber: record.SequenceNumber
+      sequenceNumber: record.SequenceNumber,
     },
     invokeIdentityArn: 'some-arn',
     eventName: 'aws:kinesis:record',
     eventSourceARN: 'some-arn',
     eventSource: 'aws:kinesis',
-    awsRegion: 'us-east-1'
+    awsRegion: 'us-east-1',
   }));
 }
 
@@ -122,7 +122,7 @@ export async function kinesisLambdaTrigger ({
   kinesisIterator,
   limit,
   context,
-  callback
+  callback,
 }: LambdaTriggerConfig): Promise<{
   processedRecordCount: number;
 }> {
@@ -144,6 +144,6 @@ export async function kinesisLambdaTrigger ({
     }
   }
   return {
-    processedRecordCount
+    processedRecordCount,
   };
 }

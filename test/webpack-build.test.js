@@ -30,11 +30,10 @@ test('Setting WEBPACK_MODE to development disables minification', async (test) =
   let buildResults = await build({
     entrypoint: source,
     outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
+    serviceName: 'test-service',
   });
   test.false(buildResults.hasErrors());
 
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   const minifiedSize = (await fs.stat(bundle)).size;
 
   process.env.WEBPACK_MODE = 'development';
@@ -42,14 +41,13 @@ test('Setting WEBPACK_MODE to development disables minification', async (test) =
     buildResults = await build({
       entrypoint: source,
       outputPath: test.context.buildDirectory,
-      serviceName: 'test-service'
+      serviceName: 'test-service',
     });
     test.false(buildResults.hasErrors());
   } finally {
     delete process.env.WEBPACK_MODE;
   }
 
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   const fullSize = (await fs.stat(bundle)).size;
   test.true(fullSize > minifiedSize);
 });
@@ -58,7 +56,7 @@ test('The webpack configuration can be transformed', async (test) => {
   const source = path.join(FIXTURES_DIRECTORY, 'lambda_service.js');
   const bundle = path.join(test.context.buildDirectory, 'lambda_service.js');
 
-  const transformer = sinon.stub().callsFake(function (config) {
+  const transformer = sinon.stub().callsFake((config) => {
     config.externals['koa-router'] = 'koa-router';
     return config;
   });
@@ -67,11 +65,10 @@ test('The webpack configuration can be transformed', async (test) => {
     configTransformer: transformer,
     entrypoint: source,
     outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
+    serviceName: 'test-service',
   });
   test.false(buildResultExternalKoaRouter.hasErrors());
 
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   const webpackedContents = await fs.readFile(bundle, 'utf8');
   // Make sure that koa-router is really treated as external as the transformed config would require
   test.truthy(/module\.exports = require\("koa-router"\);/.test(webpackedContents));
@@ -92,14 +89,14 @@ test('TSConfig files are supported', async (test) => {
     configTransformer: transformer,
     entrypoint: source,
     outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
+    serviceName: 'test-service',
   });
   test.false(result.hasErrors());
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'index.js')));
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'index.js.map')));
 
   const config = transformer.firstCall.args[0];
-  test.truthy(config.module.rules.find(rule => find(rule.use, { loader: 'ts-loader' })));
+  test.truthy(config.module.rules.find((rule) => find(rule.use, { loader: 'ts-loader' })));
 });
 
 test('Typescript bundles are supported by default', async (test) => {
@@ -108,7 +105,7 @@ test('Typescript bundles are supported by default', async (test) => {
   const result = await build({
     entrypoint: source,
     outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
+    serviceName: 'test-service',
   });
   test.false(result.hasErrors());
 
@@ -125,7 +122,7 @@ test('Node 12 bundles are produced by default', async (test) => {
     configTransformer: transformer,
     entrypoint: source,
     outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
+    serviceName: 'test-service',
   });
   test.false(result.hasErrors());
 
@@ -148,7 +145,7 @@ test('A custom Node version can be used', async (test) => {
     entrypoint: source,
     nodeVersion,
     outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
+    serviceName: 'test-service',
   });
   test.false(result.hasErrors());
 
@@ -168,12 +165,11 @@ test('Lambda archives can be produced', async (test) => {
     entrypoint: source,
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service',
-    zip: true
+    zip: true,
   });
   test.false(buildResults.hasErrors());
 
   const zip = new JSZip();
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   await zip.loadAsync(await fs.readFile(bundle));
   test.truthy(zip.file('lambda_service.js'));
 });
@@ -186,7 +182,7 @@ test('Lambda archives can be produced repeatably', async (test) => {
     entrypoint: source,
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service',
-    zip: true
+    zip: true,
   };
 
   let buildResults = await build(buildConfig);
@@ -195,7 +191,6 @@ test('Lambda archives can be produced repeatably', async (test) => {
   test.false(buildResults.hasErrors());
 
   const zip = new JSZip();
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   await zip.loadAsync(await fs.readFile(bundle));
   test.truthy(zip.file('lambda_service.js'));
   test.falsy(zip.file('lambda_service.js.zip'));
@@ -205,10 +200,10 @@ test('Multiple bundles can be produced at one time', async (test) => {
   const buildResults = await build({
     entrypoint: [
       path.join(FIXTURES_DIRECTORY, 'lambda_graphql.js'),
-      path.join(FIXTURES_DIRECTORY, 'lambda_service.js')
+      path.join(FIXTURES_DIRECTORY, 'lambda_service.js'),
     ],
     outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
+    serviceName: 'test-service',
   });
   test.false(buildResults.hasErrors());
 
@@ -220,10 +215,10 @@ test('Multiple bundles can be produced with mixed source types', async (test) =>
   const buildResults = await build({
     entrypoint: [
       path.join(FIXTURES_DIRECTORY, 'lambda_service.js'),
-      path.join(FIXTURES_DIRECTORY, 'ts_lambda_service.ts')
+      path.join(FIXTURES_DIRECTORY, 'ts_lambda_service.ts'),
     ],
     outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
+    serviceName: 'test-service',
   });
   test.false(buildResults.hasErrors());
 
@@ -235,10 +230,10 @@ test('Bundles can use custom names', async (test) => {
   const buildResults = await build({
     entrypoint: [
       path.join(FIXTURES_DIRECTORY, 'lambda_graphql.js:graphql.js'),
-      path.join(FIXTURES_DIRECTORY, 'lambda_service.js:lambda/service.js')
+      path.join(FIXTURES_DIRECTORY, 'lambda_service.js:lambda/service.js'),
     ],
     outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
+    serviceName: 'test-service',
   });
   test.false(buildResults.hasErrors());
 
@@ -250,11 +245,11 @@ test('Bundles for multiple entries can be zipped', async (test) => {
   await build({
     entrypoint: [
       path.join(FIXTURES_DIRECTORY, 'lambda_graphql.js:graphql.js'),
-      path.join(FIXTURES_DIRECTORY, 'lambda_service.js:lambda/service.js')
+      path.join(FIXTURES_DIRECTORY, 'lambda_service.js:lambda/service.js'),
     ],
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service',
-    zip: true
+    zip: true,
   });
 
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'graphql.js.zip')));
@@ -271,7 +266,7 @@ test.serial('Expand input entrypoint directory into multiple entrypoints', async
   const originalFsStat = fs.stat;
   const unreadableFile = path.join(multiLambdasDir, 'unreadable/index.js');
 
-  const stubStat = sinon.stub(fs, 'stat').callsFake(function (file) {
+  const stubStat = sinon.stub(fs, 'stat').callsFake((file) => {
     if (file === unreadableFile) {
       throw new Error('Simulated unreadable');
     }
@@ -281,11 +276,11 @@ test.serial('Expand input entrypoint directory into multiple entrypoints', async
 
   await build({
     entrypoint: [
-      multiLambdasDir
+      multiLambdasDir,
     ],
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service',
-    zip: true
+    zip: true,
   });
 
   sinon.assert.calledWith(stubStat, unreadableFile);
@@ -295,11 +290,10 @@ test.serial('Expand input entrypoint directory into multiple entrypoints', async
     'func1',
     'func2',
     'func3',
-    'func4'
+    'func4',
   ]) {
     test.true(await fs.pathExists(path.join(test.context.buildDirectory, `${funcName}.js.zip`)));
     const zip = new JSZip();
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     await zip.loadAsync(await fs.readFile(path.join(test.context.buildDirectory, `${funcName}.js.zip`)));
     test.truthy(zip.file(`${funcName}.js`));
     test.truthy(zip.file(`${funcName}.js.map`));
@@ -314,7 +308,7 @@ test.serial('Bundles are produced in the current working directory by default', 
     process.chdir(test.context.buildDirectory);
     const buildResults = await build({
       entrypoint: path.join(FIXTURES_DIRECTORY, 'lambda_service.js'),
-      serviceName: 'test-service'
+      serviceName: 'test-service',
     });
     test.false(buildResults.hasErrors());
 
@@ -333,11 +327,10 @@ async function assertSourceMapBehavior (test, options, expectMappingUrl, expectS
       outputPath: test.context.buildDirectory,
       entrypoint: path.join(FIXTURES_DIRECTORY, 'lambda_service.js'),
       serviceName: 'test-service',
-      ...options
+      ...options,
     });
 
     test.false(buildResults.hasErrors());
-    // eslint-disable-next-line security/detect-non-literal-fs-filename
     const contents = await fs.readFile(path.join(test.context.buildDirectory, 'lambda_service.js'), 'utf8');
     test.is(/sourceMappingURL=/.test(contents), expectMappingUrl, 'Has a souceMapping URL');
     test.is(/Available options are {auto, browser, node}/.test(contents), expectSourceMapRegister, 'Has source-map/register code');
@@ -363,7 +356,7 @@ test.serial('Should handle building entrypoint outside of current working direct
       outputPath: test.context.buildDirectory,
       entrypoint: path.join(FIXTURES_DIRECTORY, 'lambda_service.js'),
       serviceName: 'test-service',
-      zip: true
+      zip: true,
     });
     test.false(buildResults.hasErrors());
   } finally {
@@ -378,7 +371,7 @@ async function compileAndRunTest (test, fixture, nodeVersion, expectedResult) {
     nodeVersion,
     entrypoint: source,
     outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
+    serviceName: 'test-service',
   });
   test.false(result.hasErrors());
 
@@ -395,7 +388,7 @@ async function compileAndRunTest (test, fixture, nodeVersion, expectedResult) {
   }
   const executionEnvironment = await createLambdaExecutionEnvironment({
     image,
-    mountpoint: test.context.buildDirectory
+    mountpoint: test.context.buildDirectory,
   });
   try {
     const runner = new LambdaRunner(executionEnvironment.container.id, null, `${fixture}.handle`);
@@ -434,11 +427,10 @@ async function assertMinification (test, options, expectMinification) {
     entrypoint: source,
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service',
-    ...options
+    ...options,
   });
   test.false(buildResults.hasErrors());
 
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
   const contents = await fs.readFile(bundle, 'utf8');
   test.is(/handler\(entry\)/.test(contents), !expectMinification);
 }
@@ -461,7 +453,7 @@ test('can enable babel-loader cacheDirectory option', async (test) => {
     entrypoint: source,
     outputPath: test.context.buildDirectory,
     serviceName: 'test-service',
-    cacheDirectory: true
+    cacheDirectory: true,
   });
 
   test.false(result.hasErrors());
@@ -487,7 +479,7 @@ test('can enable babel-loader cacheDirectory option in combination with tsconfig
     configTransformer: transformer,
     entrypoint: source,
     outputPath: test.context.buildDirectory,
-    serviceName: 'test-service'
+    serviceName: 'test-service',
   });
 
   test.false(result.hasErrors());
@@ -495,9 +487,9 @@ test('can enable babel-loader cacheDirectory option in combination with tsconfig
   test.true(await fs.pathExists(path.join(test.context.buildDirectory, 'index.js.map')));
 
   const config = transformer.firstCall.args[0];
-  test.truthy(config.module.rules.find(rule => find(rule.use, { loader: 'ts-loader' })));
+  test.truthy(config.module.rules.find((rule) => find(rule.use, { loader: 'ts-loader' })));
 
-  const cacheDirectoryRule = config.module.rules.find(rule => {
+  const cacheDirectoryRule = config.module.rules.find((rule) => {
     const found = find(rule.use, { loader: 'babel-loader' });
     return found && found.options.cacheDirectory === true;
   });

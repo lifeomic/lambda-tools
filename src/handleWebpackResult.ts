@@ -1,6 +1,6 @@
 import supportsColor from 'supports-color';
 import { getLogger } from './utils/logging';
-import webpack from "webpack";
+import webpack from 'webpack';
 const logger = getLogger('webpack');
 
 export const handleWebpackResults = (webpackResult: webpack.Stats) => {
@@ -11,7 +11,7 @@ export const handleWebpackResults = (webpackResult: webpack.Stats) => {
     // hide other built modules
     maxModules: 0,
     // hide warning traces
-    moduleTrace: false
+    moduleTrace: false,
   }));
 
   if (webpackResult.hasErrors()) {

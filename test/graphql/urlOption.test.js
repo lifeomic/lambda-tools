@@ -7,21 +7,21 @@ const { ApolloServer, gql } = require('apollo-server-koa');
 const graphql = new ApolloServer({
   resolvers: {
     Query: {
-      value: () => ''
-    }
+      value: () => '',
+    },
   },
   typeDefs: gql`
     type Query {
       value: String!
     }
-  `
+  `,
 });
 
 const alternateUrl = '/graphql-alt';
 useGraphQL(test, { url: alternateUrl });
 
 test.before(() => {
-  setupGraphQL((test) => {
+  setupGraphQL(() => {
     const app = new Koa();
     graphql.applyMiddleware({ app, path: alternateUrl });
     return app;

@@ -1,7 +1,7 @@
 import AWS from 'aws-sdk';
 import NestedError from 'nested-error-stacks';
 import promiseRetry from 'promise-retry';
-import {ServiceConfigurationOptions} from 'aws-sdk/lib/service';
+import { ServiceConfigurationOptions } from 'aws-sdk/lib/service';
 import { getLogger } from './logging';
 
 const logger = getLogger('awsUtils');
@@ -21,7 +21,7 @@ export function buildConfigFromConnection (connection: AwsUtilsConnection): Conf
     credentials: new AWS.Credentials(connection.accessKey, connection.secretAccessKey),
     endpoint: connection.url,
     region: connection.region,
-    maxRetries: 10
+    maxRetries: 10,
   };
 }
 
@@ -37,14 +37,14 @@ export interface ConnectionAndConfig {
 
 export function buildConnectionAndConfig ({
   url,
-  cleanup = () => undefined
+  cleanup = () => undefined,
 }: BuildConnectionAndConfigOptions): ConnectionAndConfig {
   const connection: AwsUtilsConnection = {
     url,
     cleanup,
     region: process.env.AWS_REGION || 'us-east-1',
     accessKey: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
   };
   const config = buildConfigFromConnection(connection);
   return { connection, config };
@@ -52,13 +52,13 @@ export function buildConnectionAndConfig ({
 
 export async function waitForReady (awsType: string, retryFunc: () => Promise<any>) {
   const start = Date.now();
-  await promiseRetry(async function (retry, retryNumber) {
+  await promiseRetry(async (retry, retryNumber) => {
     try {
       await retryFunc();
-    } catch (error) {
-      const message = `${awsType} is still not ready after ${retryNumber} connection attempts. Running for ${Date.now() - start}`
+    } catch (error: any) {
+      const message = `${awsType} is still not ready after ${retryNumber} connection attempts. Running for ${Date.now() - start}`;
       logger.debug(message, error);
-      retry(new NestedError(message, error));
+      retry(new NestedError(message, error as Error));
     }
   }, { maxTimeout: 1000, retries: 20 });
 }

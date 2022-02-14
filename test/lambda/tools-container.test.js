@@ -8,7 +8,7 @@ useLambda(test);
 
 useNewContainer({
   handler: 'bundled_service.handler',
-  mountpoint: FIXTURES_DIRECTORY
+  mountpoint: FIXTURES_DIRECTORY,
 });
 
 test('The helper client can create a new container', async (test) => {

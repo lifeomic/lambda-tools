@@ -11,21 +11,21 @@ test.before(() => {
       AttributeDefinitions: [
         {
           AttributeName: 'id',
-          AttributeType: 'S'
-        }
+          AttributeType: 'S',
+        },
       ],
       KeySchema: [
         {
           AttributeName: 'id',
-          KeyType: 'HASH'
-        }
+          KeyType: 'HASH',
+        },
       ],
       ProvisionedThroughput: {
         ReadCapacityUnits: 1,
-        WriteCapacityUnits: 1
+        WriteCapacityUnits: 1,
       },
-      TableName: 'test-table'
-    }
+      TableName: 'test-table',
+    },
   ]);
 });
 
@@ -44,23 +44,23 @@ test('The helper provides database clients and tables', async (test) => {
 
   const item = {
     id: 'test',
-    message: 'hello'
+    message: 'hello',
   };
 
   await documentClient.put({
     Item: item,
-    TableName: tableName
+    TableName: tableName,
   }).promise();
 
   const result = await documentClient.get({
     Key: { id: 'test' },
-    TableName: tableName
+    TableName: tableName,
   }).promise();
 
   test.deepEqual(result.Item, item);
 });
 
-test('The helper includes a unique identifier in the table names', async (test) => {
+test('The helper includes a unique identifier in the table names', (test) => {
   const { tableNames, uniqueIdentifier } = test.context.dynamodb;
   const tableName = tableNames['test-table'];
 
@@ -69,14 +69,14 @@ test('The helper includes a unique identifier in the table names', async (test) 
   test.is(tableName, `test-table-${uniqueIdentifier}`);
 });
 
-test('The helper sets default configuration environment variables', async (test) => {
+test('The helper sets default configuration environment variables', (test) => {
   test.truthy(process.env.AWS_ACCESS_KEY_ID);
   test.truthy(process.env.AWS_SECRET_ACCESS_KEY);
   test.truthy(process.env.AWS_REGION);
   test.truthy(process.env.DYNAMODB_ENDPOINT);
 });
 
-test('The helper provides a config object', async (test) => {
+test('The helper provides a config object', (test) => {
   const { config } = test.context.dynamodb;
 
   test.true(config.credentials instanceof AWS.Credentials);

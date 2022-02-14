@@ -7,13 +7,13 @@ const { PassThrough } = require('stream');
 const { pullImage, imageExists } = require('../../src/docker');
 const TEST_IMAGE = 'alpine:3.5';
 
-test.beforeEach(t => {
+test.beforeEach((t) => {
   const logger = getLogger('docker');
 
   Object.assign(t.context, { logger });
 });
 
-test.afterEach(t => {
+test.afterEach((t) => {
   const { logger } = t.context;
   if (logger.debug.restore) {
     logger.debug.restore();
@@ -73,8 +73,8 @@ test.serial('will provide credentials from env variables when pulling an image f
     sinon.assert.calledWithExactly(dockerStub, TEST_IMAGE, {
       authconfig: {
         username: 'docker_user',
-        password: 'docker_pass'
-      }
+        password: 'docker_pass',
+      },
     });
   } finally {
     delete process.env.DOCKER_HUB_USER;

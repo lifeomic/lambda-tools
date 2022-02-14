@@ -15,7 +15,7 @@ test.afterEach((test) => {
   test.context.sandbox.restore();
 });
 
-test.serial('Cleans up the network and container on failure after start', async function (test) {
+test.serial('Cleans up the network and container on failure after start', async (test) => {
   const error = new Error('Failure to start');
   const originalStart = Docker.Container.prototype.start;
   test.context.sandbox.stub(Docker.Container.prototype, 'start').callsFake(async function () {
@@ -26,7 +26,7 @@ test.serial('Cleans up the network and container on failure after start', async 
   const networkRemoveSpy = test.context.sandbox.spy(Docker.Network.prototype, 'remove');
 
   const create = lambda.createLambdaExecutionEnvironment({
-    mountpoint: path.join(FIXTURES_DIRECTORY, 'build')
+    mountpoint: path.join(FIXTURES_DIRECTORY, 'build'),
   });
 
   await test.throwsAsync(() => create, { message: error.message });
@@ -35,12 +35,12 @@ test.serial('Cleans up the network and container on failure after start', async 
   sinon.assert.calledOnce(networkRemoveSpy);
 });
 
-test.serial('Sends AWS_XRAY_CONTEXT_MISSING var to createContainer with no value when it is null (removing env vars)', async function (test) {
+test.serial('Sends AWS_XRAY_CONTEXT_MISSING var to createContainer with no value when it is null (removing env vars)', async (test) => {
   const createSpy = test.context.sandbox.spy(Docker.prototype, 'createContainer');
 
   const env = await lambda.createLambdaExecutionEnvironment({
     environment: { AWS_XRAY_CONTEXT_MISSING: null },
-    mountpoint: path.join(FIXTURES_DIRECTORY, 'build')
+    mountpoint: path.join(FIXTURES_DIRECTORY, 'build'),
   });
 
   try {
@@ -68,7 +68,7 @@ test.serial('Cleanups up temp directory when unzipping fails', async (test) => {
 
   const failingCreate = lambda.createLambdaExecutionEnvironment({
     environment: { AWS_XRAY_CONTEXT_MISSING: null },
-    zipfile: path.join(FIXTURES_DIRECTORY, 'bundled_service.zip')
+    zipfile: path.join(FIXTURES_DIRECTORY, 'bundled_service.zip'),
   });
 
   await test.throwsAsync(() => failingCreate);

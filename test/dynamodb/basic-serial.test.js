@@ -11,21 +11,21 @@ test.before(() => {
       AttributeDefinitions: [
         {
           AttributeName: 'id',
-          AttributeType: 'S'
-        }
+          AttributeType: 'S',
+        },
       ],
       KeySchema: [
         {
           AttributeName: 'id',
-          KeyType: 'HASH'
-        }
+          KeyType: 'HASH',
+        },
       ],
       ProvisionedThroughput: {
         ReadCapacityUnits: 1,
-        WriteCapacityUnits: 1
+        WriteCapacityUnits: 1,
       },
-      TableName: 'test-table'
-    }
+      TableName: 'test-table',
+    },
   ]);
 });
 
@@ -46,23 +46,23 @@ test.serial('The helper provides database clients and tables', async (test) => {
 
   const item = {
     id: 'test',
-    message: 'hello'
+    message: 'hello',
   };
 
   await documentClient.put({
     Item: item,
-    TableName: tableName
+    TableName: tableName,
   }).promise();
 
   const result = await documentClient.get({
     Key: { id: 'test' },
-    TableName: tableName
+    TableName: tableName,
   }).promise();
 
   test.deepEqual(result.Item, item);
 });
 
-test.serial('The helper does not include a unique identifier in the table names', async (test) => {
+test.serial('The helper does not include a unique identifier in the table names', (test) => {
   const { tableNames, uniqueIdentifier } = test.context.dynamodb;
   const tableName = tableNames['test-table'];
 

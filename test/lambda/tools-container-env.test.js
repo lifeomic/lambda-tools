@@ -8,10 +8,10 @@ useLambda(test);
 useNewContainer({
   environment: {
     'OTHER_VARIABLE': 2,
-    'TEST_PARAMETER': 'test value'
+    'TEST_PARAMETER': 'test value',
   },
   handler: 'bundled_service.handler',
-  mountpoint: FIXTURES_DIRECTORY
+  mountpoint: FIXTURES_DIRECTORY,
 });
 
 test('Managed containers can use a custom environment', async (test) => {

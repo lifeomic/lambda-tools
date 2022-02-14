@@ -11,7 +11,7 @@ const versions = [
   '0.11.6',
   '0.12.20',
   '0.13.2',
-  '0.14.0'
+  '0.14.0',
 ] as const;
 const docker = new Docker();
 
@@ -27,12 +27,12 @@ test.before(async () => {
       HostConfig: {
         AutoRemove: true,
         PublishAllPorts: true,
-        Binds: [ '/var/run/docker.sock:/var/run/docker.sock' ]
+        Binds: ['/var/run/docker.sock:/var/run/docker.sock'],
       },
       Image: image,
       Env: [
-        `SERVICES=s3`,
-      ]
+        'SERVICES=s3',
+      ],
     });
 
     await container.start();
@@ -67,13 +67,13 @@ versions.forEach((versionTag) => {
   });
 });
 
-test.serial(`dockerLocalstackReady no matching images provided`, async (t) => {
+test.serial('dockerLocalstackReady no matching images provided', async (t) => {
   await t.notThrowsAsync(dockerLocalstackReady({ name: uuid() }));
 });
 
-test(`dockerLocalstackReady will throw an exception if missing parameters`, async (t) => {
+test('dockerLocalstackReady will throw an exception if missing parameters', async (t) => {
   // @ts-expect-error this is to satisfy plain javascript, where the compiler won't complain.
   await t.throwsAsync(dockerLocalstackReady({}), {
-    message: '\'containerId\', \'name\' or \'version\' is required'
+    message: '\'containerId\', \'name\' or \'version\' is required',
   });
 });

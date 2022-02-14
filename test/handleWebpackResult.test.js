@@ -6,7 +6,7 @@ test('Throw error if webpack result hasErrors() returns true', (test) => {
     handleWebpackResults({
       hasErrors: () => {
         return true;
-      }
+      },
     });
   });
 

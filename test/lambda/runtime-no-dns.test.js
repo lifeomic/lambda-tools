@@ -14,7 +14,7 @@ test.serial.before(async () => {
   const buildResults = await build({
     entrypoint: path.join(FIXTURES_DIRECTORY, 'runtime_dns.js'),
     outputPath: BUILD_DIRECTORY,
-    serviceName: 'runtime-dns'
+    serviceName: 'runtime-dns',
   });
 
   if (buildResults.hasErrors()) {
@@ -25,13 +25,13 @@ test.serial.before(async () => {
   useNewContainer({
     handler: 'runtime_dns.handler',
     image: 'lambci/lambda:nodejs12.x',
-    mountpoint: BUILD_DIRECTORY
+    mountpoint: BUILD_DIRECTORY,
   });
 });
 
 useLambda(test);
 
-test.after.always(async (test) => fs.remove(BUILD_DIRECTORY));
+test.after.always(() => fs.remove(BUILD_DIRECTORY));
 
 test.serial('DNS lookups are not retried by default', async (test) => {
   // The test assertions are part of the lambda fixture

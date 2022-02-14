@@ -22,14 +22,13 @@ test.serial.before(async () => {
   await buildLambda(BUILD_DIRECTORY, `${handlerName}.ts`, { zip: true });
 });
 
-test.serial.beforeEach(async t => {
+test.serial.beforeEach(async (t) => {
   const { kinesis: { streamNames }, localStack: { services: { lambda } } } = t.context;
   const secondStream = streamNames['second-stream'];
 
   await lambda.client.createFunction({
     Code: {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
-      ZipFile: fs.readFileSync(path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`))
+      ZipFile: fs.readFileSync(path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`)),
     },
     FunctionName: handlerName,
     Runtime: 'nodejs12.x',
@@ -42,37 +41,37 @@ test.serial.beforeEach(async t => {
         NEXT_KINESIS_STREAM_NAME: secondStream,
         KINESIS_ENDPOINT: process.env.KINESIS_ENDPOINT,
         AWS_SECRET_ACCESS_KEY: uuid(),
-        AWS_ACCESS_KEY_ID: uuid()
-      }
-    }
+        AWS_ACCESS_KEY_ID: uuid(),
+      },
+    },
   }).promise();
 
   Object.assign(t.context, {
     firstStream: streamNames['first-stream'],
-    secondStream
+    secondStream,
   });
 });
 
-test.afterEach.always(async t => {
+test.afterEach.always(async (t) => {
   const { localStack: { services: { lambda } } } = t.context;
   await lambda.client.deleteFunction({ FunctionName: handlerName }).promise();
 });
 
-test.after.always(async t => {
+test.after.always(async () => {
   await fs.remove(BUILD_DIRECTORY);
 });
 
 function formatRecords (StreamName, records) {
   return {
-    Records: records.map(record => ({
+    Records: records.map((record) => ({
       Data: Buffer.from(JSON.stringify(record)),
-      PartitionKey: uuid()
+      PartitionKey: uuid(),
     })),
-    StreamName
+    StreamName,
   };
 }
 
-test.serial('can iterate through stream to handler', async t => {
+test.serial('can iterate through stream to handler', async (t) => {
   const { kinesis: { kinesisClient }, firstStream, secondStream, localStack: { services: { lambda: { client } } } } = t.context;
   const expected = [...Array(20)].map(() => ({ key: uuid() }));
 
@@ -82,11 +81,11 @@ test.serial('can iterate through stream to handler', async t => {
 
   await kinesisLambdaTrigger({
     kinesisIterator: firstIterator,
-    lambdaHandler: async (event) => client.invoke({
+    lambdaHandler: (event) => client.invoke({
       FunctionName: handlerName,
       InvocationType: 'RequestResponse',
-      Payload: Buffer.from(JSON.stringify(event))
-    }).promise()
+      Payload: Buffer.from(JSON.stringify(event)),
+    }).promise(),
   });
   await secondIterator.next();
   const actual = await secondIterator.records.map(({ Data }) => {
@@ -97,7 +96,7 @@ test.serial('can iterate through stream to handler', async t => {
   sinon.assert.match(actual, expected);
 });
 
-test.serial('can get stream records using getStreamRecords function', async t => {
+test.serial('can get stream records using getStreamRecords function', async (t) => {
   const { kinesis: { kinesisClient }, firstStream } = t.context;
   const expected = [...Array(20)].map(() => ({ key: uuid() }));
 
@@ -112,7 +111,7 @@ test.serial('can get stream records using getStreamRecords function', async t =>
   sinon.assert.match(actual, expected);
 });
 
-test.serial('can access the response from getRecords', async t => {
+test.serial('can access the response from getRecords', async (t) => {
   const { kinesis: { kinesisClient }, firstStream } = t.context;
   const firstIterator = await KinesisIterator.newIterator({ kinesisClient, streamName: firstStream });
   await firstIterator.next();

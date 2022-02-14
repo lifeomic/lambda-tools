@@ -14,12 +14,12 @@ const { getHostAddress, ensureImage } = require('../src/docker');
 const MOCKSERVER_IMAGE = 'jamesdbloom/mockserver:mockserver-5.5.1';
 
 async function waitForMockServerToBeReady (mockServerClient) {
-  await promiseRetry(async function (retry, retryNumber) {
+  await promiseRetry(async (retry, retryNumber) => {
     try {
       await mockServerClient.retrieveActiveExpectations()
         .then(
           (success) => Promise.resolve(success),
-          (error) => { throw error; }
+          (error) => { throw error; },
         );
     } catch (error) {
       retry(new NestedError(`MockServer is still not ready after ${retryNumber} connection attempts`, error));
@@ -38,10 +38,10 @@ test.before(async () => {
   const container = await docker.createContainer({
     HostConfig: {
       AutoRemove: true,
-      PublishAllPorts: true
+      PublishAllPorts: true,
     },
     ExposedPorts: { [exposedPort]: {} },
-    Image: MOCKSERVER_IMAGE
+    Image: MOCKSERVER_IMAGE,
   });
 
   await container.start();
@@ -51,7 +51,6 @@ test.before(async () => {
 
   // The `exposedPort` value is a constant in this function. That's not
   // a security risk
-  // eslint-disable-next-line security/detect-object-injection
   const port = containerData.NetworkSettings.Ports[exposedPort][0].HostPort;
 
   const msClient = mockServerClient(host, port);
@@ -60,21 +59,21 @@ test.before(async () => {
   moduleContext = { host, port, mockServerClient: msClient, container };
 });
 
-test.beforeEach(async (test) => {
+test.beforeEach((test) => {
   const { host, port } = moduleContext;
   const lambda = new AWS.Lambda({
     credentials: new AWS.Credentials('dummy-access-key', 'dummy-key-secret'),
     region: 'us-east-1',
-    endpoint: `http://${host}:${port}/lambda`
+    endpoint: `http://${host}:${port}/lambda`,
   });
 
   test.context = {
     lambda,
-    mockServerClient: moduleContext.mockServerClient
+    mockServerClient: moduleContext.mockServerClient,
   };
 });
 
-test.after.always(async (test) => {
+test.after.always(async () => {
   if (moduleContext) {
     await moduleContext.container.stop();
   }
@@ -90,7 +89,7 @@ test('Lambda function invocations can be mocked', async (test) => {
   // Verify that invocations fail before mocking
   const preMockInvoke = lambda.invoke({
     FunctionName: functionName,
-    Payload: JSON.stringify(expectedRequestBody)
+    Payload: JSON.stringify(expectedRequestBody),
   }).promise();
   await test.throwsAsync(() => preMockInvoke);
 
@@ -99,12 +98,12 @@ test('Lambda function invocations can be mocked', async (test) => {
   // Verify that invocations succeed after mocking
   const response = await lambda.invoke({
     FunctionName: functionName,
-    Payload: JSON.stringify(expectedRequestBody)
+    Payload: JSON.stringify(expectedRequestBody),
   }).promise();
 
   test.deepEqual(response, {
     StatusCode: 200,
-    Payload: JSON.stringify(expectedResponse)
+    Payload: JSON.stringify(expectedResponse),
   });
 });
 
@@ -118,7 +117,7 @@ test('Lambda function invocations mocking supports times argument (times 1)', as
   // Verify that invocations fail before mocking
   const preMockInvoke = lambda.invoke({
     FunctionName: functionName,
-    Payload: JSON.stringify(expectedRequestBody)
+    Payload: JSON.stringify(expectedRequestBody),
   }).promise();
   await test.throwsAsync(() => preMockInvoke);
 
@@ -127,18 +126,18 @@ test('Lambda function invocations mocking supports times argument (times 1)', as
   // Verify that first invocation succeeds after mocking
   const response = await lambda.invoke({
     FunctionName: functionName,
-    Payload: JSON.stringify(expectedRequestBody)
+    Payload: JSON.stringify(expectedRequestBody),
   }).promise();
 
   test.deepEqual(response, {
     StatusCode: 200,
-    Payload: JSON.stringify(expectedResponse)
+    Payload: JSON.stringify(expectedResponse),
   });
 
   // Verify that subsequent invocations fail
   const postMockInvoke = lambda.invoke({
     FunctionName: functionName,
-    Payload: JSON.stringify(expectedRequestBody)
+    Payload: JSON.stringify(expectedRequestBody),
   }).promise();
   await test.throwsAsync(() => postMockInvoke);
 });
@@ -153,7 +152,7 @@ test('Lambda function invocations mocking supports times argument (unlimited tim
   // Verify that invocations fail before mocking
   const preMockInvoke = lambda.invoke({
     FunctionName: functionName,
-    Payload: JSON.stringify(expectedRequestBody)
+    Payload: JSON.stringify(expectedRequestBody),
   }).promise();
   await test.throwsAsync(() => preMockInvoke);
 
@@ -161,16 +160,16 @@ test('Lambda function invocations mocking supports times argument (unlimited tim
   // verify that multiple invocations don't fail if times argument is not provided when mocking
   await lambda.invoke({
     FunctionName: functionName,
-    Payload: JSON.stringify(expectedRequestBody)
+    Payload: JSON.stringify(expectedRequestBody),
   }).promise();
   const response = await lambda.invoke({
     FunctionName: functionName,
-    Payload: JSON.stringify(expectedRequestBody)
+    Payload: JSON.stringify(expectedRequestBody),
   }).promise();
 
   test.deepEqual(response, {
     StatusCode: 200,
-    Payload: JSON.stringify(expectedResponse)
+    Payload: JSON.stringify(expectedResponse),
   });
 });
 
@@ -186,12 +185,12 @@ test('Lambda function invocations can be mocked without specifying the request b
   // Verify that invocations succeed after mocking
   const response = await lambda.invoke({
     FunctionName: functionName,
-    Payload: JSON.stringify(expectedRequestBody)
+    Payload: JSON.stringify(expectedRequestBody),
   }).promise();
 
   test.deepEqual(response, {
     StatusCode: 200,
-    Payload: JSON.stringify(expectedResponse)
+    Payload: JSON.stringify(expectedResponse),
   });
 });
 
@@ -220,7 +219,7 @@ test('Lambda function invocations can be verified', async (test) => {
   // Invoke so that we can retest verify after invocation
   await lambda.invoke({
     FunctionName: functionName,
-    Payload: JSON.stringify(expectedRequestBody)
+    Payload: JSON.stringify(expectedRequestBody),
   }).promise();
 
   // Verifying one invocation should succeed now

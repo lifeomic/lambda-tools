@@ -4,7 +4,7 @@
   const tag = '[lambda-tools]';
 
   const addAllEventHandlers = (handlers) => {
-    for (const [ event, handler ] of Object.entries(handlers)) {
+    for (const [event, handler] of Object.entries(handlers)) {
       process.prependListener(event, handler);
     }
   };
@@ -13,7 +13,7 @@
   const log = (...message) => console.error(tag, ...message);
 
   const removeAllEventHandlers = (handlers) => {
-    for (const [ event, handler ] of Object.entries(handlers)) {
+    for (const [event, handler] of Object.entries(handlers)) {
       process.removeListener(event, handler);
     }
   };
@@ -36,7 +36,7 @@
       uncaughtException: (error) => logWithContext('Uncaught exception', error),
       // if the unhandled rejection is on the critical path for the handler then
       // the event loop should drain leading to the 'beforeExit' case
-      unhandledRejection: (reason, promise) => logWithContext('Unhandled rejection at:', promise, 'reason:', reason)
+      unhandledRejection: (reason, promise) => logWithContext('Unhandled rejection at:', promise, 'reason:', reason),
     };
 
     const completions = [];
@@ -64,8 +64,8 @@
 
     if (returned && typeof returned.then === 'function') {
       returned.then(
-        function (result) { finish(null, result); },
-        function (error) { finish(error); }
+        (result) => { finish(null, result); },
+        (error) => { finish(error); },
       );
     }
   };
@@ -77,7 +77,6 @@
   }
 
   // The handler name value comes from the Lambda runtime
-  // eslint-disable-next-line security/detect-object-injection
   const handler = module.exports[handlerName];
   if (typeof handler !== 'function') {
     log('Handler is not a function. Not patching handler invocation.');
@@ -85,6 +84,5 @@
   }
 
   // The handler name value comes from the Lambda runtime
-  // eslint-disable-next-line security/detect-object-injection
   module.exports[handlerName] = wrapHandler(handler);
 })();

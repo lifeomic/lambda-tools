@@ -31,9 +31,9 @@ test.serial('On Mac 127.0.0.1 is always returned', async (test) => {
     '../../src/docker',
     {
       os: {
-        type: () => 'Darwin'
-      }
-    }
+        type: () => 'Darwin',
+      },
+    },
   );
 
   const address = await getHostAddress();
@@ -46,9 +46,9 @@ test.serial('On other platforms a "real" address is returned', async (test) => {
     '../../src/docker',
     {
       os: {
-        type: () => 'Linux'
-      }
-    }
+        type: () => 'Linux',
+      },
+    },
   );
 
   const address = await getHostAddress();
@@ -56,6 +56,6 @@ test.serial('On other platforms a "real" address is returned', async (test) => {
 
   sinon.assert.calledOnce(test.context.createContainer);
   sinon.assert.calledWithExactly(test.context.createContainer, sinon.match({
-    HostConfig: sinon.match({ NetworkMode: 'host' })
+    HostConfig: sinon.match({ NetworkMode: 'host' }),
   }));
 });

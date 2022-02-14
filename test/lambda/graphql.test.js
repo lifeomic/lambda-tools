@@ -16,7 +16,7 @@ useLambda(test);
 test.before(async () => {
   const buildResults = await build({
     entrypoint: path.join(FIXTURES_DIRECTORY, 'lambda_graphql.js'),
-    outputPath: buildDirectory
+    outputPath: buildDirectory,
   });
 
   if (buildResults.hasErrors()) {
@@ -45,7 +45,7 @@ test.after.always(async () => {
 
 test('The helper client can invoke graphql lambda services', async (test) => {
   const config = {
-    headers: { 'test-header': 'test value' }
+    headers: { 'test-header': 'test value' },
   };
 
   const query = `
@@ -55,7 +55,7 @@ test('The helper client can invoke graphql lambda services', async (test) => {
   `;
 
   const variables = {
-    prompt: 'value'
+    prompt: 'value',
   };
 
   const response = await test.context.lambda.graphql('/', query, variables, config);

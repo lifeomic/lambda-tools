@@ -5,12 +5,12 @@ const sinon = require('sinon');
 
 const TEST_IMAGE = 'alpine:3.6';
 
-test.before(async function () {
+test.before(async () => {
   const docker = new Docker();
   await ensureImage(docker, TEST_IMAGE);
 });
 
-test('does not call pullImage if listImages includes the image already', async function (test) {
+test('does not call pullImage if listImages includes the image already', async () => {
   // Create a Docker instance and watch the pull method
   const docker = new Docker();
   sinon.spy(docker, 'pull');
@@ -25,11 +25,11 @@ function newImmediatelyEndingStream () {
   return {
     pipe: function (stream) {
       stream.emit('end');
-    }
+    },
   };
 }
 
-test('calls pullImage if listImages does not include the image', async function (test) {
+test('calls pullImage if listImages does not include the image', async () => {
   // Create a Docker instance and watch the pull method
   const docker = new Docker();
   sinon.stub(docker, 'pull')

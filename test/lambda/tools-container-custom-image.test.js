@@ -7,7 +7,7 @@ const { FIXTURES_DIRECTORY } = require('../helpers/lambda');
 
 let createContainer = null;
 
-test.before((test) => {
+test.before(() => {
   createContainer = sinon.spy(Docker.prototype, 'createContainer');
 });
 
@@ -16,10 +16,10 @@ useLambda(test);
 useNewContainer({
   handler: 'bundled_service.handler',
   image: 'lambci/lambda:nodejs12.x',
-  mountpoint: FIXTURES_DIRECTORY
+  mountpoint: FIXTURES_DIRECTORY,
 });
 
-test.after.always((test) => {
+test.after.always(() => {
   createContainer.restore();
 });
 
@@ -31,7 +31,7 @@ test('Managed containers can use a custom image', async (test) => {
   sinon.assert.calledWithExactly(
     createContainer,
     sinon.match({
-      Image: 'lambci/lambda:nodejs12.x'
-    })
+      Image: 'lambci/lambda:nodejs12.x',
+    }),
   );
 });

@@ -15,10 +15,10 @@ async function buildDerivativeImage () {
     await docker.buildImage(
       {
         context: path.join(FIXTURES_DIRECTORY, 'lambci-derivative'),
-        src: [ 'Dockerfile' ]
+        src: ['Dockerfile'],
       },
-      { t: name }
-    )
+      { t: name },
+    ),
   );
 
   return name;

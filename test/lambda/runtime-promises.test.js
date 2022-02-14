@@ -14,7 +14,7 @@ test.serial.before(async () => {
   const buildResults = await build({
     entrypoint: path.join(FIXTURES_DIRECTORY, 'runtime_promises.js'),
     outputPath: BUILD_DIRECTORY,
-    serviceName: 'runtime-promises'
+    serviceName: 'runtime-promises',
   });
 
   if (buildResults.hasErrors()) {
@@ -27,15 +27,15 @@ test.serial.before(async () => {
     // Using Node 12.x gives a more thorough test since this isn't normally
     // supported.
     image: 'lambci/lambda:nodejs12.x',
-    mountpoint: BUILD_DIRECTORY
+    mountpoint: BUILD_DIRECTORY,
   });
 });
 
 useLambda(test);
 
-test.after.always(async (test) => fs.remove(BUILD_DIRECTORY));
+test.after.always(() => fs.remove(BUILD_DIRECTORY));
 
-test.serial(`A lambda handler can return a promise`, async (test) => {
+test.serial('A lambda handler can return a promise', async (test) => {
   const result = await test.context.lambda.raw({}, {});
   test.is(result, 'hello from the promised land!');
 });

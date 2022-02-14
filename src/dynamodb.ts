@@ -1,8 +1,8 @@
 import assert from 'assert';
 import {
   DynamoDB,
-  DynamoDBStreams
-} from 'aws-sdk'
+  DynamoDBStreams,
+} from 'aws-sdk';
 import cloneDeep from 'lodash/cloneDeep';
 import fromPairs from 'lodash/fromPairs';
 import Docker from 'dockerode';
@@ -13,17 +13,18 @@ import {
   AwsUtilsConnection,
   ConnectionAndConfig,
   ConfigurationOptions,
-} from "./utils/awsUtils";
-import { TestInterface } from "ava";
-import { Response } from "aws-sdk/lib/response";
+} from './utils/awsUtils';
+import { TestInterface } from 'ava';
+import { Response } from 'aws-sdk/lib/response';
 
-const { getHostAddress, ensureImage } = require('./docker');
-const { buildConnectionAndConfig, waitForReady } = require('./utils/awsUtils');
+import { getHostAddress, ensureImage } from './docker';
+import { buildConnectionAndConfig, waitForReady } from './utils/awsUtils';
 
 const DYNAMODB_IMAGE_BASE = 'cnadiminti/dynamodb-local';
 const DYNAMODB_IMAGE_VERSION = '2020-09-11';
 
-const logger = require('./utils/logging').getLogger('dynamodb');
+import { getLogger } from './utils/logging';
+const logger = getLogger('dynamodb');
 
 export type MappedTableNames<KeyArray extends string[]> = {[Key in KeyArray[number]]: string}
 
@@ -72,7 +73,7 @@ function getTableName (tableName: string, uniqueIdentifier?: string): string {
 
 function buildTableNameMapping (
   schemas: DynamoDB.CreateTableInput[],
-  uniqueIdentifier?: string
+  uniqueIdentifier?: string,
 ): Record<string, string> {
   return fromPairs(schemas.map(({ TableName }) => {
     return [TableName, getTableName(TableName, uniqueIdentifier)];
@@ -103,11 +104,11 @@ export async function destroyTables (
   const schemaTableNames = schemas
     .map(({ TableName }) => getTableName(TableName, uniqueIdentifier));
   const tablesToDestroy = TableNames!
-    .filter(name => schemaTableNames.includes(name));
+    .filter((name) => schemaTableNames.includes(name));
 
   await pQueue.addAll(
     tablesToDestroy
-      .map(TableName => async () => {
+      .map((TableName) => async () => {
         try {
           const deleteRequest = dynamoClient.deleteTable({ TableName });
 
@@ -118,7 +119,7 @@ export async function destroyTables (
           } catch (e) {
             if (e.code === 'TimeoutError') {
               await waitForReady(`Deleted table ${TableName}`, () =>
-                assertTableDoesNotExist(dynamoClient, TableName)
+                assertTableDoesNotExist(dynamoClient, TableName),
               );
             } else {
               failedDeletions.push(TableName);
@@ -129,7 +130,7 @@ export async function destroyTables (
           failedDeletions.push(TableName);
           logger.error(`Failed to destroy table "${TableName}"`, JSON.stringify({ err }, null, 2));
         }
-      })
+      }),
   );
 
   if (failedDeletions.length) {
@@ -144,7 +145,7 @@ export async function createTables (
 ) {
   const failedProvisons: string[] = [];
   await pQueue.addAll(
-    schemas.map(table => async () => {
+    schemas.map((table) => async () => {
       const newTable = cloneDeep(table);
       const TableName = getTableName(newTable.TableName, uniqueIdentifier);
       newTable.TableName = TableName;
@@ -161,7 +162,7 @@ export async function createTables (
             // `dynamoClient.waitFor('tableExists',` because the waitFor
             // behavior is hardcoded to delay by 20 seconds and retry 25 times
             await waitForReady(`Created table ${TableName}`, () =>
-              dynamoClient.describeTable({ TableName }).promise()
+              dynamoClient.describeTable({ TableName }).promise(),
             );
           } else {
             failedProvisons.push(TableName);
@@ -172,14 +173,14 @@ export async function createTables (
         failedProvisons.push(TableName);
         logger.error(`Failed to create table "${TableName}"`, JSON.stringify({ err }, null, 2));
       }
-    })
+    }),
   );
 
   if (failedProvisons.length) {
     try {
       await destroyTables(dynamoClient, uniqueIdentifier, schemas);
     } catch (err) {
-      logger.error(`Failed to destroy tables after error`, err);
+      logger.error('Failed to destroy tables after error', err);
     }
     throw new Error(`Failed to create tables: ${failedProvisons.join(', ')}`);
   }
@@ -202,7 +203,7 @@ export async function launchDynamoContainer (
     inMemory = false,
     dynamoDbImageBase = DYNAMODB_IMAGE_BASE,
     dynamoDbImageVersion = DYNAMODB_IMAGE_VERSION,
-  }: DynamoDBTestOptions = {}
+  }: DynamoDBTestOptions = {},
 ): Promise<LaunchDynamoContainerResult> {
   const Image = `${dynamoDbImageBase}:${dynamoDbImageVersion}`;
   await ensureImage(docker, Image);
@@ -210,11 +211,11 @@ export async function launchDynamoContainer (
   const container = await docker.createContainer({
     HostConfig: {
       AutoRemove: true,
-      PublishAllPorts: true
+      PublishAllPorts: true,
     },
     ExposedPorts: { '8000/tcp': {} },
     Image,
-    ...(inMemory ? { Cmd: ['-inMemory', '-sharedDb'] } : {})
+    ...(inMemory ? { Cmd: ['-inMemory', '-sharedDb'] } : {}),
   });
 
   await container.start();
@@ -250,7 +251,7 @@ export async function getConnection (opts?: DynamoDBTestOptions): Promise<Connec
     cleanup: () => {
       environment.restore();
       return stopContainer();
-    }
+    },
   });
 
   const dynamoClient = new DynamoDB(config);
@@ -268,7 +269,7 @@ export async function getConnection (opts?: DynamoDBTestOptions): Promise<Connec
  */
 export function dynamoDBTestHooks <TableNames extends string[]>(
   useUniqueTables = false,
-  opts?: DynamoDBTestOptions
+  opts?: DynamoDBTestOptions,
 ) {
   let connection: AwsUtilsConnection | undefined;
   let config: ConfigurationOptions | undefined;
@@ -292,7 +293,7 @@ export function dynamoDBTestHooks <TableNames extends string[]>(
       streamsClient,
       tableNames: buildTableNameMapping(schemas, uniqueIdentifier) as MappedTableNames<TableNames>,
       uniqueIdentifier,
-      config: config!
+      config: config!,
     };
 
     await createTables(dynamoClient, uniqueIdentifier, schemas);
@@ -316,7 +317,7 @@ export function dynamoDBTestHooks <TableNames extends string[]>(
   }
 
   return {
-    beforeAll, beforeEach, afterEach, afterAll
+    beforeAll, beforeEach, afterEach, afterAll,
   };
 }
 
@@ -330,11 +331,11 @@ export function dynamoDBTestHooks <TableNames extends string[]>(
 export function useDynamoDB (
   anyTest: TestInterface,
   useUniqueTables?: boolean,
-  opts?: DynamoDBTestOptions
+  opts?: DynamoDBTestOptions,
 ): void {
   // The base ava test doesn't have context, and has to be cast.
   // This allows clients to send in the default ava export, and they can cast later or before.
-  const test = anyTest as TestInterface<DynamoDBTestContext<any>>
+  const test = anyTest as TestInterface<DynamoDBTestContext<any>>;
   const testHooks = dynamoDBTestHooks(useUniqueTables, opts);
 
   test.serial.before(testHooks.beforeAll);
@@ -343,7 +344,7 @@ export function useDynamoDB (
     test.context.dynamodb = await testHooks.beforeEach();
   });
 
-  test.serial.afterEach.always(async test => {
+  test.serial.afterEach.always(async (test) => {
     await testHooks.afterEach(test.context.dynamodb);
   });
 

@@ -17,21 +17,20 @@ const handlerName = 'ts_lambda_kinesisHandler';
 
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());
 
-const sleep = seconds => new Promise(resolve => setTimeout(resolve, seconds * 1000));
+const sleep = (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
 test.before(async () => {
   await buildLambda(BUILD_DIRECTORY, `${handlerName}.ts`, { zip: true });
 });
 
-test.serial.beforeEach(async t => {
+test.serial.beforeEach(async (t) => {
   const { localStack: { services: { lambda, kinesis } } } = t.context;
 
   await createStreams(kinesis.client);
 
   await lambda.client.createFunction({
     Code: {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
-      ZipFile: fs.readFileSync(path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`))
+      ZipFile: fs.readFileSync(path.join(BUILD_DIRECTORY, `${handlerName}.js.zip`)),
     },
     FunctionName: handlerName,
     Runtime: 'nodejs12.x',
@@ -44,9 +43,9 @@ test.serial.beforeEach(async t => {
         NEXT_KINESIS_STREAM_NAME: streamNames[1],
         KINESIS_ENDPOINT: kinesis.connection.url,
         AWS_SECRET_ACCESS_KEY: uuid(),
-        AWS_ACCESS_KEY_ID: uuid()
-      }
-    }
+        AWS_ACCESS_KEY_ID: uuid(),
+      },
+    },
   }).promise();
 
   const { StreamDescription: { StreamARN } } = await kinesis.client.describeStream({ StreamName: streamNames[0] }).promise();
@@ -56,31 +55,31 @@ test.serial.beforeEach(async t => {
     FunctionName: handlerName,
     BatchSize: 10,
     Enabled: true,
-    StartingPosition: 'TRIM_HORIZON'
+    StartingPosition: 'TRIM_HORIZON',
   }).promise();
 });
 
-test.afterEach(async t => {
+test.afterEach(async (t) => {
   const { localStack: { services: { lambda, kinesis } } } = t.context;
   await destroyStreams(kinesis.client);
   await lambda.client.deleteFunction({ FunctionName: handlerName }).promise();
 });
 
-test.after.always(async t => {
+test.after.always(async () => {
   await fs.remove(BUILD_DIRECTORY);
 });
 
 function formatRecords (StreamName, records) {
   return {
-    Records: records.map(record => ({
+    Records: records.map((record) => ({
       Data: Buffer.from(JSON.stringify(record)),
-      PartitionKey: uuid()
+      PartitionKey: uuid(),
     })),
-    StreamName
+    StreamName,
   };
 }
 
-test.serial('can iterate through stream to handler', async t => {
+test.serial('can iterate through stream to handler', async (t) => {
   const { localStack: { services: { kinesis: { client: kinesisClient } } } } = t.context;
   const expected = [...Array(20)].map(() => ({ key: uuid() }));
 

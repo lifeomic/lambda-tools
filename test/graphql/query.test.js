@@ -16,18 +16,18 @@ test.before(() => {
     const graphql = new ApolloServer({
       context: ({ ctx }) => ({
         defaultValue: test.context.defaultValue,
-        header: ctx.get('test-header')
+        header: ctx.get('test-header'),
       }),
       resolvers: {
         Query: {
-          value: (obj, args, context, info) => args.prompt + ': ' + (context.header || context.defaultValue())
-        }
+          value: (obj, args, context) => args.prompt + ': ' + (context.header || context.defaultValue()),
+        },
       },
       typeDefs: gql`
         type Query {
           value(prompt: String!): String!
         }
-      `
+      `,
     });
 
     graphql.applyMiddleware({ app });
@@ -55,11 +55,11 @@ test('Making a GraphQL query invokes the app', async (test) => {
 test('The GraphQL helper allows making batch requests', async (test) => {
   const query = [
     {
-      query: 'query GetValue{ value(prompt: "prompt1") }'
+      query: 'query GetValue{ value(prompt: "prompt1") }',
     },
     {
-      query: 'query GetValue{ value(prompt: "prompt2") }'
-    }
+      query: 'query GetValue{ value(prompt: "prompt2") }',
+    },
   ];
 
   // const variables = { prompt: 'value' };
