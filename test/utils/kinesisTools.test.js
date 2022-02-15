@@ -11,7 +11,7 @@ const { FIXTURES_DIRECTORY, buildLambda } = require('../helpers/lambda');
 
 streams(['first-stream', 'second-stream']);
 useKinesisDocker(test);
-useLocalStack(test, { services: ['lambda'], versionTag: '0.12.4' });
+useLocalStack(test, { services: ['lambda'], versionTag: '0.14.0' });
 
 const handlerName = 'ts_lambda_kinesisHandler';
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());

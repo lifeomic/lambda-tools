@@ -26,7 +26,9 @@ test.afterEach(() => {
 
 test.after(async (t) => {
   const { connection } = t.context;
-  await connection.cleanup();
+  if (connection && connection.cleanup) {
+    await connection.cleanup();
+  }
 });
 
 async function assertStreamsPresent (t, client, expected, message) {

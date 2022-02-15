@@ -101,22 +101,22 @@ export interface Config<Service extends keyof LocalStackServices> {
 }
 
 const hasLogMessage = (
-  isReadyMessages: Record<string, boolean | undefined>,
+  isReadyMessages: [string | RegExp, boolean | undefined][],
   logs: string[],
 ) => {
-  const entries = Object.entries(isReadyMessages);
-  return entries.map(([key, value]) => {
-    const hasMessage = value || !!logs.find((next) => next.toLowerCase().includes(key.toLowerCase()));
-    isReadyMessages[key] = hasMessage;
+  const isWaiting = isReadyMessages.map(([regex, value], idx) => {
+    const hasMessage = value || !!logs.find((logLine) => logLine.match(regex));
+    isReadyMessages[idx][1] = hasMessage;
     return hasMessage;
-  }).filter((value) => value).length === entries.length;
+  }).find((value) => !value);
+  return isWaiting === undefined;
 };
 
 class LocalstackWriteBuffer extends Writable {
   private _buffer: string[];
   private _isSetUp = false;
   private logger: Logger;
-  private isReadyMessages: Record<string, boolean | undefined> = { 'Ready.': undefined };
+  private isReadyMessages: [string | RegExp, boolean | undefined][] = [['Ready.', false]];
 
   constructor (
     private resolve: (buffer: LocalstackWriteBuffer) => void,
@@ -132,11 +132,11 @@ class LocalstackWriteBuffer extends Writable {
     const [, minor] = [Number.parseInt(majorStr, 10), Number.parseInt(minorStr, 10)];
 
     if (minor === 12) {
-      this.isReadyMessages['Execution of "preload_services" took'] = false;
+      this.isReadyMessages.push([/Execution of "(preload|start_api)_services" took/, false]);
     }
 
     if ([13, 14].includes(minor)) {
-      this.isReadyMessages['Execution of "start_runtime_components" took'] = false;
+      this.isReadyMessages.push([/Execution of "start_runtime_components" took/, false]);
     }
   }
 
@@ -434,7 +434,7 @@ export const dockerLocalstackReady = async (
     }));
 };
 
-export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.12.4', services, nameTag, envVariables = {} }: Config<Service>) {
+export async function getConnection <Service extends keyof LocalStackServices>({ versionTag = '0.14.0', services, nameTag, envVariables = {} }: Config<Service>) {
   if (versionTag === 'latest') {
     throw new Error('We refuse to try to work with the latest tag');
   }

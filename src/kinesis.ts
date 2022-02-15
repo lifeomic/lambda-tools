@@ -16,7 +16,7 @@ import { TestInterface } from 'ava';
 
 const logger = getLogger('kinesis');
 
-const KINESIS_IMAGE = 'localstack/localstack:0.12.2';
+const KINESIS_IMAGE = 'localstack/localstack:0.14.0';
 
 export { tools };
 
