@@ -484,7 +484,9 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     },
     ExposedPorts,
     Image: image,
-    Env: Object.values(env).map((value, key) => `${key}=${value}`),
+    Env: Object.entries(env)
+      .filter(([, value]) => !!value)
+      .map(([key, value]) => `${key}=${value}`),
   });
 
   await container.start();

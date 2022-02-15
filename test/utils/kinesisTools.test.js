@@ -58,7 +58,8 @@ test.afterEach.always(async (t) => {
 });
 
 test.after.always(async () => {
-  await fs.remove(BUILD_DIRECTORY);
+  await fs.emptyDir(BUILD_DIRECTORY);
+  await fs.rmdir(BUILD_DIRECTORY);
 });
 
 function formatRecords (StreamName, records) {

@@ -24,7 +24,7 @@ test.afterEach(() => {
   streams([]);
 });
 
-test.after(async (t) => {
+test.after.always(async (t) => {
   const { connection } = t.context;
   if (connection && connection.cleanup) {
     await connection.cleanup();

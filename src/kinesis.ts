@@ -1,22 +1,19 @@
 import AWS from 'aws-sdk';
 import { v4 as uuid } from 'uuid';
-import Docker from 'dockerode';
 import cloneDeep from 'lodash/cloneDeep';
 import fromPairs from 'lodash/fromPairs';
 
 import * as tools from './utils/kinesisTools';
+import { getConnection as getLocalstackConnection } from './localstack';
 
-import { getHostAddress, ensureImage } from './docker';
-import { Environment } from './Environment';
-import { AwsUtilsConnection, buildConnectionAndConfig, ConfigurationOptions, waitForReady } from './utils/awsUtils';
-import { localstackReady } from './localstack';
+import { AwsUtilsConnection, buildConnectionAndConfig, ConfigurationOptions } from './utils/awsUtils';
 import { getLogger } from './utils/logging';
 import { pQueue } from './utils/config';
 import { TestInterface } from 'ava';
 
 const logger = getLogger('kinesis');
 
-const KINESIS_IMAGE = 'localstack/localstack:0.14.0';
+const LOCALSTACK_VERSION = { versionTag: '0.14.0' };
 
 export { tools };
 
@@ -115,52 +112,12 @@ export async function getConnection () {
   if (process.env.KINESIS_ENDPOINT) {
     return buildConnectionAndConfig({ url: process.env.KINESIS_ENDPOINT });
   }
-
-  const docker = new Docker();
-  const environment = new Environment();
-
-  await ensureImage(docker, KINESIS_IMAGE);
-
-  const localstackPort = `${process.env.LAMBDA_TOOLS_LOCALSTACK_PORT || 4566}`;
-
-  const container = await docker.createContainer({
-    HostConfig: {
-      AutoRemove: true,
-      PublishAllPorts: true,
-    },
-    ExposedPorts: { [`${localstackPort}/tcp`]: {} },
-    Image: KINESIS_IMAGE,
-    Env: [
-      'SERVICES=kinesis',
-    ],
+  const { mappedServices: { kinesis } } = await getLocalstackConnection({
+    services: ['kinesis'],
+    ...LOCALSTACK_VERSION,
   });
 
-  await container.start();
-
-  const containerData = await container.inspect();
-  const promise = localstackReady(container, containerData);
-  const host = await getHostAddress();
-  const port = containerData.NetworkSettings.Ports[`${localstackPort}/tcp`][0].HostPort;
-  const url = `http://${host}:${port}`;
-
-  environment.set('AWS_ACCESS_KEY_ID', 'bogus');
-  environment.set('AWS_SECRET_ACCESS_KEY', 'bogus');
-  environment.set('AWS_REGION', 'us-east-1');
-  environment.set('KINESIS_ENDPOINT', url);
-
-  const { config, connection } = buildConnectionAndConfig({
-    cleanup: () => {
-      environment.restore();
-      return container.stop();
-    },
-    url,
-  });
-
-  await promise;
-  const kinesisClient = new AWS.Kinesis(config);
-  await waitForReady('Kinesis', async () => kinesisClient.listStreams().promise());
-
-  return { connection, config };
+  return { connection: kinesis.connection, config: kinesis.config };
 }
 
 export function kinesisTestHooks <KeyArray extends string[]>(useUniqueStreams?: boolean) {
