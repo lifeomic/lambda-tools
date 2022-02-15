@@ -20,7 +20,7 @@ import { pQueue } from './utils/config';
 
 import { Writable } from 'stream';
 import { getLogger, Logger } from './utils/logging';
-import { TestInterface } from "ava";
+import { TestFn } from "ava";
 import { ServiceConfigurationOptions } from "aws-sdk/lib/service";
 const logger = getLogger('localstack');
 
@@ -521,14 +521,14 @@ export function localStackHooks <Services extends keyof LocalStackServices>({ ve
   };
 }
 
-export function useLocalStack <Services extends keyof LocalStackServices>(anyTest: TestInterface, config: Config<Services>) {
+export function useLocalStack <Services extends keyof LocalStackServices>(anyTest: TestFn, config: Config<Services>) {
   if (!config) {
     throw new Error('Config is required');
   }
   const testHooks = localStackHooks(config);
   // The base ava test doesn't have context, and has to be cast.
   // This allows clients to send in the default ava export, and they can cast later or before.
-  const test = anyTest as TestInterface<LocalStackTestContext<Services>>
+  const test = anyTest as TestFn<LocalStackTestContext<Services>>
 
   test.serial.before(async t => {
     t.context.localStack = await testHooks.beforeAll();

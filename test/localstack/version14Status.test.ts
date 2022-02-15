@@ -1,4 +1,4 @@
-import anyTest, { TestInterface } from 'ava';
+import anyTest, { TestFn } from 'ava';
 
 import {
   LOCALSTACK_SERVICES,
@@ -9,7 +9,7 @@ import {
 } from '../../src/localstack';
 const services = Object.keys(LOCALSTACK_SERVICES) as (keyof LocalStackServices)[];
 
-const test = anyTest as TestInterface<{ cleanup?: () => Promise<void>; mappedServices: Record<keyof LocalStackServices, LocalStackService> }>
+const test = anyTest as TestFn<{ cleanup?: () => Promise<void>; mappedServices: Record<keyof LocalStackServices, LocalStackService> }>
 
 test.before(async t => {
   const { mappedServices, cleanup } = await getConnection({ services, versionTag: '0.14.0' });

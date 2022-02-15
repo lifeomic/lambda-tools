@@ -1,7 +1,7 @@
-import anyTest, { TestInterface } from 'ava';
+import anyTest, { TestFn } from 'ava';
 import { getConnection } from '../../src/localstack';
 
-const test = anyTest as TestInterface<{ cleanup?: () => Promise<void> }>;
+const test = anyTest as TestFn<{ cleanup?: () => Promise<void> }>;
 
 test.afterEach(async (t) => {
   if (t.context.cleanup) {

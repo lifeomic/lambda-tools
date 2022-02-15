@@ -2,7 +2,7 @@ import assert from 'assert';
 import map from 'lodash/map';
 import isString from 'lodash/isString';
 import supertest, { Test } from 'supertest';
-import { ExecutionContext, TestInterface } from 'ava';
+import { ExecutionContext, TestFn } from 'ava';
 import Koa from 'koa';
 
 export type SetupContextGraphQl<Context extends GraphQLTestContext = GraphQLTestContext> = (context: Context) => Koa;
@@ -129,12 +129,12 @@ export interface GraphQlOptions {
 }
 
 export const useGraphQL = (
-  anyTest: TestInterface,
+  anyTest: TestFn,
   {
     url = '/graphql'
   }: GraphQlOptions = {}
 ) => {
-  const test = anyTest as TestInterface<GraphQLTestContext>;
+  const test = anyTest as TestFn<GraphQLTestContext>;
   test.serial.beforeEach((t) => {
     const app = setupGraphQLFunc(t);
     assert(app, 'GraphQL setup must return a Koa application');

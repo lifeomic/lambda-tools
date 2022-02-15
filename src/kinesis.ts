@@ -12,7 +12,7 @@ import { AwsUtilsConnection, buildConnectionAndConfig, ConfigurationOptions, wai
 import { localstackReady } from './localstack';
 import { getLogger } from './utils/logging';
 import { pQueue } from './utils/config';
-import { TestInterface } from 'ava';
+import { TestFn } from 'ava';
 
 const logger = getLogger('kinesis');
 
@@ -206,8 +206,8 @@ export function kinesisTestHooks <KeyArray extends string[]>(useUniqueStreams?: 
   };
 }
 
-export function useKinesisDocker (anyTest: TestInterface, useUniqueStreams?: boolean) {
-  const test = anyTest as TestInterface<KinesisTestContext<any>>;
+export function useKinesisDocker (anyTest: TestFn, useUniqueStreams?: boolean) {
+  const test = anyTest as TestFn<KinesisTestContext<any>>;
   const testHooks = kinesisTestHooks(useUniqueStreams);
 
   test.serial.before(testHooks.beforeAll);
@@ -223,10 +223,10 @@ export function useKinesisDocker (anyTest: TestInterface, useUniqueStreams?: boo
   test.serial.after.always(testHooks.afterAll);
 }
 
-export function useKinesis (anyTest: TestInterface, streamName: string) {
+export function useKinesis (anyTest: TestFn, streamName: string) {
   // The base ava test doesn't have context, and has to be cast.
   // This allows clients to send in the default ava export, and they can cast later or before.
-  const test = anyTest as TestInterface<UseKinesisContext>;
+  const test = anyTest as TestFn<UseKinesisContext>;
   const kinesis = new AWS.Kinesis({
     endpoint: process.env.KINESIS_ENDPOINT
   });

@@ -9,7 +9,7 @@ import isObjectLike from 'lodash/isObjectLike';
 import { promisify } from 'util';
 import { Handler} from "aws-lambda";
 import { AxiosRequestConfig } from "axios";
-import { TestInterface } from "ava";
+import { TestFn } from "ava";
 import flatten from 'lodash/flatten';
 
 import { executeContainerCommand, ensureImage } from './docker';
@@ -354,10 +354,10 @@ export interface LambdaTestContext {
   lambda: AlphaClient;
 }
 
-export const useLambda = (anyTest: TestInterface, localOptions: LambdaConfigOptions = {}) => {
+export const useLambda = (anyTest: TestFn, localOptions: LambdaConfigOptions = {}) => {
   // The base ava test doesn't have context, and has to be cast.
   // This allows clients to send in the default ava export, and they can cast later or before.
-  const test = anyTest as TestInterface<LambdaTestContext>;
+  const test = anyTest as TestFn<LambdaTestContext>;
   const hooks = useLambdaHooks(localOptions);
 
   test.serial.before(async () => {

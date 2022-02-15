@@ -1,8 +1,9 @@
-import anyTest, {TestInterface} from 'ava';
+import anyTest, {TestFn} from 'ava';
 import {DynamoDB} from "aws-sdk";
 import {DynamoDBTestContext, tableSchema, useDynamoDB} from '../../src/dynamodb'
+import { TestFn } from 'ava/types/test-fn';
 
-const test = anyTest as TestInterface<DynamoDBTestContext<['test1', 'test2']>>;
+const test = anyTest as TestFn<DynamoDBTestContext<['test1', 'test2']>>;
 
 const tableSchemas: DynamoDB.CreateTableInput[] = [
   {

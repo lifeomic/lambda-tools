@@ -14,7 +14,7 @@ import {
   ConnectionAndConfig,
   ConfigurationOptions,
 } from "./utils/awsUtils";
-import { TestInterface } from "ava";
+import { TestFn } from "ava";
 import { Response } from "aws-sdk/lib/response";
 
 const { getHostAddress, ensureImage } = require('./docker');
@@ -321,20 +321,20 @@ export function dynamoDBTestHooks <TableNames extends string[]>(
 }
 
 /**
- * @param {TestInterface} anyTest ava object
+ * @param {TestFn} anyTest ava object
  * @param {boolean} useUniqueTables
  * @param {DynamoDBTestOptions} opts
  * @param {boolean} opts.inMemory Determines whether to run the local DynamoDB instance
  * in in-memory mode, or to persist the data to disk
  */
 export function useDynamoDB (
-  anyTest: TestInterface,
+  anyTest: TestFn,
   useUniqueTables?: boolean,
   opts?: DynamoDBTestOptions
 ): void {
   // The base ava test doesn't have context, and has to be cast.
   // This allows clients to send in the default ava export, and they can cast later or before.
-  const test = anyTest as TestInterface<DynamoDBTestContext<any>>
+  const test = anyTest as TestFn<DynamoDBTestContext<any>>
   const testHooks = dynamoDBTestHooks(useUniqueTables, opts);
 
   test.serial.before(testHooks.beforeAll);
