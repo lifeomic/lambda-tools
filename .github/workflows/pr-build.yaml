@@ -19,7 +19,7 @@ jobs:
       - name: Test
         env:
           LAMBDA_REMOTE_DOCKER: true
-        run: yarn test
+        run: yarn test -c 1
       - name: Coverage
         run: yarn coverage
       - name: Coveralls

@@ -41,7 +41,6 @@ test.serial.beforeEach(async (t) => {
     Environment: {
       Variables: {
         NEXT_KINESIS_STREAM_NAME: streamNames[1],
-        KINESIS_ENDPOINT: kinesis.connection.url,
         AWS_SECRET_ACCESS_KEY: uuid(),
         AWS_ACCESS_KEY_ID: uuid(),
       },

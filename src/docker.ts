@@ -91,8 +91,8 @@ export const pullImage = async (docker: Docker, image: string) => {
   await new Promise((resolve, reject) => {
     docker.modem.followProgress(stream, resolve, (progress: {status: string; progress?: string, error?: string}) => {
       if (progress.error) {
-        const error = `${image}: ${progress.error}`;
-        logger.info(error);
+        const error = `${image}: Error: ${progress.error}`;
+        logger.error(error);
         reject(new Error(error));
       } else {
         logger.debug(`${image}: ${progress.status}${progress.progress ? ` ${progress.progress}` : ''}`);

@@ -22,7 +22,7 @@ jobs:
       - name: Test
         env:
           LAMBDA_REMOTE_DOCKER: true
-        run: yarn test
+        run: yarn test -c 1
       - name: Coverage # Only needed if the test command doesn't already output a report, like with Jest
         run: yarn coverage # the coverage command should output results to <REPO_ROOT>/.nyc_output/lcov.info
       - name: Coverage Report
