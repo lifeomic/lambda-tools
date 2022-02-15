@@ -148,6 +148,8 @@ export class AlphaClient extends Alpha {
         const result = await runner.invoke(event);
         if (callback) {
           callback(undefined, result);
+        } else {
+          return result;
         }
       } catch (error: any | Error) {
         if (callback) {

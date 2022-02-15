@@ -1,4 +1,4 @@
-const fs = require('fs-extra');
+const fsExtra = require('fs-extra');
 const path = require('path');
 const test = require('ava');
 const { v4: uuid } = require('uuid');
@@ -13,7 +13,10 @@ const { FIXTURES_DIRECTORY } = require('./helpers/lambda');
 
 const BUILD_DIRECTORY = path.join(FIXTURES_DIRECTORY, 'build', uuid());
 
-test.after.always(() => fs.remove(BUILD_DIRECTORY));
+test.after.always(async () => {
+  await fsExtra.emptyDir(BUILD_DIRECTORY);
+  await fsExtra.rmdir(BUILD_DIRECTORY);
+});
 
 [
   '10.23.0',

@@ -1,11 +1,10 @@
 import assert from 'assert';
-import Docker, { Exec, ExecCreateOptions } from 'dockerode';
+import Docker, { ExecCreateOptions } from 'dockerode';
 import os from 'os';
 import { WriteBuffer } from './WriteBuffer';
 import map from 'lodash/map';
 import flatten from 'lodash/flatten';
 import { getLogger } from './utils/logging';
-import { EventEmitter } from 'events';
 import { IncomingMessage } from 'http';
 
 const DEFAULT_IMAGE = 'alpine:3.6';
@@ -19,10 +18,6 @@ export interface ExecuteCommandConfig {
   command: string[];
   environment?: string[];
   stdin?: string;
-}
-
-type DockerExec = Exec & {
-  output: EventEmitter & { end: (...args: any[]) => any };
 }
 
 export const executeContainerCommand = async ({ container, command, environment, stdin }: ExecuteCommandConfig) => {
@@ -42,18 +37,18 @@ export const executeContainerCommand = async ({ container, command, environment,
     options.AttachStdin = true;
   }
 
-  const exec = await container.exec(options) as DockerExec;
+  const exec = await container.exec(options);
 
   const stderr = new WriteBuffer();
   const stdout = new WriteBuffer();
-  await exec.start(usingStdin ? { stdin: true, hijack: true } : {});
+  const stream = await exec.start(usingStdin ? { stdin: true, hijack: true } : {});
   if (usingStdin) {
-    exec.output.end(Buffer.from(stdin!));
+    stream.end(Buffer.from(stdin!));
   }
-  container.modem.demuxStream(exec.output, stdout, stderr);
+  container.modem.demuxStream(stream, stdout, stderr);
   await new Promise((resolve, reject) => {
-    exec.output.once('end', resolve);
-    exec.output.once('error', reject);
+    stream.once('end', resolve);
+    stream.once('error', reject);
   });
   const inspectOutput = await exec.inspect();
   return { stderr, stdout, inspectOutput };

@@ -1,5 +1,6 @@
 class Foo {
-  foo () {
+  // eslint-disable-next-line require-await, no-unused-vars
+  async foo (bar) {
     (() => {
       this.bar = 'baz';
     })();

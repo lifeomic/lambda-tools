@@ -17,6 +17,7 @@ import flatten from 'lodash/flatten';
 import { loadPatch } from './patches';
 import { getLogger } from './utils/logging';
 
+const run = promisify<webpack.Configuration, webpack.Stats>(webpack);
 const glob = promisify(rawGlob);
 const logger = getLogger('webpack');
 
@@ -337,9 +338,7 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
   const transformer = options.configTransformer || function (config: webpack.Configuration) { return config; };
   const transformedConfig: webpack.Configuration = transformer(webpackConfig);
 
-  const compiler = webpack(transformedConfig);
-
-  const webpackResult = await (promisify(compiler.run)());
+  const webpackResult = await run(transformedConfig);
 
   handleWebpackResults(webpackResult);
 
