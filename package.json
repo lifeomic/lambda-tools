@@ -30,7 +30,7 @@
   "ava": {
     "verbose": true,
     "failWithoutAssertions": false,
-    "timeout": "10m",
+    "timeout": "2m",
     "files": [
       "test/**/*.test.*"
     ],
@@ -118,7 +118,7 @@
     "@types/webpack": "^4.41.32",
     "@types/yargs": "^15.0.11",
     "archiver": "^5.3.0",
-    "ava": "^3.13.0",
+    "ava": "^3.15.0",
     "aws-sdk": "^2.290.0",
     "babel-loader": "^8.0.2",
     "chalk": "^3.0.0",

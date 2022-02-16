@@ -143,7 +143,7 @@ export class AlphaClient extends Alpha {
   constructor ({ container, environment, handler }: AlphaClientConfig) {
     const runner = new LambdaRunner(container, environment, handler);
 
-    const fn: Handler = async function handler (event, context, callback) {
+    const fn: Handler = async (event, context, callback) => {
       try {
         const result = await runner.invoke(event);
         if (callback) {
@@ -166,8 +166,8 @@ export class AlphaClient extends Alpha {
 
   graphql<T = any> (
     path: string,
-    query: any,
-    variables: any,
+    query: string,
+    variables?: Record<string, any>,
     config?: AxiosRequestConfig,
   ) {
     return this.post<T>(path, { query, variables }, config);

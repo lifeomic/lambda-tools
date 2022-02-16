@@ -10,6 +10,7 @@ import { AwsUtilsConnection, buildConnectionAndConfig, ConfigurationOptions } fr
 import { getLogger } from './utils/logging';
 import { pQueue } from './utils/config';
 import { TestInterface } from 'ava';
+import Environment from './Environment';
 
 const logger = getLogger('kinesis');
 
@@ -108,16 +109,28 @@ function buildStreamNameMapping (uniqueIdentifier: string) {
   }));
 }
 
-export async function getConnection () {
+export interface GetConnection {
+  connection: AwsUtilsConnection;
+  config: ConfigurationOptions;
+}
+export async function getConnection (): Promise<GetConnection> {
   if (process.env.KINESIS_ENDPOINT) {
     return buildConnectionAndConfig({ url: process.env.KINESIS_ENDPOINT });
   }
-  const { mappedServices: { kinesis } } = await getLocalstackConnection({
+  const { mappedServices: { kinesis }, cleanup } = await getLocalstackConnection({
     services: ['kinesis'],
     ...LOCALSTACK_VERSION,
   });
 
-  return { connection: kinesis.connection, config: kinesis.config };
+  const environment = new Environment();
+  environment.set('AWS_ACCESS_KEY_ID', 'bogus');
+  environment.set('AWS_SECRET_ACCESS_KEY', 'bogus');
+  environment.set('AWS_REGION', 'us-east-1');
+  environment.set('KINESIS_ENDPOINT', kinesis.connection.url);
+
+  kinesis.connection.cleanup = cleanup;
+
+  return kinesis;
 }
 
 export function kinesisTestHooks <KeyArray extends string[]>(useUniqueStreams?: boolean) {
@@ -125,9 +138,7 @@ export function kinesisTestHooks <KeyArray extends string[]>(useUniqueStreams?: 
   let config: ConfigurationOptions;
 
   async function beforeAll () {
-    const result = await getConnection();
-    connection = result.connection;
-    config = result.config;
+    ({ connection, config } = await getConnection());
   }
 
   async function beforeEach () {

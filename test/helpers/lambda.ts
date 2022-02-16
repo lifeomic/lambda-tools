@@ -1,20 +1,20 @@
-const Docker = require('dockerode');
-const fs = require('fs-extra');
-const path = require('path');
-const { v4: uuid } = require('uuid');
+import { TestInterface } from 'ava';
+import Docker, { Container } from 'dockerode';
 
-const { build, useComposeContainer, useLambda } = require('../../src/lambda');
-const { promisify } = require('util');
+import fs from 'fs-extra';
+import path from 'path';
+import { v4 as uuid } from 'uuid';
+import { build, useComposeContainer, useLambda } from '../../src/lambda';
+import { pullImage } from '../../src/docker';
+import { Config } from '../../src/webpack';
 
-const FIXTURES_DIRECTORY = path.join(__dirname, '../fixtures');
+export const FIXTURES_DIRECTORY = path.join(__dirname, '../fixtures');
 
-function hasTag (tagName) {
-  return function (image) {
-    return image.RepoTags && image.RepoTags.includes(tagName);
-  };
+export interface HelpersLambdaTestContext {
+  container?: Container;
 }
 
-async function buildLambda (bundlePath, handlerName, options) {
+export const buildLambda = async (bundlePath: string, handlerName: string, options?: Partial<Config>) => {
   const buildResults = await build({
     entrypoint: path.join(FIXTURES_DIRECTORY, `${handlerName}`),
     outputPath: bundlePath,
@@ -27,12 +27,17 @@ async function buildLambda (bundlePath, handlerName, options) {
     throw new Error('Lambda build failed!');
   }
   return buildResults;
+};
+
+export interface UseLambdaContainerOptions {
+  containerConfig?: Record<string, any>;
+  handlerName?: string;
 }
 
-function useLambdaContainer (test, imageName, options = {}) {
+export const useLambdaContainer = (test: TestInterface<HelpersLambdaTestContext>, imageName: string | (() => Promise<string>), options: UseLambdaContainerOptions = {}) => {
   const bundlePath = path.join(FIXTURES_DIRECTORY, 'build', uuid());
   const { containerConfig = {}, handlerName = 'lambda_service' } = options;
-  let container;
+  let container: Container;
 
   useLambda(test);
 
@@ -63,18 +68,13 @@ function useLambdaContainer (test, imageName, options = {}) {
       // swallow errors...
     }
   });
-}
+};
 
-async function createContainer (image, name, mountpoint) {
+export const createContainer = async (image: string, name: string, mountpoint: string) => {
   const docker = new Docker();
-  const followProgress = promisify(docker.modem.followProgress);
 
   const qualifiedImage = /:[^:]*/.test(image) ? image : `${image}:latest`;
-
-  const images = await docker.listImages();
-  if (!images.find(hasTag(qualifiedImage))) {
-    await followProgress(await docker.pull(image));
-  }
+  await pullImage(docker, qualifiedImage);
 
   const container = await docker.createContainer({
     Entrypoint: '/bin/sh',
@@ -95,11 +95,4 @@ async function createContainer (image, name, mountpoint) {
   await container.start();
   console.log(`Created container ${container.id}`);
   return container;
-}
-
-module.exports = {
-  createContainer,
-  useLambdaContainer,
-  FIXTURES_DIRECTORY,
-  buildLambda,
 };

@@ -401,7 +401,7 @@ test('Setting inMemory to false runs the container in persistent mode', async ()
   sinon.assert.neverCalledWith(docker.createContainer, sinon.match({ Cmd: ['-inMemory', '-sharedDb'] }));
 });
 
-test('launchDynamoContanier works with its default parameters', async (t) => {
+test('launchDynamoContainer works with its default parameters', async (t) => {
   const { url, stopContainer } = await launchDynamoContainer();
   await stopContainer();
   t.truthy(url.match(/http:\/\/.*:\d+/));

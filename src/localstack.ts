@@ -132,12 +132,17 @@ class LocalstackWriteBuffer extends Writable {
     const [, minor] = [Number.parseInt(majorStr, 10), Number.parseInt(minorStr, 10)];
 
     if (minor === 12) {
-      this.isReadyMessages.push([/Execution of "(preload|start_api)_services" took/, false]);
+      this.isReadyMessages.push([/Execution of "(preload|start_api)_services" took.*/, false]);
     }
 
     if ([13, 14].includes(minor)) {
-      this.isReadyMessages.push([/Execution of "start_runtime_components" took/, false]);
+      this.isReadyMessages.push([/Execution of "start_runtime_components" took.*/, false]);
     }
+  }
+
+  destroy() {
+    (this.stream as any).destroy();
+    return this;
   }
 
   reset () {
@@ -430,7 +435,7 @@ export const dockerLocalstackReady = async (
   await Promise.all(containers.map(
     async (container) => {
       const buffer = await localstackReady(container, await container.inspect(), false);
-      (buffer.stream as any).destroy();
+      buffer.destroy();
     }));
 };
 
@@ -511,6 +516,7 @@ export async function getConnection <Service extends keyof LocalStackServices>({
     getOutput: () => output.toString(),
     clearOutput: () => output.reset(),
     cleanup: async () => {
+      output.destroy();
       environment.restore();
       return await container.stop();
     },
