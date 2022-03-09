@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - 'master'
+      - "master"
 
 jobs:
   build:
@@ -31,33 +31,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: .nyc_output/lcov.info
           flag-name: master
-      - id: tagExistsAndVersion
-        name: Check if tags exist in NPM and GIT
-        run: |
-          set +e
-          packageName="$(node -p "require('./package').name")"
-          packageVersion="$(node -p "require('./package').version")"
-          packageNameAndVersion="${packageName}@${packageVersion}"
-
-          npm view "${packageNameAndVersion}" dist.tarball | grep "${packageVersion}" > /dev/null
-          npmTagExists="$([ "$?" = "0" ] && BOOL="true" || BOOL="false"; echo $BOOL)"
-
-          set -e
-          echo "::set-output name=npmTagExists::${npmTagExists}"
-          echo "::set-output name=packageVersion::${packageVersion}"
       - name: Publish
-        if: ${{ steps.tagExistsAndVersion.outputs.npmTagExists == 'false'}}
-        run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{secrets.LIFEOMIC_NPM_TOKEN}}
-      - name: Create Release
-        if: ${{ steps.tagExistsAndVersion.outputs.npmTagExists == 'false'}}
-        id: create_release
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.tagExistsAndVersion.outputs.packageVersion }}
-          release_name: v${{ steps.tagExistsAndVersion.outputs.packageVersion }}
-          draft: false
-          prerelease: false
+          NPM_TOKEN: ${{ secrets.LIFEOMIC_NPM_TOKEN }}
+        run: yarn semantic-release
