@@ -14,7 +14,7 @@
     "lambda-tools-wait-for-localstack": "./bin/wait-for-localstack.js"
   },
   "scripts": {
-    "prepublishOnly": "yarn tsc",
+    "build": "node build-package.js",
     "coverage": "nyc report --reporter=text-lcov > ./.nyc_output/lcov.info",
     "lint": "eslint . --ext .js,.ts -f codeframe",
     "pretest": "yarn lint && tsc --noEmit",
