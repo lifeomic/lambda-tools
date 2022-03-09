@@ -18,13 +18,9 @@
     "resolveJsonModule": true,
     "rootDir": ".",
     "skipLibCheck": true,
-    "declaration": true
+    "declaration": true,
+    "outDir": "./dist"
   },
-  "include": [
-    "src/**/*",
-    "bin/*"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/**/*", "bin/*"],
+  "exclude": ["node_modules"]
 }
