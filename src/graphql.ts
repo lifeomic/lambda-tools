@@ -39,7 +39,7 @@ let setupGraphQLFunc: SetupGraphQL = () => {
  *    message. If string, exact match. If function, apply test function to
  *    error message.
  */
-export const assertError = (response: GraphQlResponse, path: string | undefined, messageTest: (message: string) => boolean) => {
+export const assertError = (response: GraphQlResponse, path: string | undefined, messageTest: string | ((message: string) => boolean)) => {
   assert(response.body.errors, 'Expected error but none found');
 
   // path isn't defined on schema type errors. Get first error in that case
