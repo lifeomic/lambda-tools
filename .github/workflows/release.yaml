@@ -37,4 +37,6 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.LIFEOMIC_NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: yarn semantic-release
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          yarn semantic-release
