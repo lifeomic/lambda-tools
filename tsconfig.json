@@ -19,7 +19,8 @@
     "rootDir": ".",
     "skipLibCheck": true,
     "declaration": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "allowJs": true
   },
   "include": ["src/**/*", "bin/*"],
   "exclude": ["node_modules"]
