@@ -1,7 +1,7 @@
 const babelEnvDeps = require('webpack-babel-env-deps');
 import fs from 'fs-extra';
 import path from 'path';
-import TerserPlugin from 'terser-webpack-plugin';
+const TerserPlugin = require('terser-webpack-plugin');
 import webpack from 'webpack';
 const WebpackOptionsDefaulter = require('webpack/lib/WebpackOptionsDefaulter');
 import { zip } from './zip';

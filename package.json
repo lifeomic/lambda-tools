@@ -67,7 +67,7 @@
     "typescript": "*"
   },
   "devDependencies": {
-    "@lifeomic/alpha": "^1.4.1",
+    "@lifeomic/alpha": "^4.1.0",
     "@lifeomic/eslint-plugin-node": "^2.0.1",
     "@types/node": "^12.20.43",
     "@types/sinon": "^9.0.10",
@@ -123,6 +123,7 @@
     "archiver": "^3.0.0",
     "ava": "^3.13.0",
     "aws-sdk": "^2.290.0",
+    "axios": "^0.27.2",
     "babel-loader": "^8.0.2",
     "chalk": "^3.0.0",
     "debug": "^4.1.1",
@@ -152,7 +153,7 @@
     "access": "public"
   },
   "peerDependencies": {
-    "@lifeomic/alpha": "^0.14.0 || ^1.0.0",
+    "@lifeomic/alpha": "^4.1.0",
     "mockserver-client": "^5.11.2"
   }
 }
