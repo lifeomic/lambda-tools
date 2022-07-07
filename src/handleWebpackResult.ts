@@ -3,7 +3,12 @@ import { getLogger } from './utils/logging';
 import webpack from "webpack";
 const logger = getLogger('webpack');
 
-export const handleWebpackResults = (webpackResult: webpack.Stats) => {
+export const handleWebpackResults = (webpackResult?: webpack.Stats) => {
+  if (!webpackResult) {
+    logger.error('No webpack result');
+    throw new Error('no_result_error');
+  }
+
   logger.info('Webpacking compilation result:\n', webpackResult.toString({
     colors: !!supportsColor.stdout,
     // hide excessive chunking output

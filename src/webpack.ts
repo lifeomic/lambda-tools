@@ -19,7 +19,7 @@ const glob = promisify(rawGlob);
 const logger = getLogger('webpack');
 
 const WEBPACK_DEFAULTS = new WebpackOptionsDefaulter().process({});
-const run = promisify<webpack.Configuration, webpack.Stats>(webpack);
+const run = promisify<webpack.Configuration, webpack.Stats | undefined>(webpack);
 
 const CALLER_NODE_MODULES = 'node_modules';
 const DEFAULT_NODE_VERSION = '12.20.0';
