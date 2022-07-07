@@ -137,7 +137,6 @@
     "string-replace-loader": "^2.1.1",
     "supertest": "^4.0.1",
     "supports-color": "^7.0.0",
-    "terser-webpack-plugin": "^5.3.3",
     "tmp-promise": "^2.0.1",
     "unzipper": "^0.10.0",
     "uuid": "^3.3.2",
