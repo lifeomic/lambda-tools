@@ -18,5 +18,5 @@ test('Throw error if webpack does not return a result', (test) => {
     handleWebpackResults();
   });
 
-  test.is(err.message, 'no_result_error');
+  test.is(err.message, 'compilation_error');
 });

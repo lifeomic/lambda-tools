@@ -115,7 +115,7 @@ if (argv.w) {
 
 build(buildOptions)
   .catch((error) => {
-    if (error.message === 'compilation_error' || error.message === 'no_result_error') {
+    if (error.message === 'compilation_error') {
       console.error('An error occurred during compilation. See output above for more details.');
     } else {
       console.error('Failed to build lambda package:', error);

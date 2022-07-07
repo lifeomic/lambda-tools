@@ -6,7 +6,7 @@ const logger = getLogger('webpack');
 export const handleWebpackResults = (webpackResult?: webpack.Stats) => {
   if (!webpackResult) {
     logger.error('No webpack result');
-    throw new Error('no_result_error');
+    throw new Error('compilation_error');
   }
 
   logger.info('Webpacking compilation result:\n', webpackResult.toString({
