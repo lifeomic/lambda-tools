@@ -141,7 +141,6 @@
     "tmp-promise": "^2.0.1",
     "unzipper": "^0.10.0",
     "uuid": "^3.3.2",
-    "webpack-babel-env-deps": "^1.5.0",
     "wrapper-webpack-plugin": "^2.1.0",
     "yargs": "^16.1.1",
     "zip-webpack-plugin": "^3.0.0"
