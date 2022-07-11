@@ -1,4 +1,4 @@
-import Alpha from '@lifeomic/alpha';
+import { Alpha } from '@lifeomic/alpha';
 import assert from 'assert';
 import Docker from 'dockerode';
 import { v4 as uuid } from 'uuid';
