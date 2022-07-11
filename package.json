@@ -111,7 +111,8 @@
     "ts-loader": "^8.0.17",
     "ts-node": "^9.1.1",
     "ts-sinon": "^2.0.1",
-    "typescript": "^3.9.9"
+    "typescript": "^3.9.9",
+    "webpack": "^4.41.2"
   },
   "dependencies": {
     "@babel/core": "^7.12.3",
@@ -143,7 +144,6 @@
     "tmp-promise": "^2.0.1",
     "unzipper": "^0.10.0",
     "uuid": "^3.3.2",
-    "webpack": "^4.41.2",
     "webpack-babel-env-deps": "^1.5.0",
     "wrapper-webpack-plugin": "^2.1.0",
     "yargs": "^16.1.1",
@@ -154,6 +154,7 @@
   },
   "peerDependencies": {
     "@lifeomic/alpha": "^5.0.1",
-    "mockserver-client": "^5.11.2"
+    "mockserver-client": "^5.11.2",
+    "webpack": "^4.41.2"
   }
 }
