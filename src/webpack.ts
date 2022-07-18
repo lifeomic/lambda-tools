@@ -230,7 +230,11 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
 
   const babelLoaderConfig = {
     exclude: [ babelEnvDeps.exclude({ engines: { node: '>=' + nodeVersion } }) ],
-    loader: 'babel-loader'
+    loader: 'babel-loader',
+    plugins: [
+      '@babel/plugin-proposal-nullish-coalescing-operator',
+      "@babel/plugin-proposal-optional-chaining"
+    ]
   };
 
   const outputDir = path.resolve(options.outputPath || process.cwd());
