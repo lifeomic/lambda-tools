@@ -240,7 +240,10 @@ export default async ({ entrypoint, serviceName = 'test-service', ...config }: C
     options: {
       cacheDirectory: options.cacheDirectory,
       presets: [ babelEnvConfig ],
-      plugins: []
+      plugins: [
+        '@babel/plugin-proposal-nullish-coalescing-operator',
+        "@babel/plugin-proposal-optional-chaining"
+      ]
     }
   };
 
