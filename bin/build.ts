@@ -70,6 +70,7 @@ const argv = yargs
     type: 'boolean'
   })
   .demandCommand(1)
+  .demandOption(['s'])
   .epilog(epilogue)
   .argv;
 
