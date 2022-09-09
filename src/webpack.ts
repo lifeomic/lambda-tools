@@ -181,7 +181,7 @@ export interface Config {
   zip?: boolean;
 }
 
-export default async ({ entrypoint, serviceName = 'test-service', ...config }: Config) => {
+export default async ({ entrypoint, serviceName, ...config }: Config) => {
   const options = defaults(config, { enableRuntimeSourceMaps: false });
 
   // If an entrypoint is a directory then we discover all of the entrypoints
