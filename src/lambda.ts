@@ -74,10 +74,11 @@ export async function destroyLambdaExecutionEnvironment (environment: ExecutionE
 }
 
 async function getEntrypoint (docker: Docker, imageName: string): Promise<string[]> {
-  const image = await (await docker.getImage(imageName)).inspect();
+  const image = await (docker.getImage(imageName)).inspect();
+  const entryPoint = image.ContainerConfig.Entrypoint ?? image.Config.Entrypoint;
 
-  if (image.ContainerConfig.Entrypoint) {
-    return flatten([image.ContainerConfig.Entrypoint]);
+  if (entryPoint) {
+    return flatten([entryPoint]);
   } else {
     const parentImageName = image.Parent;
     assert(parentImageName, `The image ${imageName} has no entrypoint and no parent image`);
