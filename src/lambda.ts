@@ -74,7 +74,7 @@ export async function destroyLambdaExecutionEnvironment (environment: ExecutionE
 }
 
 export async function getEntrypoint (docker: Docker, imageName: string): Promise<string[]> {
-  const image = await (docker.getImage(imageName)).inspect();
+  const image = await docker.getImage(imageName).inspect();
   const entryPoint = image.ContainerConfig.Entrypoint ?? image.Config.Entrypoint;
 
   if (entryPoint) {
