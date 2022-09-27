@@ -29,15 +29,16 @@ test.serial('should fail to get entrypoint', async (test) => {
   test.is(error.message, errorMessage);
 });
 
-test.serial('should not fail to get entrypoint', async (test) => {
+test.serial('should return the entry point', async (test) => {
   const imageName = 'random';
+  const entryPoint = ['hello', 'entrypoint'];
   const containerStub = sinon.createStubInstance(Dockerode.Container, {
     inspect: sinon.stub().resolves({ Image: imageName })
   });
   const imageStub = sinon.createStubInstance(Dockerode.Image, {
     inspect: sinon.stub().resolves({
       Config: {
-        Entrypoint: ['hello', 'entrypoint']
+        Entrypoint: entryPoint
       },
       ContainerConfig: {}
     })
@@ -47,5 +48,7 @@ test.serial('should not fail to get entrypoint', async (test) => {
     getImage: sinon.stub().returns(imageStub)
   });
 
-  await test.notThrowsAsync(getEntrypoint(dockerStub, imageName));
+  const result = await getEntrypoint(dockerStub, imageName);
+
+  test.deepEqual(result, entryPoint);
 });
