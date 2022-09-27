@@ -1,7 +1,7 @@
 const test = require('ava');
 const sinon = require('sinon');
 const Dockerode = require('dockerode');
-const { useLambdaHooks } = require('../../src/lambda');
+const { getEntrypoint } = require('../../src/lambda');
 
 test.afterEach(() => {
   sinon.restore();
@@ -10,18 +10,42 @@ test.afterEach(() => {
 test.serial('should fail to get entrypoint', async (test) => {
   const imageName = 'random';
   const errorMessage = `The image ${imageName} has no entrypoint and no parent image`;
-  const containerInspectStub = sinon.stub(Dockerode.Container.prototype, 'inspect').resolves({ Image: imageName });
-  const imageInspectStub = sinon.stub(Dockerode.Image.prototype, 'inspect').resolves({
-    Config: {},
-    ContainerConfig: {}
+  const containerStub = sinon.createStubInstance(Dockerode.Container, {
+    inspect: sinon.stub().resolves({ Image: imageName })
   });
-  sinon.stub(Dockerode.prototype, 'getContainer').resolves({ inspect: containerInspectStub });
-  sinon.stub(Dockerode.prototype, 'getImage').returns({ inspect: imageInspectStub });
-  const { beforeEach } = useLambdaHooks(test);
+  const imageStub = sinon.createStubInstance(Dockerode.Image, {
+    inspect: sinon.stub().resolves({
+      Config: {},
+      ContainerConfig: {}
+    })
+  });
+  const dockerStub = sinon.createStubInstance(Dockerode, {
+    getContainer: sinon.stub().resolves(containerStub),
+    getImage: sinon.stub().returns(imageStub)
+  });
 
-  const client = await beforeEach();
-
-  const error = await test.throwsAsync(client.raw({}, {}));
+  const error = await test.throwsAsync(getEntrypoint(dockerStub, imageName));
 
   test.is(error.message, errorMessage);
+});
+
+test.serial('should not fail to get entrypoint', async (test) => {
+  const imageName = 'random';
+  const containerStub = sinon.createStubInstance(Dockerode.Container, {
+    inspect: sinon.stub().resolves({ Image: imageName })
+  });
+  const imageStub = sinon.createStubInstance(Dockerode.Image, {
+    inspect: sinon.stub().resolves({
+      Config: {
+        Entrypoint: ['hello', 'entrypoint']
+      },
+      ContainerConfig: {}
+    })
+  });
+  const dockerStub = sinon.createStubInstance(Dockerode, {
+    getContainer: sinon.stub().resolves(containerStub),
+    getImage: sinon.stub().returns(imageStub)
+  });
+
+  await test.notThrowsAsync(getEntrypoint(dockerStub, imageName));
 });
