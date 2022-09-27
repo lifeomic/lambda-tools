@@ -8,7 +8,7 @@ test.afterEach(() => {
 });
 
 test.serial('should fail to get entrypoint', async (test) => {
-  const imageName = 'random';
+  const imageName = 'image';
   const errorMessage = `The image ${imageName} has no entrypoint and no parent image`;
   const containerStub = sinon.createStubInstance(Dockerode.Container, {
     inspect: sinon.stub().resolves({ Image: imageName })
@@ -29,26 +29,31 @@ test.serial('should fail to get entrypoint', async (test) => {
   test.is(error.message, errorMessage);
 });
 
-test.serial('should return the entry point', async (test) => {
-  const imageName = 'random';
-  const entryPoint = ['hello', 'entrypoint'];
+test.serial('should not fail to get entrypoint', async (test) => {
+  const imageName = 'image';
   const containerStub = sinon.createStubInstance(Dockerode.Container, {
     inspect: sinon.stub().resolves({ Image: imageName })
   });
+  const imageInspectStub = sinon.stub();
+  imageInspectStub.onFirstCall().resolves({
+    Config: {},
+    ContainerConfig: {},
+    Parent: `parent-${imageName}`
+  });
+  imageInspectStub.onSecondCall().resolves({
+    Config: {
+      Entrypoint: ['hello', 'entrypoint']
+    },
+    ContainerConfig: {}
+  });
+
   const imageStub = sinon.createStubInstance(Dockerode.Image, {
-    inspect: sinon.stub().resolves({
-      Config: {
-        Entrypoint: entryPoint
-      },
-      ContainerConfig: {}
-    })
+    inspect: imageInspectStub
   });
   const dockerStub = sinon.createStubInstance(Dockerode, {
     getContainer: sinon.stub().resolves(containerStub),
     getImage: sinon.stub().returns(imageStub)
   });
 
-  const result = await getEntrypoint(dockerStub, imageName);
-
-  test.deepEqual(result, entryPoint);
+  await test.notThrowsAsync(getEntrypoint(dockerStub, imageName));
 });
