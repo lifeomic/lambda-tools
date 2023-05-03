@@ -1,40 +1,41 @@
-const babelEnvDeps = require('webpack-babel-env-deps');
-import fs from 'fs-extra';
-import path from 'path';
-import TerserPlugin from 'terser-webpack-plugin';
-import webpack from 'webpack';
-const WebpackOptionsDefaulter = require('webpack/lib/WebpackOptionsDefaulter');
-import { zip } from './zip';
-import chalk from 'chalk';
-import { promisify } from 'util';
-import { default as rawGlob } from 'glob';
-import { handleWebpackResults } from './handleWebpackResult';
-import defaults from 'lodash/defaults';
-import flatten from 'lodash/flatten';
+const babelEnvDeps = require("webpack-babel-env-deps");
+import fs from "fs-extra";
+import path from "path";
+import TerserPlugin from "terser-webpack-plugin";
+import webpack from "webpack";
+const WebpackOptionsDefaulter = require("webpack/lib/WebpackOptionsDefaulter");
+import { zip } from "./zip";
+import chalk from "chalk";
+import { promisify } from "util";
+import { default as rawGlob } from "glob";
+import { handleWebpackResults } from "./handleWebpackResult";
+import defaults from "lodash/defaults";
+import flatten from "lodash/flatten";
 
-import { loadPatch } from './patches';
-import { getLogger } from './utils/logging';
+import { loadPatch } from "./patches";
+import { getLogger } from "./utils/logging";
 
 const glob = promisify(rawGlob);
-const logger = getLogger('webpack');
+const logger = getLogger("webpack");
 
 const WEBPACK_DEFAULTS = new WebpackOptionsDefaulter().process({});
 const run = promisify<webpack.Configuration, webpack.Stats>(webpack);
 
-const CALLER_NODE_MODULES = 'node_modules';
-const DEFAULT_NODE_VERSION = '12.20.0';
-const LAMBDA_TOOLS_NODE_MODULES = path.resolve(__dirname, '..', 'node_modules');
+const CALLER_NODE_MODULES = "node_modules";
+const DEFAULT_NODE_VERSION = "12.20.0";
+const LAMBDA_TOOLS_NODE_MODULES = path.resolve(__dirname, "..", "node_modules");
 
-type Mode = 'development' | 'production' | 'none';
+type Mode = "development" | "production" | "none";
 
-const getNormalizedFileName = (file: string) => path.basename(file).replace(/.ts$/, '.js');
+const getNormalizedFileName = (file: string) =>
+  path.basename(file).replace(/.ts$/, ".js");
 
 const parseEntrypoint = (entrypoint: string): Entrypoint => {
-  const [ file, name ] = entrypoint.split(':');
+  const [file, name] = entrypoint.split(":");
 
   return {
     file: path.resolve(file),
-    name: name || getNormalizedFileName(file)
+    name: name || getNormalizedFileName(file),
   };
 };
 
@@ -42,17 +43,17 @@ const parseEntrypoint = (entrypoint: string): Entrypoint => {
  * Helper function to trim absolute file path by removing the `process.cwd()`
  * prefix if file is nested under `process.cwd()`.
  */
-function makeFilePathRelativeToCwd (file: string) {
+function makeFilePathRelativeToCwd(file: string) {
   const cwd = process.cwd();
-  return (file.startsWith(cwd)) ? '.' + file.substring(cwd.length) : file;
+  return file.startsWith(cwd) ? "." + file.substring(cwd.length) : file;
 }
 
 /**
  * @param {String} outputDir the directory that contains output files
  * @param {String[]} entryNames the entrypoint names from which output was produced
  */
-async function zipOutputFiles (outputDir: string, entryNames: string[]) {
-  logger.info('\nCreating zip file for each entrypoint...\n');
+async function zipOutputFiles(outputDir: string, entryNames: string[]) {
+  logger.info("\nCreating zip file for each entrypoint...\n");
 
   for (const entryName of entryNames) {
     const dirname = path.dirname(entryName);
@@ -60,31 +61,41 @@ async function zipOutputFiles (outputDir: string, entryNames: string[]) {
     const outputZipFile = path.join(outputDir, outputZipBasename);
 
     // Find all of the output files that belong to this entry
-    const entriesForZipFile = (await glob(`${entryName}*`, {
-      cwd: outputDir,
-      // ignore previously output zip file for repeatability
-      ignore: outputZipBasename
-    })).map((file) => {
+    const entriesForZipFile = (
+      await glob(`${entryName}*`, {
+        cwd: outputDir,
+        // ignore previously output zip file for repeatability
+        ignore: outputZipBasename,
+      })
+    ).map((file) => {
       return {
-        name: (dirname === '.') ? file : file.substring(dirname.length + 1),
-        file: path.join(outputDir, file)
+        name: dirname === "." ? file : file.substring(dirname.length + 1),
+        file: path.join(outputDir, file),
       };
     });
 
     // Now, write a zip file for each entry
     logger.info(`Creating zip for entrypoint ${chalk.bold(entryName)}...`);
-    logger.info(entriesForZipFile.map((entry) => {
-      return `- ${chalk.bold(entry.name)}\n`;
-    }).join(''));
+    logger.info(
+      entriesForZipFile
+        .map((entry) => {
+          return `- ${chalk.bold(entry.name)}\n`;
+        })
+        .join("")
+    );
     await zip(outputZipFile, entriesForZipFile);
-    logger.info(chalk.green(`Zip file for ${chalk.bold(entryName)} written to ` +
-      `${chalk.bold(makeFilePathRelativeToCwd(outputZipFile))}\n`));
+    logger.info(
+      chalk.green(
+        `Zip file for ${chalk.bold(entryName)} written to ` +
+          `${chalk.bold(makeFilePathRelativeToCwd(outputZipFile))}\n`
+      )
+    );
   }
 }
 
-const INDEX_FILES = ['index.js', 'index.ts'];
+const INDEX_FILES = ["index.js", "index.ts"];
 
-async function findIndexFile (dir: string) {
+async function findIndexFile(dir: string) {
   for (const indexFile of INDEX_FILES) {
     const candidateFile = path.join(dir, indexFile);
     try {
@@ -94,17 +105,25 @@ async function findIndexFile (dir: string) {
         return candidateFile;
       }
     } catch (err) {
-      if (err.code !== 'ENOENT') {
-        logger.warn(chalk.yellow(`Unable to read possible index file ` +
-          `${chalk.bold(candidateFile)}. ` +
-          `Skipping! ${chalk.red(err.toString())}`));
+      if (err.code !== "ENOENT") {
+        logger.warn(
+          chalk.yellow(
+            `Unable to read possible index file ` +
+              `${chalk.bold(candidateFile)}. ` +
+              `Skipping! ${chalk.red(err.toString())}`
+          )
+        );
       }
     }
   }
 
-  logger.warn(chalk.yellow(`No index file for entrypoint in ` +
-    `${chalk.bold(makeFilePathRelativeToCwd(dir))} directory. ` +
-    `Searched for: ${INDEX_FILES.join(', ')}`));
+  logger.warn(
+    chalk.yellow(
+      `No index file for entrypoint in ` +
+        `${chalk.bold(makeFilePathRelativeToCwd(dir))} directory. ` +
+        `Searched for: ${INDEX_FILES.join(", ")}`
+    )
+  );
 
   // We didn't find an index file so return null and the caller will
   // ignore this directory
@@ -116,7 +135,7 @@ export interface Entrypoint {
   name: string;
 }
 
-async function expandEntrypoints (entrypoints: Entrypoint[]) {
+async function expandEntrypoints(entrypoints: Entrypoint[]) {
   const finalEntrypoints = [] as Entrypoint[];
 
   for (const entrypoint of entrypoints) {
@@ -147,7 +166,7 @@ async function expandEntrypoints (entrypoints: Entrypoint[]) {
             // as an entrypoint.
             finalEntrypoints.push({
               file: indexFile,
-              name: `${directoryFile}.js`
+              name: `${directoryFile}.js`,
             });
           }
         } else {
@@ -189,14 +208,16 @@ export default async ({ entrypoint, serviceName, ...config }: Config) => {
   // For example, entrypoint might be "./src/lambdas" and we might discover
   // "./src/lambdas/abc/index.js" (a subdirectory with index file)
   // and "./src/lambdas/def.js" (a simple file)
-  const entrypoints = await expandEntrypoints(flatten([entrypoint]).map(parseEntrypoint));
+  const entrypoints = await expandEntrypoints(
+    flatten([entrypoint]).map(parseEntrypoint)
+  );
 
   const entry = entrypoints.reduce<Record<string, string[]>>(
     (accumulator, entry) => {
       const { file, name } = entry;
-      const preloadModules = ['@babel/polyfill'];
+      const preloadModules = ["@babel/polyfill"];
       if (options.enableRuntimeSourceMaps) {
-        preloadModules.push('source-map-support/register');
+        preloadModules.push("source-map-support/register");
       }
       accumulator[name] = [...preloadModules, file];
       return accumulator;
@@ -207,81 +228,82 @@ export default async ({ entrypoint, serviceName, ...config }: Config) => {
   const nodeVersion = options.nodeVersion || DEFAULT_NODE_VERSION;
 
   const plugins = [
-    new webpack.NormalModuleReplacementPlugin(/^any-promise$/, 'core-js/fn/promise'),
+    new webpack.NormalModuleReplacementPlugin(
+      /^any-promise$/,
+      "core-js/fn/promise"
+    ),
     new webpack.DefinePlugin({
-      'global.GENTLY': false,
-      'process.env.LIFEOMIC_SERVICE_NAME': `'${serviceName}'`
+      "global.GENTLY": false,
+      "process.env.LIFEOMIC_SERVICE_NAME": `'${serviceName}'`,
     }),
-    await loadPatch('lambda')
+    await loadPatch("lambda"),
   ];
 
   if (options.enableDnsRetry) {
-    plugins.push(await loadPatch('dns'));
+    plugins.push(await loadPatch("dns"));
   }
 
   const babelEnvConfig = [
-    '@babel/preset-env',
+    "@babel/preset-env",
     {
       targets: {
-        node: nodeVersion
-      }
-    }
+        node: nodeVersion,
+      },
+    },
   ];
 
   const babelLoaderConfig = {
-    exclude: [ babelEnvDeps.exclude({ engines: { node: '>=' + nodeVersion } }) ],
-    loader: 'babel-loader'
+    exclude: [babelEnvDeps.exclude({ engines: { node: ">=" + nodeVersion } })],
+    loader: "babel-loader",
   };
 
   const outputDir = path.resolve(options.outputPath || process.cwd());
 
   const babelLoader = {
-    loader: 'babel-loader',
+    loader: "babel-loader",
     options: {
       cacheDirectory: options.cacheDirectory,
-      presets: [ babelEnvConfig ],
-      plugins: []
-    }
+      presets: [babelEnvConfig],
+      plugins: ["@babel/plugin-proposal-class-properties"],
+    },
   };
 
   const tsRule = options.tsconfig
     ? {
-      use: [
-        babelLoader,
-        {
-          loader: 'ts-loader',
-          options: {
-            configFile: options.tsconfig,
-            transpileOnly: options.transpileOnly
-          }
-        }
-      ]
-    } : {
-      ...babelLoaderConfig,
-      options: {
-        cacheDirectory: options.cacheDirectory,
-        presets: [
-          babelEnvConfig,
-          require('@babel/preset-typescript')
-        ]
+        use: [
+          babelLoader,
+          {
+            loader: "ts-loader",
+            options: {
+              configFile: options.tsconfig,
+              transpileOnly: options.transpileOnly,
+            },
+          },
+        ],
       }
-    };
+    : {
+        ...babelLoaderConfig,
+        options: {
+          cacheDirectory: options.cacheDirectory,
+          presets: [babelEnvConfig, require("@babel/preset-typescript")],
+        },
+      };
 
   const optimization = options.minify
     ? { minimizer: [new TerserPlugin({ terserOptions: { sourceMap: true } })] }
     : { minimize: false };
 
   const devtool = options.enableRuntimeSourceMaps
-    ? 'source-map'
-    : 'hidden-source-map';
+    ? "source-map"
+    : "hidden-source-map";
 
   const webpackConfig: webpack.Configuration = {
     entry,
     output: {
       path: outputDir,
-      libraryTarget: 'commonjs',
+      libraryTarget: "commonjs",
       // Zipped bundles use explicit output names to determine the archive name
-      filename: '[name]'
+      filename: "[name]",
     },
     devtool,
     plugins,
@@ -289,55 +311,61 @@ export default async ({ entrypoint, serviceName, ...config }: Config) => {
       rules: [
         // See https://github.com/bitinn/node-fetch/issues/493
         {
-          type: 'javascript/auto',
+          type: "javascript/auto",
           test: /\.mjs$/,
-          use: []
+          use: [],
         },
         {
           test: /\.js$/,
-          ...babelLoader
+          ...babelLoader,
         },
         {
           test: /\.ts$/,
-          ...tsRule
-        }
-      ]
+          ...tsRule,
+        },
+      ],
     },
-    mode: (process.env.WEBPACK_MODE || 'production') as Mode,
+    mode: (process.env.WEBPACK_MODE || "production") as Mode,
     optimization,
     resolve: {
       // Since build is being called by other packages dependencies may be
       // relative to the caller or us. This cause our node modules to be
       // searched if a dependency can't be found in the caller's.
-      modules: [ CALLER_NODE_MODULES, LAMBDA_TOOLS_NODE_MODULES ],
-      extensions: WEBPACK_DEFAULTS.resolve.extensions.concat(['.ts'])
+      modules: [CALLER_NODE_MODULES, LAMBDA_TOOLS_NODE_MODULES],
+      extensions: WEBPACK_DEFAULTS.resolve.extensions.concat([".ts"]),
     },
     resolveLoader: {
       // Since build is being called by other packages dependencies may be
       // relative to the caller or us. This puts our node_modules on the
       // resolver path before trying to use the caller's.
-      modules: [ LAMBDA_TOOLS_NODE_MODULES, CALLER_NODE_MODULES ]
+      modules: [LAMBDA_TOOLS_NODE_MODULES, CALLER_NODE_MODULES],
     },
-    target: 'node',
+    target: "node",
     // Don't overrite __dirname and __filename, leave them as is
     // https://github.com/webpack/webpack/issues/1599
     node: {
       __dirname: false,
-      __filename: false
+      __filename: false,
     },
     externals: {
-      'aws-sdk': 'aws-sdk',
+      "aws-sdk": "aws-sdk",
       // crypto-browserify is a port of Node's crypto package for browsers.
       // However, it tends to be less reliable than the native crypto. This
       // causes native crypto to be used instead.
-      'crypto-browserify': 'crypto',
-      'dtrace-provider': 'dtrace-provider',
-      'vertx': 'vertx'
-    }
+      "crypto-browserify": "crypto",
+      "dtrace-provider": "dtrace-provider",
+      vertx: "vertx",
+    },
   };
 
-  const transformer = options.configTransformer || function (config: webpack.Configuration) { return config; };
-  const transformedConfig: webpack.Configuration = await transformer(webpackConfig);
+  const transformer =
+    options.configTransformer ||
+    function (config: webpack.Configuration) {
+      return config;
+    };
+  const transformedConfig: webpack.Configuration = await transformer(
+    webpackConfig
+  );
 
   const webpackResult = await run(transformedConfig);
 
