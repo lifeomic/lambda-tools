@@ -1,4 +1,4 @@
-import createDebug, { Debugger } from 'debug';
+import createDebug, { Debugger, debug } from 'debug';
 
 const libName = 'lambda-tools';
 
@@ -23,7 +23,10 @@ interface LoggerExtension {
 function extendLogger ({ logger, name, enabled, log }: LoggerExtension): Debugger {
   const childLogger: Debugger = logger.extend(name);
   childLogger.log = log || logger.log;
-  childLogger.enabled = enabled || logger.enabled;
+  if (enabled || logger.enabled) {
+    debug.names.push(new RegExp(`^${childLogger.namespace}$`))
+  }
+
   return childLogger;
 }
 
@@ -35,7 +38,10 @@ function createChildLogger (name: string, root: Debugger): Logger {
     debug: extendLogger({ logger: root, name: 'debug', log: consoleLog, enabled: root.enabled }),
     child: (name: string) => {
       const child = root.extend(name);
-      child.enabled = root.enabled;
+      if (root.enabled) {
+        debug.names.push(new RegExp(`^${child.namespace}$`))
+      }
+
       return createChildLogger(name, child);
     }
   };

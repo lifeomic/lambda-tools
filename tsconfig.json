@@ -20,7 +20,7 @@
     "skipLibCheck": true,
     "declaration": true,
     "outDir": "./dist",
-    "allowJs": true
+    "allowJs": true,
   },
   "include": ["src/**/*", "bin/*"],
   "exclude": ["node_modules", "src/patches/*.js"]
