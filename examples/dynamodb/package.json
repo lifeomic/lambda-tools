@@ -12,5 +12,5 @@
   "dependencies": {
     "ava": "^0.25.0",
     "@lifeomic/lambda-tools": "file:../../"
-  },
+  }
 }
