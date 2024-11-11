@@ -43,8 +43,7 @@ test.serial('should not fail to get entrypoint', async (test) => {
   imageInspectStub.onSecondCall().resolves({
     Config: {
       Entrypoint: ['hello', 'entrypoint']
-    },
-    ContainerConfig: {}
+    }
   });
 
   const imageStub = sinon.createStubInstance(Dockerode.Image, {
