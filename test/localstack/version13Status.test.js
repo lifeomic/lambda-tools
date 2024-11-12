@@ -8,7 +8,7 @@ const {
 const services = Object.keys(LOCALSTACK_SERVICES);
 
 test.before(async t => {
-  const { mappedServices, cleanup } = await getConnection({ services, versionTag: '0.13.2' });
+  const { mappedServices, cleanup } = await getConnection({ services, versionTag: '0.13.3' });
   Object.assign(t.context, { mappedServices, cleanup });
 });
 
